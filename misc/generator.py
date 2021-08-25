@@ -1,0 +1,58 @@
+import os
+from configs.config_constant import DIC_AGENTS, DIC_ENVS
+from misc.utils import write_summary, downsample
+
+
+class Generator:
+    def __init__(self, round_number, dic_path, dic_exp_conf,
+                 dic_agent_conf, dic_traffic_env_conf):
+        self.round_number = round_number
+        self.dic_exp_conf = dic_exp_conf
+        self.dic_path = dic_path
+        self.dic_agent_conf = dic_agent_conf
+        self.dic_traffic_env_conf = dic_traffic_env_conf
+
+        self.agent_name = self.dic_exp_conf["MODEL_NAME"]
+        self.agent = DIC_AGENTS[self.agent_name](
+            dic_agent_conf=self.dic_agent_conf,
+            dic_traffic_env_conf=self.dic_traffic_env_conf,
+            dic_path=self.dic_path,
+            round_number=self.round_number)
+
+        self.env_name = self.dic_traffic_env_conf["ENV_NAME"]
+        self.env = DIC_ENVS[self.env_name](self.dic_path,
+                                           self.dic_traffic_env_conf)
+
+    def generate(self, done_enable=True):
+
+        state = self.env.reset()
+        step_num = 0
+        while step_num < int(
+                self.dic_exp_conf["TIME_COUNTS"] / self.dic_traffic_env_conf[
+                    "MIN_ACTION_TIME"]):
+            action_list = []
+            for one_state in state:
+                action = self.agent.choose_action(one_state)
+                action_list.append(action)
+            next_state, reward, done, _ = self.env.step(action_list)
+            state = next_state
+            step_num += 1
+            if done_enable and done:
+                break
+        self.env.bulk_log()
+
+    def generate_test(self):
+        self.agent.load_network('round_%d' % self.round_number)
+        self.generate(done_enable=False)
+        write_summary(self.dic_path, 3600, self.round_number)
+
+        if not self.dic_exp_conf["EXP_DEBUG"]:
+            for inter_name in sorted(
+                    self.dic_traffic_env_conf["LANE_PHASE_INFOS"].keys()):
+                path_to_log_file = os.path.join(
+                    self.dic_path["PATH_TO_WORK"],
+                    "test_round",
+                    'round_%d' % self.round_number,
+                    "%s.pkl" % inter_name
+                )
+                downsample(path_to_log_file)
