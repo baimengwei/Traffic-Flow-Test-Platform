@@ -2,6 +2,7 @@ import pickle
 import os
 import random
 from configs.config_constant import DIC_AGENTS
+from misc.utils import set_seed
 
 
 class Updater:
@@ -12,6 +13,8 @@ class Updater:
         self.dic_exp_conf = dic_exp_conf
         self.dic_traffic_env_conf = dic_traffic_env_conf
         self.dic_path = dic_path
+
+        set_seed(self.dic_exp_conf["SEED"] + self.round_number)
 
         self.agent_name = self.dic_exp_conf["MODEL_NAME"]
         self.agent = DIC_AGENTS[self.agent_name](

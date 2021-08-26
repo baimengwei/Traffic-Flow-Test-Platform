@@ -94,7 +94,6 @@ def log_round_time(dic_path, round_number, t1, t2):
         t1: start time
         t2: end time
     Returns:
-
     """
     work_dir = dic_path["PATH_TO_WORK"]
     f_timing = open(os.path.join(work_dir, "timing.txt"), "a+")
@@ -215,3 +214,18 @@ def convert_dic_to_df(dic):
         df = pd.Series(dic[key], name=key)
         list_df.append(df)
     return pd.DataFrame(list_df)
+
+def seed_test():
+    print('random model:')
+    for i in range(10):
+        print(random.random(), end=' ')
+    print('')
+    print('numpy model:')
+    for i in range(10):
+        print(np.random.random(), end=' ')
+    print('')
+    print('torch model:')
+    for i in range(10):
+        print(torch.rand(1), end=' ')
+    print('')
+    exit(0)

@@ -63,9 +63,8 @@ class Agent:
         """
         decayed_lr = self.dic_agent_conf["LEARNING_RATE"] * pow(
             self.dic_agent_conf["LR_DECAY"], round_number)
-        self.dic_agent_conf["LEARNING_RATE"] = max(decayed_lr,
-                                                   self.dic_agent_conf[
-                                                       "MIN_LR"])
+        self.dic_agent_conf["LEARNING_RATE"] = \
+            max(decayed_lr, self.dic_agent_conf["MIN_LR"])
 
     def choose_action(self, state, choice_random):
         raise NotImplementedError

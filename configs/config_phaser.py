@@ -376,7 +376,6 @@ def pre_config_for_scenarios(args, scenarios):
     copy_conf_file(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                    dic_path)
     copy_traffic_file(dic_traffic_env_conf, dic_path)
-    set_seed(dic_exp_conf["SEED"])
     return dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path
 
 
@@ -394,7 +393,7 @@ def parse():
                         help='number of learning for each epoch')
     parser.add_argument('--fast_batch_size', type=int, default=3,
                         help='batch size for each individual task')
-    parser.add_argument("--run_round", type=int, default=80)
+    parser.add_argument("--run_round", type=int, default=50)
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--traffic_group", type=str, default="train_all")
     parser.add_argument("--seed", type=int, default=11)

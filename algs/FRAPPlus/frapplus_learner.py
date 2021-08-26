@@ -11,7 +11,6 @@ class FRAPPlusLearner:
     def __init__(self, dic_exp_conf, dic_agent_conf,
                  dic_traffic_env_conf, dic_path, round_number):
         """
-
         """
         self.dic_exp_conf = dic_exp_conf
         self.dic_agent_conf = dic_agent_conf

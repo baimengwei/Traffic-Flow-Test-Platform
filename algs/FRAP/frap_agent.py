@@ -81,8 +81,7 @@ class FRAPAgent(Agent):
         else:
             self.load_network("round_%d" % (self.round_number - 1))
             q_bar_freq = self.dic_agent_conf["UPDATE_Q_BAR_FREQ"]
-            q_bar_number = (self.round_number - 1) // \
-                           q_bar_freq * q_bar_freq
+            q_bar_number = (self.round_number - 1) // q_bar_freq * q_bar_freq
             self.load_network_bar("round_%d" % q_bar_number)
 
     def build_network(self):
@@ -237,10 +236,9 @@ class FRAPAgent(Agent):
         return inputs
 
     def choose_action(self, state, choice_random=True):
-        q_values = self.q_network.predict(
-            self.convert_state_to_input(state))
-        if random.random() <= self.dic_agent_conf["EPSILON"] \
-                and choice_random:
+        inputs = self.convert_state_to_input(state)
+        q_values = self.q_network.predict(inputs)
+        if random.random() <= self.dic_agent_conf["EPSILON"] and choice_random:
             action = random.randrange(len(q_values[0]))
         else:
             action = np.argmax(q_values[0])

@@ -1,6 +1,4 @@
 from metalearner import MetaLearner
-from sampler import BatchSampler
-import config
 import time
 import copy
 from multiprocessing import Process
@@ -8,7 +6,6 @@ import pickle
 import random
 import numpy as np
 import tensorflow as tf
-from utils import parse, config_all, parse_roadnet
 import os
 from copy import deepcopy
 

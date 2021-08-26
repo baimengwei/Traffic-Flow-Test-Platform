@@ -1,5 +1,6 @@
 import copy
 import json
+import pickle
 from math import isnan
 import pickle as pkl
 import matplotlib.pyplot as plt
@@ -226,6 +227,7 @@ def main(records_dir):
     # summary_detail_train(memo, copy.deepcopy(total_summary))
     summary_detail_test(records_dir, copy.deepcopy(dict_summary))
     # summary_detail_test_segments(memo, copy.deepcopy(total_summary))
+
 
 def summary_detail_train(memo, total_summary):
     # each_round_train_duration
@@ -551,7 +553,6 @@ def summary_detail_test(records_dir, dict_summary):
                 min_duration = ave_duration
                 min_duration_ind = int(round[6:])
 
-
         # result_dir = os.path.join(records_dir, traffic_file)
         result_dir = dic_path_conf["PATH_TO_WORK"]
 
@@ -582,7 +583,8 @@ def summary_detail_test(records_dir, dict_summary):
                 (duration_each_round_list, traffic_file))
 
     total_result = pd.DataFrame(dict_summary)
-    # total_result.to_csv(os.path.join("summary", memo, "total_test_results.csv"))
+    # total_result.to_csv(os.path.join("summary", memo,
+    # "total_test_results.csv"))
     figure_dir = dic_path_conf["PATH_TO_FIGURE"]
 
     if dic_exp_conf["EARLY_STOP"]:
@@ -692,6 +694,14 @@ def summary_detail_baseline(memo):
             memo,
             "total_baseline_test_results.csv"))
 
+
+def summary_reward(work_dir):
+    file_names = os.listdir(work_dir)
+    for file in file_names:
+        content = pickle.load(os.path.join(work_dir, file, 'intersection_1_1'))
+        print(content)
+
+
 if __name__ == "__main__":
     dict_summary = {
         "traffic": [],
@@ -713,3 +723,5 @@ if __name__ == "__main__":
     # summary_detail_test(memo, copy.deepcopy(dict_summary))
     # summary_detail_baseline(memo)
     # summary_detail_test_segments(memo, copy.deepcopy(dict_summary))
+    summary_reward(
+        'records/workspace/FRAPPlus_Min/_08_26_10_49_19_FRAPPlus/test_round/')

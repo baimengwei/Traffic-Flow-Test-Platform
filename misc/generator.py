@@ -1,6 +1,6 @@
 import os
 from configs.config_constant import DIC_AGENTS, DIC_ENVS
-from misc.utils import write_summary, downsample
+from misc.utils import write_summary, downsample, set_seed
 
 
 class Generator:
@@ -11,6 +11,11 @@ class Generator:
         self.dic_path = dic_path
         self.dic_agent_conf = dic_agent_conf
         self.dic_traffic_env_conf = dic_traffic_env_conf
+
+        generate_number = int(self.dic_path["PATH_TO_LOG"][-1])
+        set_seed(self.dic_exp_conf["SEED"] +
+                 self.round_number +
+                 generate_number)
 
         self.agent_name = self.dic_exp_conf["MODEL_NAME"]
         self.agent = DIC_AGENTS[self.agent_name](

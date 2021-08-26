@@ -33,7 +33,6 @@ def main(args):
     """main entrance. for frap
     """
     t_start = time.time()
-
     dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path = \
         pre_config_for_scenarios(args, 'train_round')
 

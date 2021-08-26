@@ -1,6 +1,8 @@
+from configs.config_phaser import parse
+
+
 def run_metalight():
     from algs.MetaLight.meta_train import main
-    from algs.MetaLight.meta_train import parse
     args = parse()
     print('start execute...')
     main(args)
@@ -8,17 +10,15 @@ def run_metalight():
 
 def run_frapplus():
     from algs.FRAPPlus.frapplus_train import main
-    from algs.FRAPPlus.frapplus_train import parse
     args = parse()
     print('start execute frapplus...')
     args.algorithm = 'FRAPPlus'
-    args.memo = 'FRAPPlus_MMM'
+    args.memo = 'FRAPPlus_Min'
     main(args)
 
 
 def run_frap():
     from algs.FRAP.frap_train import main
-    from algs.FRAP.frap_train import parse
     args = parse()
     print('start execute frap...')
     args.algorithm = 'FRAP'
@@ -28,5 +28,5 @@ def run_frap():
 
 if __name__ == '__main__':
     # run_metalight()
-    run_frap()
-    # run_frapplus()
+    # run_frap()
+    run_frapplus()
