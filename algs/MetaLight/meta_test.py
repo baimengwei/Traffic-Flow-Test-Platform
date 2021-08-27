@@ -182,5 +182,5 @@ def _train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path):
 
 if __name__ == '__main__':
     args = parse()
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpu
+
     main(args)

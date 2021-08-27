@@ -1,31 +1,33 @@
 import os
-
 from multiprocessing import Process
-from configs.config_phaser import update_path2, create_dir
+
+from configs.config_phaser import create_dir, update_path2
 from misc.construct_sample import ConstructSample
 from misc.generator import Generator
 from misc.updater import Updater
+from misc.utils import downsample
 
 
-class FRAPPlusLearner:
-    def __init__(self, dic_exp_conf, dic_agent_conf,
-                 dic_traffic_env_conf, dic_path, round_number):
-        """
-        """
+class RoundLearner:
+    def __init__(self, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
+                 dic_path, round_number):
         self.dic_exp_conf = dic_exp_conf
         self.dic_agent_conf = dic_agent_conf
         self.dic_traffic_env_conf = dic_traffic_env_conf
         self.dic_path = dic_path
         self.round_number = round_number
 
-    def learn_frapplus(self):
+        pass
+
+    def learn_round(self):
         self.round_generate_step()
         self.round_make_samples()
         self.round_update_network()
         self.round_test_eval()
+        pass
 
     def round_generate_step(self):
-        def generator_wrapper(round_number,dic_path, dic_exp_conf,
+        def generator_wrapper(round_number, dic_path, dic_exp_conf,
                               dic_agent_conf, dic_traffic_env_conf):
             generator = Generator(round_number=round_number,
                                   dic_path=dic_path,
@@ -35,6 +37,7 @@ class FRAPPlusLearner:
             generator.generate()
 
         process_list = []
+
         for generate_number in range(self.dic_exp_conf["NUM_GENERATORS"]):
             path_to_log = os.path.join(
                 self.dic_path["PATH_TO_WORK"],
@@ -87,6 +90,18 @@ class FRAPPlusLearner:
                           self.dic_path))
         p.start()
         p.join()
+
+        for cnt_gen in range(self.dic_exp_conf["NUM_GENERATORS"]):
+            for inter_name in sorted(
+                    self.dic_traffic_env_conf["LANE_PHASE_INFOS"].keys()):
+                path_to_log_file = os.path.join(
+                    self.dic_path["PATH_TO_WORK"],
+                    "samples",
+                    "round_" + str(self.round_number),
+                    "generator_" + str(cnt_gen),
+                    "%s.pkl" % inter_name
+                )
+                downsample(path_to_log_file)
 
     def round_test_eval(self):
         def test_eval(round_number, dic_path, dic_exp_conf, dic_agent_conf,

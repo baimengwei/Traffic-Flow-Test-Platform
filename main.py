@@ -26,7 +26,26 @@ def run_frap():
     main(args)
 
 
+# TODO here
+# def run_fraprq():
+#     from algs.FRAPRQ.fraprq_train import main
+#     args = parse()
+#     print('start execute fraprq...')
+#     args.algorithm = 'FRAPRQ'
+#     args.memo = 'FRAP_RQ_T'
+#     main(args)
+
+def run_dqn():
+    from algs.DQN.dqn_train import main
+    args = parse()
+    print('start execute dqn...')
+    args.algorithm = "DQN"
+    args.memo = "DQN_C"
+    main(args)
+
+
 if __name__ == '__main__':
     # run_metalight()
     # run_frap()
-    run_frapplus()
+    # run_frapplus()
+    run_dqn()

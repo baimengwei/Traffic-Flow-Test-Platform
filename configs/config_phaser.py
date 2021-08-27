@@ -7,7 +7,7 @@ from configs import config_constant
 import argparse
 import json
 
-from misc.utils import copy_conf_file, copy_traffic_file, set_seed, \
+from misc.utils import copy_conf_file, copy_traffic_file, \
     get_relation, get_phase_map
 
 
@@ -18,11 +18,10 @@ def update_traffic_env_conf(args, dic_conf, dic_path):
     Returns:
         dic_conf
     """
-
-    if args.algorithm in ["MetaLight", "MAML", "Random", "FRAP", "FRAPPlus"]:
+    if args.algorithm in RL_ALGORITHM:
         dic_conf["LIST_STATE_FEATURE"] = \
             ["cur_phase", "lane_num_vehicle"]
-    elif args.algorithm in ["SOTL"]:
+    elif args.algorithm in TRAD_ALGORITHM:
         dic_conf["LIST_STATE_FEATURE"] = [
             "cur_phase_index",
             "time_this_phase",
@@ -393,7 +392,7 @@ def parse():
                         help='number of learning for each epoch')
     parser.add_argument('--fast_batch_size', type=int, default=3,
                         help='batch size for each individual task')
-    parser.add_argument("--run_round", type=int, default=50)
+    parser.add_argument("--run_round", type=int, default=100)
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--traffic_group", type=str, default="train_all")
     parser.add_argument("--seed", type=int, default=11)

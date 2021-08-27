@@ -10,7 +10,7 @@ from configs.config_phaser import parse, \
 from misc.utils import log_round_time
 
 
-def frap_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
+def dqn_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                dic_path, round_number):
     inter_names = list(dic_traffic_env_conf["LANE_PHASE_INFOS"].keys())
     warn("using a fix inter_name[0]")
@@ -29,7 +29,7 @@ def frap_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
 
 
 def main(args):
-    """main entrance. for frap
+    """main entrance. for dqn
     """
     t_start = time.time()
     dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path = \
@@ -37,7 +37,7 @@ def main(args):
 
     for round_number in range(args.run_round):
         t_round = time.time()
-        p = Process(target=frap_train,
+        p = Process(target=dqn_train,
                     args=(copy.deepcopy(dic_exp_conf),
                           copy.deepcopy(dic_agent_conf),
                           copy.deepcopy(dic_traffic_env_conf),

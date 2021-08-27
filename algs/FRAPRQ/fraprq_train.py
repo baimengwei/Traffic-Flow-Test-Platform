@@ -1,6 +1,4 @@
-import json
 from warnings import warn
-import matplotlib.pyplot as plt
 from common.round_learner import RoundLearner
 from misc import summary
 from multiprocessing import Process
@@ -13,8 +11,8 @@ from configs.config_phaser import parse
 from misc.utils import log_round_time, set_seed
 
 
-def frapplus_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
-                   dic_path, round_number):
+def fraprq_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
+                 dic_path, round_number):
     """
     Args:
         dic_exp_conf: configuration of this experiment
@@ -39,32 +37,8 @@ def frapplus_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
     # -------------------------------------------------------------------------
     print('round %s start...' % round_number)
     learner = RoundLearner(dic_exp_conf, dic_agent_conf,
-                              dic_traffic_env_conf, dic_path, round_number)
+                           dic_traffic_env_conf, dic_path, round_number)
     learner.learn_round()
-
-
-def plot_msg(dic_path):
-    figure_dir = dic_path["PATH_TO_FIGURE"]
-    train_round = os.path.join(dic_path["PATH_TO_WORK"], 'train_round')
-    round_dir = sorted(os.listdir(train_round),
-                       key=lambda x: int(x.split('_')[-1]))
-    plot_reward_list = []
-
-    for each_round in round_dir:
-        each_round = os.path.join(train_round, each_round)
-        batch_dir = sorted(os.listdir(each_round),
-                           key=lambda x: int(x.split('_')[-1]))
-        for each_batch in batch_dir:
-            each_batch = os.path.join(each_round, each_batch)
-            record_msg_file = os.path.join(each_batch, 'record_msg.json')
-            record_msg = json.load(open(record_msg_file))
-            plot_reward_list += [record_msg["inter_reward_0"]]
-
-    plt.plot(plot_reward_list)
-    plt.xlabel("round_batch")
-    plt.ylabel("reward_cal")
-    plt.savefig(os.path.join(figure_dir, "reward_curve.png"))
-    plt.show()
 
 
 def main(args):
@@ -76,7 +50,7 @@ def main(args):
 
     for round_number in range(args.run_round):
         t_round = time.time()
-        p = Process(target=frapplus_train,
+        p = Process(target=fraprq_train,
                     args=(copy.deepcopy(dic_exp_conf),
                           copy.deepcopy(dic_agent_conf),
                           copy.deepcopy(dic_traffic_env_conf),

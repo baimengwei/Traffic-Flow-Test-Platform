@@ -9,6 +9,8 @@ from math import isnan
 import torch
 import json
 
+from matplotlib import pyplot as plt
+
 
 def get_planed_entering(flow_file, episode_len):
     # todo--check with huichu about how each vehicle is inserted, according to
@@ -229,3 +231,28 @@ def seed_test():
         print(torch.rand(1), end=' ')
     print('')
     exit(0)
+
+
+
+def plot_msg(dic_path):
+    figure_dir = dic_path["PATH_TO_FIGURE"]
+    train_round = os.path.join(dic_path["PATH_TO_WORK"], 'train_round')
+    round_dir = sorted(os.listdir(train_round),
+                       key=lambda x: int(x.split('_')[-1]))
+    plot_reward_list = []
+
+    for each_round in round_dir:
+        each_round = os.path.join(train_round, each_round)
+        batch_dir = sorted(os.listdir(each_round),
+                           key=lambda x: int(x.split('_')[-1]))
+        for each_batch in batch_dir:
+            each_batch = os.path.join(each_round, each_batch)
+            record_msg_file = os.path.join(each_batch, 'record_msg.json')
+            record_msg = json.load(open(record_msg_file))
+            plot_reward_list += [record_msg["inter_reward_0"]]
+
+    plt.plot(plot_reward_list)
+    plt.xlabel("round_batch")
+    plt.ylabel("reward_cal")
+    plt.savefig(os.path.join(figure_dir, "reward_curve.png"))
+    plt.show()

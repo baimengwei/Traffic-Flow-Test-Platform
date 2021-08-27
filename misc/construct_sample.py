@@ -1,9 +1,7 @@
 import numpy as np
 import pickle
 import os
-
 from misc.utils import set_seed
-
 
 class ConstructSample:
 

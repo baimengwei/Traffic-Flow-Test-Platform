@@ -698,11 +698,16 @@ def summary_detail_baseline(memo):
 def summary_reward(work_dir):
     file_names = os.listdir(work_dir)
     for file in file_names:
-        content = pickle.load(os.path.join(work_dir, file, 'intersection_1_1'))
-        print(content)
+        if 'round' in file:
+            file_path = os.path.join(work_dir, file, 'intersection_1_1.pkl')
+            with open(file_path, 'rb') as f:
+                content = pickle.load(f)
+
+                print(content)
 
 
 if __name__ == "__main__":
+    os.chdir('../')
     dict_summary = {
         "traffic": [],
         "traffic_file": [],
