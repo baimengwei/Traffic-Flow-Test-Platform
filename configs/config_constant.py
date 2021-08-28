@@ -1,6 +1,7 @@
 from algs.DQN.dqn_agent import DQNAgent
 from algs.FRAP.frap_agent import FRAPAgent
 from algs.FRAPPlus.frapplus_agent import FRAPPlusAgent
+from algs.SOTL.sotl_agent import SOTLAgent
 from envs.anon_env import AnonEnv
 
 # from envs.sumo_env import SumoEnv
@@ -14,8 +15,8 @@ DIC_FEATURE_DIM = dict(
     # "vehicle_acceleration_img",
     # "vehicle_waiting_time_img",
     # "lane_num_vehicle",
-    # "lane_num_vehicle_been_stopped_thres01",
-    # "lane_num_vehicle_been_stopped_thres1",
+    # "stop_vehicle_thres1",
+    # "stop_vehicle_thres1",
     # "lane_queue_length",
     # "lane_num_vehicle_left",
     # "lane_sum_duration_vehicle_left",
@@ -32,8 +33,8 @@ LIST_STATE_FEATURE = [
     "vehicle_acceleration_img",
     "vehicle_waiting_time_img",
     "lane_num_vehicle",
-    "lane_num_vehicle_been_stopped_thres01",
-    "lane_num_vehicle_been_stopped_thres1",
+    "stop_vehicle_thres1",
+    "stop_vehicle_thres01",
     "lane_queue_length",
     "lane_num_vehicle_left",
     "lane_sum_duration_vehicle_left",
@@ -47,14 +48,14 @@ DIC_REWARD_INFO = {
     "sum_lane_wait_time": 0,
     "sum_lane_num_vehicle_left": 0,
     "sum_duration_vehicle_left": 0,
-    "sum_num_vehicle_been_stopped_thres01": 0,
-    "sum_num_vehicle_been_stopped_thres1": -0.25
+    "sum_stop_vehicle_thres01": 0,
+    "sum_stop_vehicle_thres1": -0.25
 }
 
 DIC_SOTL_AGENT_CONF = {
-    "PHI": 5,
-    "MIN_GREEN_VEC": 3,
-    "MAX_RED_VEC": 6,
+    "PHI_MIN": 0,
+    "THETA": 10,
+    "MU": 5,
 }
 
 DIC_METALIGHT_AGENT_CONF = {
@@ -168,7 +169,7 @@ DIC_AGENTS = {
     # "MetaLight": MetaLightAgent,
     "FRAPPlus": FRAPPlusAgent,
     "DQN": DQNAgent,
-    # "SOTL": SOTLAgent,
+    "SOTL": SOTLAgent,
     "FRAP": FRAPAgent,
 }
 RL_ALGORITHM = [

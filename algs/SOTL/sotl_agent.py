@@ -1,74 +1,39 @@
 class SOTLAgent():
-    def __init__(self, dic_agent_conf, dic_traffic_env_conf, dic_path):
-        """
-        change list to dict for compatibility with other algorithm.
-        Args:
-            dic_agent_conf:
-            dic_traffic_env_conf: from list to dict
-            dic_path: from list ot dict
-        """
+    def __init__(self, dic_agent_conf, dic_traffic_env_conf,
+                 dic_path, round_number):
 
         self.dic_agent_conf = dic_agent_conf
-        if isinstance(dic_traffic_env_conf, list):
-            self.dic_traffic_env_conf = dic_traffic_env_conf[0]
-            self.dic_path = dic_path[0]
-        else:
-            self.dic_traffic_env_conf = dic_traffic_env_conf
-            self.dic_path = dic_path
+        self.dic_traffic_env_conf = dic_traffic_env_conf
+        self.dic_path = dic_path
+        self.round_number = round_number
 
         self.current_phase_time = 0
-
-        self.DIC_PHASE_MAP = {
-            1: 0,
-            2: 1,
-            3: 2,
-            4: 3,
-            5: 4,
-            6: 5,
-            7: 6,
-            8: 7,
-            0: 0
-        }
-        self.green_lane = {}
-        start_lane = self.dic_traffic_env_conf["LANE_PHASE_INFO"]["start_lane"]
-        for phase in self.dic_traffic_env_conf["LANE_PHASE_INFO"]["phase"]:
-            self.green_lane[phase] = []
-            for lane in self.dic_traffic_env_conf[
-                    "LANE_PHASE_INFO"]["phase_startLane_mapping"][phase]:
-                self.green_lane[phase].append(start_lane.index(lane))
-
-        self.time_this_phase = self.dic_traffic_env_conf["MIN_ACTION_TIME"]
-        self.phase_list = self.dic_traffic_env_conf["LANE_PHASE_INFO"]['phase']
-        self.phase_id = 0
+        self.kappa = 0
+        self.global_cnt = 0
+        self.lane_phase_info = self.dic_traffic_env_conf["LANE_PHASE_INFO"]
+        self.phase_count = len(self.lane_phase_info["phase"])
+        self.phase_map = self.lane_phase_info["phase_map"]
 
     def choose_action(self, state):
-        ''' choose the best action for current state '''
+        cur_phase = state['cur_phase'][0]
+        lane_stop_vehicle = state['stop_vehicle_thres1']
+        self.kappa += sum(lane_stop_vehicle)
 
-        state = state[0][0]
-        if state["cur_phase_index"][0] == -1:
-            return self.phase_id
+        action = cur_phase
+        self.global_cnt += 1
 
-        cur_phase = self.DIC_PHASE_MAP[state["cur_phase_index"][0]]
-        # print(state)
-
-        if state["time_this_phase"][0] >= self.dic_agent_conf["PHI"] and cur_phase != -1:
-            green_vec = sum([state["lane_num_vehicle_been_stopped_thres1"][i]
-                            for i in self.green_lane[cur_phase + 1]])
-            red_vec = sum(
-                state["lane_num_vehicle_been_stopped_thres1"]) - green_vec
-            # print("green: %d, red: %d" % (green_vec, red_vec))
-            if green_vec <= self.dic_agent_conf["MIN_GREEN_VEC"] and \
-                    red_vec > self.dic_agent_conf["MAX_RED_VEC"]:
-                self.current_phase_time = 0
-                self.action = (
-                    cur_phase + 1) % len(self.dic_traffic_env_conf["PHASE"])
-                return (
-                    cur_phase + 1) % len(self.dic_traffic_env_conf["PHASE"])
-            else:
-                self.action = cur_phase
-                self.current_phase_time += 1
-                return cur_phase
+        if self.current_phase_time > self.dic_agent_conf["PHI_MIN"]:
+            green_vehicle = \
+                sum([lane_stop_vehicle[idx]
+                     for idx, lane_enable in enumerate(self.phase_map[action])
+                     if lane_enable == 1])
+            if not 0 < green_vehicle < self.dic_agent_conf["MU"]:
+                if self.kappa > self.dic_agent_conf["THETA"]:
+                    action = (cur_phase) % self.phase_count
+                    self.kappa = 0
+                    self.current_phase_time = 0
+                    return action
         else:
-            self.action = cur_phase
             self.current_phase_time += 1
-            return cur_phase
+        # print('time %3d action: %d' % (self.global_cnt, action))
+        return action-1

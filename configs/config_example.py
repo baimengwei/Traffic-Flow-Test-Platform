@@ -36,8 +36,8 @@ dic_traffic_env = {
         "vehicle_acceleration_img",
         "vehicle_waiting_time_img",
         "lane_num_vehicle",
-        "lane_num_vehicle_been_stopped_thres01",
-        "lane_num_vehicle_been_stopped_thres1",
+        "stop_vehicle_thres1",
+        "stop_vehicle_thres1",
         "lane_queue_length",
         "lane_num_vehicle_left",
         "lane_sum_duration_vehicle_left",
@@ -51,7 +51,7 @@ dic_traffic_env = {
         "sum_lane_num_vehicle_left": 0,
         "sum_duration_vehicle_left": 0,
         "sum_num_vehicle_been_stopped_thres01": 0,
-        "sum_num_vehicle_been_stopped_thres1": -0.25
+        "stop_vehicle_thres1": -0.25
     },
     "TRAFFIC_CATEGORY": {
         "train": {
@@ -464,7 +464,7 @@ dic_traffic_env = {
         }
     },
     "DIC_REWARD_INFO": {
-        "sum_num_vehicle_been_stopped_thres1": -0.25
+        "stop_vehicle_thres1": -0.25
     },
     "VALID_THRESHOLD": 30,
     "MIN_ACTION_TIME": 10,

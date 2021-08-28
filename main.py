@@ -44,8 +44,18 @@ def run_dqn():
     main(args)
 
 
+def run_sotl():
+    from algs.SOTL.sotl_train import main
+    args = parse()
+    print('start execute sotl...')
+    args.algorithm = "SOTL"
+    args.memo = "SOTL_AA"
+    main(args)
+
+
 if __name__ == '__main__':
     # run_metalight()
     # run_frap()
     # run_frapplus()
-    run_dqn()
+    # run_dqn()
+    run_sotl()

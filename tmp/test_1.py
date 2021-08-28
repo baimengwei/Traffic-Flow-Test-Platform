@@ -1,19 +1,45 @@
-import json
-import engine
-import os
+from multiprocessing import Process
+import time
+import multiprocessing.pool
 
 
-print(os.getcwd())
-print(os.listdir(os.getcwd()))
+class NoDaemonProcess(multiprocessing.Process):
+    def _get_daemon(self):
+        return False
 
-file = open('config.json')
-content = json.load(file)
-content = json.dumps(content)
-file.close()
+    def _set_daemon(self, value):
+        pass
+
+    daemon = property(_get_daemon, _set_daemon)
 
 
-eng = engine.Engine(1,1,True,True)
-eng.load_roadnet('roadnet.json')
-eng.load_flow('flow.json')
-for i in range(100):
-    eng.next_step()
+class Pool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
+
+
+def print_run(msg):
+    print('msg.%s' % msg)
+    time.sleep(2)
+
+
+def print_log(msg):
+    p = Process(target=print_run,
+                args=(msg,))
+    p.start()
+    p.join()
+    print('msg is : %s' % msg)
+    time.sleep(1)
+
+
+def set_multprocess():
+    pool = Pool(processes=10)
+    for i in range(20):
+        pool.apply_async(func=print_log, args=(str(i),))
+
+    pool.close()
+    pool.join()
+    print('finished')
+
+
+if __name__ == '__main__':
+    set_multprocess()

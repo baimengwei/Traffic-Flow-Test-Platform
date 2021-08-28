@@ -23,10 +23,9 @@ def update_traffic_env_conf(args, dic_conf, dic_path):
             ["cur_phase", "lane_num_vehicle"]
     elif args.algorithm in TRAD_ALGORITHM:
         dic_conf["LIST_STATE_FEATURE"] = [
-            "cur_phase_index",
-            "time_this_phase",
+            "cur_phase",
             "lane_num_vehicle",
-            "lane_num_vehicle_been_stopped_thres1",
+            "stop_vehicle_thres1",
         ]
     else:
         raise ValueError
@@ -281,7 +280,7 @@ def config_all(args):
         "DIC_REWARD_INFO_ALL": DIC_REWARD_INFO,
         "TRAFFIC_CATEGORY": TRAFFIC_CATEGORY,
 
-        "DIC_REWARD_INFO": {"sum_num_vehicle_been_stopped_thres1": -0.25},
+        "DIC_REWARD_INFO": {"sum_stop_vehicle_thres1": -0.25},
         "VALID_THRESHOLD": 30,
         "MIN_ACTION_TIME": 10,
         "YELLOW_TIME": 5,

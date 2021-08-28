@@ -2,10 +2,8 @@ import pickle
 import numpy as np
 import json
 import sys
-
 import os
 import engine
-
 from misc.utils import get_total_traffic_volume, get_vehicle_list, \
     convert_dic_to_df
 
@@ -31,8 +29,8 @@ class Intersection:
         self.previous_phase_index = 1
         self.dic_lane_vehicle_current_step = {}
         self.dic_lane_vehicle_previous_step = {}
-        self.dic_lane_waiting_vehicle_count_current_step = {}
-        self.dic_lane_waiting_vehicle_count_previous_step = {}
+        self.dic_lane_vehicle_waiting_current_step = {}
+        self.dic_lane_vehicle_waiting_previous_step = {}
         self.dic_vehicle_speed_current_step = {}
         self.dic_vehicle_speed_previous_step = {}
         self.dic_vehicle_distance_previous_step = {}
@@ -43,8 +41,7 @@ class Intersection:
 
         # -1: all yellow
         self.all_yellow_phase_index = -1
-        # 0-7 phase
-
+        # 0-7 phase number
         self.eng.set_tl_phase(self.inter_name, self.current_phase_index)
         self.next_phase_to_set_index = None
         self.current_phase_duration = -1
@@ -66,7 +63,7 @@ class Intersection:
             if self.current_phase_index == self.next_phase_to_set_index:
                 pass
             else:
-                self.eng.set_tl_phase(self.inter_name, 0)
+                self.eng.set_tl_phase(self.inter_name, self.yellow_phase_index)
                 self.current_phase_index = self.all_yellow_phase_index
                 self.all_yellow_flag = True
 
@@ -74,8 +71,8 @@ class Intersection:
         self.previous_phase_index = self.current_phase_index
         self.dic_lane_vehicle_previous_step = \
             self.dic_lane_vehicle_current_step
-        self.dic_lane_waiting_vehicle_count_previous_step = \
-            self.dic_lane_waiting_vehicle_count_current_step
+        self.dic_lane_vehicle_waiting_previous_step = \
+            self.dic_lane_vehicle_waiting_current_step
         self.dic_vehicle_speed_previous_step = \
             self.dic_vehicle_speed_current_step
         self.dic_vehicle_distance_previous_step = \
@@ -88,7 +85,7 @@ class Intersection:
         else:
             self.current_phase_duration = 1
         self.dic_lane_vehicle_current_step = self.eng.get_lane_vehicles()
-        self.dic_lane_waiting_vehicle_count_current_step = \
+        self.dic_lane_vehicle_waiting_current_step = \
             self.eng.get_lane_waiting_vehicle_count()
         if self.dic_traffic_env_conf["ENV_DEBUG"]:
             self.dic_vehicle_speed_current_step = self.eng.get_vehicle_speed()
@@ -155,14 +152,14 @@ class Intersection:
         dic_feature["lane_num_vehicle"] = \
             [len(self.dic_lane_vehicle_current_step[lane]) for lane in
              self.list_entering_lanes]
-        dic_feature["lane_num_vehicle_been_stopped_thres01"] = \
-            [self.dic_lane_waiting_vehicle_count_current_step[lane]
+        dic_feature["stop_vehicle_thres01"] = \
+            [self.dic_lane_vehicle_waiting_current_step[lane]
              for lane in self.list_entering_lanes]
-        dic_feature["lane_num_vehicle_been_stopped_thres1"] = \
-            [self.dic_lane_waiting_vehicle_count_current_step[lane]
+        dic_feature["stop_vehicle_thres1"] = \
+            [self.dic_lane_vehicle_waiting_current_step[lane]
              for lane in self.list_entering_lanes]
         dic_feature["lane_queue_length"] = \
-            [self.dic_lane_waiting_vehicle_count_current_step[lane]
+            [self.dic_lane_vehicle_waiting_current_step[lane]
              for lane in self.list_entering_lanes]
         dic_feature["lane_num_vehicle_left"] = None
         dic_feature["lane_sum_duration_vehicle_left"] = None
@@ -188,9 +185,9 @@ class Intersection:
         dic_reward["sum_lane_wait_time"] = None
         dic_reward["sum_lane_num_vehicle_left"] = None
         dic_reward["sum_duration_vehicle_left"] = None
-        dic_reward["sum_num_vehicle_been_stopped_thres01"] = None
-        dic_reward["sum_num_vehicle_been_stopped_thres1"] = np.sum(
-            self.dic_feature["lane_num_vehicle_been_stopped_thres1"])
+        dic_reward["sum_stop_vehicle_thres01"] = None
+        dic_reward["sum_stop_vehicle_thres1"] = \
+            np.sum(self.dic_feature["stop_vehicle_thres1"])
         reward = 0
         for r in dic_reward_info:
             if dic_reward_info[r] != 0:
