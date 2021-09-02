@@ -466,9 +466,9 @@ def summary_detail_test(records_dir, dict_summary):
     traffic_env_conf = open(os.path.join(records_dir, "traffic_env.conf"), 'r')
     dic_traffic_env_conf = json.load(traffic_env_conf)
     traffic_file = dic_traffic_env_conf["TRAFFIC_FILE"]
-
-    run_counts = dic_exp_conf["TIME_COUNTS"]
-    num_rounds = dic_exp_conf["NUM_ROUNDS"]
+    # TODO restruct this file.
+    run_counts = dic_traffic_env_conf["EPISODE_LEN"]
+    num_rounds = dic_exp_conf["ADAPT_ROUND"]
     num_seg = run_counts // 3600
     nan_thres = 120
     duration_each_round_list = []
@@ -587,17 +587,17 @@ def summary_detail_test(records_dir, dict_summary):
     # "total_test_results.csv"))
     figure_dir = dic_path_conf["PATH_TO_FIGURE"]
 
-    if dic_exp_conf["EARLY_STOP"]:
-        performance_duration = padding_duration(performance_duration)
-    summary_plot(
-        performance_duration,
-        figure_dir,
-        mode_name="test",
-        num_rounds=num_rounds)
-    performance_at_min_duration_round_plot(
-        performance_at_min_duration_round,
-        figure_dir,
-        mode_name="test")
+    # if dic_exp_conf["EARLY_STOP"]:
+    #     performance_duration = padding_duration(performance_duration)
+    # summary_plot(
+    #     performance_duration,
+    #     figure_dir,
+    #     mode_name="test",
+    #     num_rounds=num_rounds)
+    # performance_at_min_duration_round_plot(
+    #     performance_at_min_duration_round,
+    #     figure_dir,
+    #     mode_name="test")
 
 
 def summary_detail_baseline(memo):

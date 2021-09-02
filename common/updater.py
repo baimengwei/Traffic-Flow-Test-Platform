@@ -33,11 +33,6 @@ class Updater:
             sample_file.close()
             pass
 
-    def update_network(self):
-        self.agent.prepare_Xs_Y(self.sample_set)
-        self.agent.train_network()
-        self.agent.save_network("round_" + str(self.round_number))
-
     def forget_sample(self):
         ind_end = len(self.sample_set)
         print("memory size before forget: {0}".format(ind_end))
@@ -50,3 +45,8 @@ class Updater:
                           len(self.sample_set))
         self.sample_set = random.sample(self.sample_set, sample_size)
         print("memory samples number:", sample_size)
+
+    def update_network(self):
+        self.agent.prepare_Xs_Y(self.sample_set)
+        self.agent.train_network()
+        self.agent.save_network("round_" + str(self.round_number))

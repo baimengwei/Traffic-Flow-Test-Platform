@@ -1,135 +1,221 @@
+import os.path
+import random
+import shutil
+
 import numpy as np
-from algs.FRAPPlus.frapplus_agent import FRAPPlusAgent
+import torch
+from algs.FRAPPlus.frapplus_agent import FRAPPlus
+from algs.agent import Agent
+from configs.config_phaser import *
 
 
-class MetaLightAgent:
-    def __init__(self, dic_agent_conf, dic_traffic_env_conf, dic_path):
+class MetaLightAgent(Agent):
+    def __init__(self, dic_agent_conf, dic_traffic_env_conf, dic_path,
+                 round_number, mode='task'):
+        """mode is mata or task, which is supposed to define. default is 'task'
         """
-        Args:
-            dic_agent_conf:
-            dic_traffic_env_conf: a list please for each different task
-            dic_path: a list please for each task
+        super().__init__(dic_agent_conf, dic_traffic_env_conf, dic_path,
+                         round_number)
+        self.mode = mode
+        if self.round_number == 0 and self.mode == 'meta':
+            self.build_network()
+        elif self.mode == 'task':
+            self.load_network("round_%d" % self.round_number)
+            bar_freq = self.dic_agent_conf["UPDATE_Q_BAR_FREQ"]
+            bar_number = self.round_number // bar_freq * bar_freq
+            self.load_network_bar("round_%d" % bar_number)
+        elif self.mode == 'meta':
+            self.load_network_meta()
+        else:
+            raise NotImplementedError('a bug is here !')
+
+    def build_network(self):
+        """used for meta agent.
         """
+        self.model_meta = FRAPPlus(self.dic_traffic_env_conf)
+        self.lossfunc_meta = torch.nn.MSELoss()
+        self.optimizer_meta = \
+            torch.optim.Adam(self.model_meta.parameters(),
+                             lr=self.dic_agent_conf["LEARNING_RATE"])
 
-        self.dic_agent_conf = dic_agent_conf
-        self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.dic_path = dic_path
+    def build_network_bar(self):
+        pass
 
-        self.policy_inter = []
-
-        # warnings.warn("assuming agent number is 1")
-        self.num_agent = 1
-
-        for i in range(self.num_agent):
-            self.policy_inter.append(
-                FRAPPlusAgent(
-                    dic_agent_conf=dic_agent_conf,
-                    dic_traffic_env_conf=dic_traffic_env_conf,
-                    dic_path=dic_path))
-
-        self.group_size = self.dic_traffic_env_conf["FAST_BATCH_SIZE"]
-
-    def choose_action(self, observations, test=False):
+    def choose_action(self, state, choice_random=True):
+        """used for each task
         """
-        Args:
-            observations: a list with one column
-            test: False if need to output with random, else true.
-        Returns:
-            actions: action list, map observations
+        inputs = self.convert_state_to_input(state)
+        inputs = torch.Tensor(inputs).flatten().unsqueeze(0)
+        q_values = self.model.forward(inputs)
+        if random.random() <= self.dic_agent_conf["EPSILON"] \
+                and choice_random:
+            actions = random.randrange(len(q_values[0]))
+        else:
+            actions = np.argmax(q_values[0].detach().numpy())
+        return actions
+
+    def convert_state_to_input(self, s):
+        """used for each task
         """
-        action_inter = np.zeros((len(observations)), dtype=np.int)
-        for i in range(int(len(observations) / self.group_size)):
-            a = i * self.group_size
-            b = (i + 1) * self.group_size
-            action_inter[a:b] = self.policy_inter[i].choose_action(
-                observations[a:b], test)
-        return action_inter
+        inputs = []
+        dic_phase_expansion = self.dic_traffic_env_conf[
+            "LANE_PHASE_INFO"]['phase_map']
+        for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
+            if feature == "cur_phase":
+                inputs.append(np.array([dic_phase_expansion[s[feature][0]]]))
+            else:
+                inputs.append(np.array([s[feature]]))
+        return inputs
 
-    def load_params(self, params):
+    def load_network(self, file_name):
+        """ used for each task
+        not exists: choose the meta params for task to train start.
+        others: choose the task params for task to train ongoing.
         """
-        each policy_inter load the same params coming from a total weights
-        Args:
-            params: a model's weights, dict
-        Returns:
+        file_path_source = os.path.join(self.dic_path["PATH_TO_MODEL"],
+                                        '../', '../', '../', 'meta_round')
+        file_path_target = os.path.join(self.dic_path["PATH_TO_MODEL"],
+                                        file_name + '.pt')
+        if not os.path.exists(file_path_target):
+            file_newest = sorted(
+                os.listdir(file_path_source),
+                key=lambda x: int(x.split('_')[-1].split('.')[0]))[-1]
+            file_path_source = os.path.join(file_path_source, file_newest)
+            shutil.copy(file_path_source, file_path_target)
+            ckpt = torch.load(file_path_target)
+        else:
+            ckpt = torch.load(file_path_target)
+        self.model = FRAPPlus(self.dic_traffic_env_conf)
+        self.model.load_state_dict(ckpt['state_dict'])
+        self.optimizer = torch.optim.Adam(self.model.parameters())
+        self.optimizer.load_state_dict(ckpt['optimizer'])
+        self.lossfunc = torch.nn.MSELoss()
+        self.lossfunc.load_state_dict(ckpt['lossfunc'])
+
+    def load_network_bar(self, file_name):
+        """reference to the function `load_network` comment
         """
-        for i in range(len(self.policy_inter)):
-            self.policy_inter[i].load_params(params)
+        if self.round_number == 1:
+            self.model_target = FRAPPlus(self.dic_traffic_env_conf)
+            self.model_target.load_state_dict(self.model.state_dict())
+        else:
+            file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
+                                     file_name + '.pt')
+            ckpt = torch.load(file_path)
+            self.model_target = FRAPPlus(self.dic_traffic_env_conf)
+            self.model_target.load_state_dict((ckpt['state_dict']))
 
-    def fit(self, episodes, params, target_params):
+    def load_network_meta(self):
+        """used for meta agent
         """
-        Args:
-            episodes: for different tasks(list). a buffer pool (list ..)
-            params: weights for different tasks(list).
-            target_params: weights for different tasks(list).
-        Returns:
+        model_dir = os.path.join(self.dic_path["PATH_TO_MODEL"],
+                                 'round_%d.pt' % (self.round_number - 1))
+        ckpt = torch.load(model_dir)
+        self.model_meta = FRAPPlus(self.dic_traffic_env_conf)
+        self.model_meta.load_state_dict(ckpt['state_dict'])
+        self.optimizer_meta = torch.optim.Adam(self.model_meta.parameters())
+        self.optimizer_meta.load_state_dict(ckpt['optimizer'])
+        self.lossfunc_meta = torch.nn.MSELoss()
+        self.lossfunc_meta.load_state_dict(ckpt['lossfunc'])
+
+    def prepare_Xs_Y(self, sample_set):
+        """used for each task
         """
-        for i in range(len(self.policy_inter)):
-            self.policy_inter[i].fit(
-                episodes.episodes_inter[i],
-                params=params[i],
-                target_params=target_params[i])
+        state = []
+        action = []
+        next_state = []
+        reward_avg = []
+        for each in sample_set:
+            state.append(each[0]['cur_phase'] + each[0]['lane_num_vehicle'])
+            action.append(each[1])
+            next_state.append(
+                each[2]['cur_phase'] + each[2]['lane_num_vehicle'])
+            reward_avg.append(each[3])
 
-    def update_params(self, episodes, params, lr_step, slice_index):
+        q_values = self.model.forward(torch.Tensor(state)).detach().numpy()
+        q_values_bar = self.model_target.forward(
+            torch.Tensor(next_state)).detach().numpy()
+        reward_avg = np.array(reward_avg) / self.dic_agent_conf["NORMAL_FACTOR"]
+        gamma = self.dic_agent_conf["GAMMA"]
+        range_idx = list(range(len(q_values)))
+        try:
+            q_values[range_idx, action] = \
+                reward_avg + gamma * np.max(q_values_bar, axis=-1)
+        except:
+            print('a breakpoint here.')
+
+        self.Xs = np.array(state)
+        self.Y = q_values
+        pass
+
+    def prepare_Xs_Y_meta(self, sample_set):
+        """used for each task <- note
         """
-        Args:
-            episodes: for different tasks(list). a buffer pool
-            params: weights for different tasks(list).
-            lr_step: lr
-            slice_index: samples index list
-        Returns:
-            new params list.
+        state = []
+        action = []
+        next_state = []
+        reward_avg = []
+        for each in sample_set:
+            state.append(each[0]['cur_phase'] + each[0]['lane_num_vehicle'])
+            action.append(each[1])
+            next_state.append(
+                each[2]['cur_phase'] + each[2]['lane_num_vehicle'])
+            reward_avg.append(each[3])
+
+        q_values = self.model.forward(torch.Tensor(state)).detach().numpy()
+        Xs = np.array(state)
+        Y = q_values
+        return Xs, Y
+
+    def train_network(self):
+        """used for each task
         """
-        new_params = []
-        for i in range(len(self.policy_inter)):
-            new_params.append(
-                self.policy_inter[i].update_params(
-                    episodes.episodes_inter[i], params[i],
-                    lr_step, slice_index))
-        return new_params
+        epochs = self.dic_agent_conf["EPOCHS"]
+        for i in range(epochs):
+            sample_x = self.Xs
+            sample_y = self.Y
+            yp = self.model.forward(torch.Tensor(sample_x))
+            loss = self.lossfunc(yp, torch.Tensor(sample_y))
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+            # print('%d memory, updating... %d, loss: %.4f'
+            #       % (len(self.Y), i, loss.item()))
 
-    def init_params(self):
-        return self.policy_inter[0].get_params()
-
-    def get_params(self):
-        params = []
-        for policy in self.policy_inter:
-            params.append(policy.get_params())
-        return params
-
-    def decay_epsilon(self, batch_id):
-        for policy in self.policy_inter:
-            policy.decay_epsilon(batch_id)
-
-    def update_meta_params(self, episodes, slice_index, new_slice_index,
-                           _params):
+    def train_network_meta(self, list_targets):
+        """used for meta agent.
         """
-        Args:
-            episodes: for different tasks, its buffers
-            slice_index: Di
-            new_slice_index: Di'
-            _params: meta params list, come from the local file, each item of
-                list is same.
-        Returns:
-            new meta params * len(_params)
+        epochs = self.dic_agent_conf["EPOCHS"]
+        idx = [i for i in range(len(list_targets))]
+
+        for i in range(epochs):
+            sample_x, sample_y = list_targets[idx, 0], list_targets[idx, 1]
+            sample_x = np.array([each.tolist() for each in sample_x])
+            sample_y = np.array([each.tolist() for each in sample_y])
+            yp = self.model_meta.forward(torch.Tensor(sample_x))
+            loss = self.lossfunc_meta(yp, torch.Tensor(sample_y))
+            self.optimizer_meta.zero_grad()
+            loss.backward()
+            self.optimizer_meta.step()
+            # print('%d memory, updating... %d, loss: %.4f'
+            #       % (len(self.Y), i, loss.item()))
+
+    def save_network(self, file_name):
         """
-        params = _params[0]
-        tot_grads = dict(zip(params.keys(), [0] * len(params.keys())))
+        """
+        file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
+                                 file_name + '.pt')
+        ckpt = {'state_dict': self.model.state_dict(),
+                'optimizer': self.optimizer.state_dict(),
+                'lossfunc': self.lossfunc.state_dict()}
+        torch.save(ckpt, file_path)
 
-        for i in range(len(self.policy_inter)):
-            grads = self.policy_inter[i].second_cal_grads(
-                episodes.episodes_inter[i], slice_index,
-                new_slice_index, params)
-            for key in params.keys():
-                tot_grads[key] += grads[key]
-
-        if self.dic_agent_conf['GRADIENT_CLIP']:
-            for key in tot_grads.keys():
-                tot_grads[key] = np.clip(
-                    tot_grads[key], -1 * self.dic_agent_conf['CLIP_SIZE'],
-                    self.dic_agent_conf['CLIP_SIZE'])
-
-        new_params = dict(zip(params.keys(),
-                              [params[key]
-                               - self.dic_agent_conf["BETA"] * tot_grads[key]
-                               for key in params.keys()]))
-        return [new_params] * len(_params)
+    def save_network_meta(self, file_name):
+        """
+        """
+        file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
+                                 file_name + '.pt')
+        ckpt = {'state_dict': self.model_meta.state_dict(),
+                'optimizer': self.optimizer_meta.state_dict(),
+                'lossfunc': self.lossfunc_meta.state_dict()}
+        torch.save(ckpt, file_path)

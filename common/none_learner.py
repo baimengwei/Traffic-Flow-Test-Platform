@@ -1,8 +1,6 @@
-import os
 from multiprocessing import Process
-from configs.config_phaser import create_dir, update_path2
-from misc.generator import Generator
-from misc.utils import write_summary
+from common.generator import Generator
+from misc.utils import write_summary, create_path_dir
 
 
 class NoneLearner:
@@ -13,7 +11,6 @@ class NoneLearner:
         self.dic_traffic_env_conf = dic_traffic_env_conf
         self.dic_path = dic_path
         self.round_number = round_number
-
         pass
 
     def learn_round(self):
@@ -29,14 +26,11 @@ class NoneLearner:
                                   dic_agent_conf=dic_agent_conf,
                                   dic_traffic_env_conf=dic_traffic_env_conf)
             generator.generate(done_enable=False)
-            write_summary(self.dic_path, 3600, self.round_number)
+            write_summary(self.dic_path,
+                          self.dic_traffic_env_conf["EPISODE_LEN"],
+                          self.round_number)
 
-        path_to_log = os.path.join(self.dic_path["PATH_TO_WORK"],
-                                   "test_round",
-                                   "round_%d" % self.round_number)
-        self.dic_path = update_path2(path_to_log, self.dic_path)
-        create_dir(self.dic_path)
-
+        create_path_dir(self.dic_path)
         p = Process(target=test_eval,
                     args=(self.round_number,
                           self.dic_path,

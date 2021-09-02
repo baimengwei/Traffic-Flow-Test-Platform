@@ -12,7 +12,7 @@ class Generator:
         self.dic_agent_conf = dic_agent_conf
         self.dic_traffic_env_conf = dic_traffic_env_conf
 
-        generate_number = int(self.dic_path["PATH_TO_LOG"][-1])
+        generate_number = int(self.dic_path["PATH_TO_WORK"][-1])
         set_seed(self.dic_exp_conf["SEED"] +
                  self.round_number +
                  generate_number)
@@ -32,9 +32,9 @@ class Generator:
 
         state = self.env.reset()
         step_num = 0
-        while step_num < int(
-                self.dic_exp_conf["TIME_COUNTS"] / self.dic_traffic_env_conf[
-                    "MIN_ACTION_TIME"]):
+        total_step = int(self.dic_traffic_env_conf["EPISODE_LEN"] /
+                         self.dic_traffic_env_conf["MIN_ACTION_TIME"])
+        while step_num < total_step:
             action_list = []
             for one_state in state:
                 action = self.agent.choose_action(one_state)
@@ -44,20 +44,20 @@ class Generator:
             step_num += 1
             if done_enable and done:
                 break
+        print('final inter 0: lane_num_vehicle ',
+              next_state[0]['lane_num_vehicle'])
         self.env.bulk_log()
 
     def generate_test(self):
         self.agent.load_network('round_%d' % self.round_number)
         self.generate(done_enable=False)
-        write_summary(self.dic_path, 3600, self.round_number)
+        write_summary(self.dic_path, self.round_number)
 
         if not self.dic_exp_conf["EXP_DEBUG"]:
             for inter_name in sorted(
                     self.dic_traffic_env_conf["LANE_PHASE_INFOS"].keys()):
                 path_to_log_file = os.path.join(
                     self.dic_path["PATH_TO_WORK"],
-                    "test_round",
-                    'round_%d' % self.round_number,
                     "%s.pkl" % inter_name
                 )
                 downsample(path_to_log_file)

@@ -24,16 +24,16 @@ def fraprq_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
 
     """
     inter_names = list(dic_traffic_env_conf["LANE_PHASE_INFOS"].keys())
-    warn("using a fix inter_name[0]")
+    # warn("using a fix inter_name[0]")
     inter_name = inter_names[0]
     dic_traffic_env_conf = \
-        update_traffic_env_conf2(inter_name, dic_traffic_env_conf)
+        update_traffic_env_conf2(dic_traffic_env_conf, inter_name)
     set_seed(round_number)
 
     dir_log_root = os.path.join(dic_path['PATH_TO_WORK'],
                                 'train_round',
                                 'round_' + str(round_number))
-    dic_path = update_path2(dir_log_root, dic_path)
+    dic_path = update_path2(dic_path, dir_log_root)
     # -------------------------------------------------------------------------
     print('round %s start...' % round_number)
     learner = RoundLearner(dic_exp_conf, dic_agent_conf,
@@ -48,7 +48,7 @@ def main(args):
     dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path = \
         pre_config_for_scenarios(args, 'train_round')
 
-    for round_number in range(args.run_round):
+    for round_number in range(args.train_round):
         t_round = time.time()
         p = Process(target=fraprq_train,
                     args=(copy.deepcopy(dic_exp_conf),

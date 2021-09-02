@@ -6,19 +6,19 @@ import torch
 import torch.nn as nn
 
 
-class FRAP(nn.Module):
+class FRAPPlus(nn.Module):
     def __init__(self, dic_traffic_env_conf):
         super().__init__()
 
         self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.line_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
+        self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
 
-        self.list_lane = self.line_phase_info['start_lane']
-        self.list_phase = self.line_phase_info['phase']
+        self.list_lane = self.lane_phase_info['start_lane']
+        self.list_phase = self.lane_phase_info['phase']
         self.phase_line_mapping = \
-            self.line_phase_info['phase_startLane_mapping']
+            self.lane_phase_info['phase_startLane_mapping']
         self.constant_mask = \
-            torch.Tensor(self.line_phase_info['relation']).int()
+            torch.Tensor(self.lane_phase_info['relation']).int()
 
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
         self.phase_dim = dim_feature['cur_phase'][0]
@@ -75,17 +75,18 @@ class FRAP(nn.Module):
             line_combine = self.phase_line_mapping[phase_index]
             line1, line2 = line_combine[0], line_combine[1]
             line1 = self.weight_feature_line(dic_feature_lane[line1])
+            line1 = self.activate_feature_line(line1)
             line2 = self.weight_feature_line(dic_feature_lane[line2])
+            line2 = self.activate_feature_line(line2)
             combine = line1 + line2
             list_phase_pressure.append(combine)
 
-        constant_mask = self.embeding_constant(self.constant_mask)
-        constant_mask = torch.tile(constant_mask.unsqueeze(0),
-                                   (batch_size, 1, 1, 1))
+        constant_mask = torch.tile(self.constant_mask, (batch_size, 1, 1))
+        constant_mask = self.embeding_constant(constant_mask)
         constant_mask = torch.transpose(constant_mask, 3, 1)
         constant_mask = torch.transpose(constant_mask, 3, 2)
 
-        feature_mask = torch.tensor([])
+        list_phase_pressure_matrix = []
         num_phase = len(self.list_phase)
         for i in range(num_phase):
             for j in range(num_phase):
@@ -93,9 +94,9 @@ class FRAP(nn.Module):
                     phase_con = torch.cat([list_phase_pressure[i],
                                            list_phase_pressure[j]],
                                           dim=-1)
-                    feature_mask = torch.cat([feature_mask, phase_con])
-
-        feature_mask = feature_mask.reshape((-1, num_phase, num_phase - 1, 32))
+                    list_phase_pressure_matrix.append(phase_con)
+        feature_mask = torch.cat(list_phase_pressure_matrix, dim=-1).reshape(
+            batch_size, num_phase, num_phase-1, 32)
         feature_mask = torch.transpose(feature_mask, 3, 1)
         feature_mask = torch.transpose(feature_mask, 3, 2)
 
@@ -128,21 +129,21 @@ class FRAPPlusAgent(Agent):
             self.load_network_bar("round_%d" % bar_number)
 
     def build_network(self):
-        self.model = FRAP(self.dic_traffic_env_conf)
+        self.model = FRAPPlus(self.dic_traffic_env_conf)
         self.lossfunc = torch.nn.MSELoss()
         self.optimizer = \
             torch.optim.Adam(self.model.parameters(),
                              lr=self.dic_agent_conf["LEARNING_RATE"])
 
     def build_network_bar(self):
-        self.model_target = FRAP(self.dic_traffic_env_conf)
+        self.model_target = FRAPPlus(self.dic_traffic_env_conf)
         self.model_target.load_state_dict(self.model.state_dict())
 
     def load_network(self, file_name):
         file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
                                  file_name + '.pt')
         ckpt = torch.load(file_path)
-        self.model = FRAP(self.dic_traffic_env_conf)
+        self.model = FRAPPlus(self.dic_traffic_env_conf)
         self.model.load_state_dict(ckpt['state_dict'])
 
         self.optimizer = torch.optim.Adam(self.model.parameters())
@@ -154,7 +155,7 @@ class FRAPPlusAgent(Agent):
         file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
                                  file_name + '.pt')
         ckpt = torch.load(file_path)
-        self.model_target = FRAP(self.dic_traffic_env_conf)
+        self.model_target = FRAPPlus(self.dic_traffic_env_conf)
         self.model_target.load_state_dict((ckpt['state_dict']))
 
     def save_network(self, file_name):

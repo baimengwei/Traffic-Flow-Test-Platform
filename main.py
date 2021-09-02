@@ -2,9 +2,11 @@ from configs.config_phaser import parse
 
 
 def run_metalight():
-    from algs.MetaLight.meta_train import main
+    from algs.MetaLight.metalight_train import main
     args = parse()
     print('start execute...')
+    args.algorithm = 'MetaLight'
+    args.memo = 'MetaLight_XXGX'
     main(args)
 
 
@@ -55,7 +57,7 @@ def run_sotl():
 
 if __name__ == '__main__':
     # run_metalight()
-    # run_frap()
+    run_frap()
     # run_frapplus()
     # run_dqn()
-    run_sotl()
+    # run_sotl()

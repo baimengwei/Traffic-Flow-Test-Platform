@@ -22,7 +22,6 @@ class Agent:
         self.round_number = round_number
 
         self.decay_epsilon(self.round_number)
-        self.decay_lr(self.round_number)
 
         # self._decouple_params()
         # self.dim_input = self._get_input_dim()
@@ -57,19 +56,13 @@ class Agent:
         self.dic_agent_conf["EPSILON"] = max(
             decayed_epsilon, self.dic_agent_conf["MIN_EPSILON"])
 
-    def decay_lr(self, round_number):
-        """Warning: MODIFIED DIC_AGENT_CONF : LEARNING_RATE VALUE
-        default: Not changed
-        """
-        decayed_lr = self.dic_agent_conf["LEARNING_RATE"] * pow(
-            self.dic_agent_conf["LR_DECAY"], round_number)
-        self.dic_agent_conf["LEARNING_RATE"] = \
-            max(decayed_lr, self.dic_agent_conf["MIN_LR"])
-
     def choose_action(self, state, choice_random):
         raise NotImplementedError
 
     def build_network(self):
+        raise NotImplementedError
+
+    def build_network_bar(self):
         raise NotImplementedError
 
     def load_network(self, file_name):
@@ -78,7 +71,7 @@ class Agent:
     def load_network_bar(self, file_name):
         raise NotImplementedError
 
-    def prepare_Xs_Y(self, memory):
+    def prepare_Xs_Y(self, sample_set):
         raise NotImplementedError
 
     def train_network(self):

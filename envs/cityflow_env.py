@@ -316,10 +316,8 @@ class CityFlowEnv:
                 self.dic_traffic_env_conf["SAVEREPLAY"],
                 self.dic_traffic_env_conf["RLTRAFFICLIGHT"],
                 False)
-
-            self.eng.load_roadnet(
-                os.path.join(self.path_to_work_directory,
-                             self.dic_traffic_env_conf["ROADNET_FILE"]))
+            # TODO reconstruct this env file please.
+            self.eng.load_roadnet()
             self.eng.load_flow(
                 os.path.join(self.path_to_work_directory,
                              self.dic_traffic_env_conf["FLOW_FILE"]))

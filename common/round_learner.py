@@ -1,14 +1,14 @@
-import os
 from multiprocessing import Process
-
-from configs.config_phaser import create_dir, update_path2
 from misc.construct_sample import ConstructSample
-from misc.generator import Generator
-from misc.updater import Updater
-from misc.utils import downsample
+from common.generator import Generator
+from common.updater import Updater
+from configs.config_phaser import *
 
 
 class RoundLearner:
+    """used for FRAP, FRAPPlus, DQN etc.
+
+    """
     def __init__(self, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                  dic_path, round_number):
         self.dic_exp_conf = dic_exp_conf
@@ -39,20 +39,18 @@ class RoundLearner:
         process_list = []
 
         for generate_number in range(self.dic_exp_conf["NUM_GENERATORS"]):
-            path_to_log = os.path.join(
-                self.dic_path["PATH_TO_WORK"],
-                "samples", "round_%d" % self.round_number,
-                           "generator_%d" % generate_number)
-            dic_path = update_path2(path_to_log, self.dic_path)
-            create_dir(dic_path)
+            work_dir = os.path.join(self.dic_path["PATH_TO_WORK"],
+                                    "samples", "round_%d" % self.round_number,
+                                    "generator_%d" % generate_number)
+            dic_path = update_path_work(self.dic_path, work_dir)
+            create_path_dir(dic_path)
             # -----------------------------------------------------
             p = Process(target=generator_wrapper,
                         args=(self.round_number, dic_path, self.dic_exp_conf,
                               self.dic_agent_conf, self.dic_traffic_env_conf))
             p.start()
             process_list.append(p)
-        for i in range(len(process_list)):
-            p = process_list[i]
+        for p in process_list:
             p.join()
 
     def round_make_samples(self):
@@ -116,12 +114,12 @@ class RoundLearner:
         path_to_log = os.path.join(self.dic_path["PATH_TO_WORK"],
                                    "test_round",
                                    "round_%d" % self.round_number)
-        self.dic_path = update_path2(path_to_log, self.dic_path)
-        create_dir(self.dic_path)
+        dic_path = update_path_work(self.dic_path, path_to_log)
+        create_path_dir(dic_path)
 
         p = Process(target=test_eval,
                     args=(self.round_number,
-                          self.dic_path,
+                          dic_path,
                           self.dic_exp_conf,
                           self.dic_agent_conf,
                           self.dic_traffic_env_conf))

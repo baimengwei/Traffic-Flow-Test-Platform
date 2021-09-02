@@ -41,7 +41,7 @@ class Intersection:
 
         # -1: all yellow
         self.all_yellow_phase_index = -1
-        # 0-7 phase number
+
         self.eng.set_tl_phase(self.inter_name, self.current_phase_index)
         self.next_phase_to_set_index = None
         self.current_phase_duration = -1
@@ -200,7 +200,7 @@ class AnonEnv:
         self.dic_path = dic_path
         self.dic_traffic_env_conf = dic_traffic_env_conf
 
-        self.path_to_log = self.dic_path["PATH_TO_LOG"]
+        self.path_to_log = self.dic_path["PATH_TO_WORK"]
         self.path_to_data = self.dic_path["PATH_TO_DATA"]
         self.lane_phase_infos = self.dic_traffic_env_conf['LANE_PHASE_INFOS']
         self.yellow_time = self.dic_traffic_env_conf["YELLOW_TIME"]
@@ -211,12 +211,9 @@ class AnonEnv:
                                  self.dic_traffic_env_conf["THREADNUM"],
                                  self.dic_traffic_env_conf["SAVEREPLAY"],
                                  self.dic_traffic_env_conf["RLTRAFFICLIGHT"])
-        self.eng.load_roadnet(
-            os.path.join(self.path_to_data,
-                         self.dic_traffic_env_conf["ROADNET_FILE"]))
-        self.eng.load_flow(
-            os.path.join(self.path_to_data,
-                         self.dic_traffic_env_conf["FLOW_FILE"]))
+        # TODO check path here.
+        self.eng.load_roadnet(self.dic_path["PATH_TO_ROADNET_FILE"])
+        self.eng.load_flow(self.dic_path["PATH_TO_FLOW_FILE"])
 
         self.list_intersection = []
         self.list_inter_log = dict()
@@ -325,7 +322,7 @@ class AnonEnv:
 
             inter = self.list_intersection[inter_ind]
             feature = inter.dic_feature
-            print(feature['lane_num_vehicle'])
+
             if max(feature['lane_num_vehicle']) > self.dic_traffic_env_conf[
                 "VALID_THRESHOLD"]:
                 valid_flag[inter_ind] = 0

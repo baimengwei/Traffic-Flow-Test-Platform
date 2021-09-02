@@ -13,14 +13,14 @@ from misc.utils import log_round_time
 def sotl_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                dic_path, round_number):
     inter_names = list(dic_traffic_env_conf["LANE_PHASE_INFOS"].keys())
-    warn("using a fix inter_name[0]")
+    # warn("using a fix inter_name[0]")
     inter_name = inter_names[0]
     dic_traffic_env_conf = \
         update_traffic_env_conf2(inter_name, dic_traffic_env_conf)
 
-    dir_log_root = os.path.join(dic_path['PATH_TO_LOG'],
+    dir_log_root = os.path.join(dic_path['PATH_TO_WORK'],
                                 'round_' + str(round_number))
-    dic_path = update_path2(dir_log_root, dic_path)
+    dic_path = update_path2(dic_path, dir_log_root)
     # ---------------------------------------------------------
     print('round %s start...' % round_number)
     learner = NoneLearner(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,

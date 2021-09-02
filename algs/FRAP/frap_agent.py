@@ -1,17 +1,13 @@
 from keras.models import model_from_json, load_model
-from keras.optimizers import RMSprop
 import random
-from keras.engine.topology import Layer
 import os
 import tensorflow as tf
 import keras.backend.tensorflow_backend as KTF
 from algs.agent import Agent
-from keras.layers import Input, Dense, Reshape, Lambda, Activation, Embedding, \
-    Conv2D
+from keras.layers import *
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.layers.merge import concatenate, add, multiply
-
 from keras import backend as K
 import numpy as np
 
@@ -26,7 +22,8 @@ def slice_tensor(x, index):
 
 def keras_relation(x, dic_traffic_env_conf):
     relations = dic_traffic_env_conf["LANE_PHASE_INFO"]['relation']
-    relations = np.array(relations).reshape((1, 8, 7))
+    num_phase = len(relations)
+    relations = np.array(relations).reshape((1, num_phase, num_phase - 1))
     batch_size = K.shape(x)[0]
     constant = K.constant(relations)
     constant = K.tile(constant, (batch_size, 1, 1))
@@ -74,10 +71,14 @@ class FRAPAgent(Agent):
         session = tf.Session()
         KTF.set_session(session)
 
+        self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
+        self.list_lane = self.lane_phase_info['start_lane']
+        self.list_phase = self.lane_phase_info['phase']
+        self.num_phase = len(self.list_phase)
+
         if self.round_number == 0:
             self.q_network = self.build_network()
-            self.q_network_bar = \
-                self.build_network_from_copy(self.q_network)
+            self.q_network_bar = self.build_network_bar()
         else:
             self.load_network("round_%d" % (self.round_number - 1))
             q_bar_freq = self.dic_agent_conf["UPDATE_Q_BAR_FREQ"]
@@ -91,8 +92,7 @@ class FRAPAgent(Agent):
                 "DIC_FEATURE_DIM"][feature_name]
             dic_input_node[feature_name] = Input(shape=dim_feature,
                                                  name="input_" + feature_name)
-        p = Activation('sigmoid')(
-            Embedding(2, 4, input_length=8)(dic_input_node["cur_phase"]))
+        p = Activation('sigmoid')(Embedding(2, 4)(dic_input_node["cur_phase"]))
 
         LANE_ORDER = self.dic_traffic_env_conf["LANE_PHASE_INFO"][
             'start_lane']
@@ -123,17 +123,16 @@ class FRAPAgent(Agent):
                                             lane_embedding(dic_lane[lane2])]))
 
         constant_layer = \
-            Lambda(keras_relation,
-                   arguments={
-                       "dic_traffic_env_conf": self.dic_traffic_env_conf},
+            Lambda(keras_relation, arguments={
+                "dic_traffic_env_conf": self.dic_traffic_env_conf},
                    name="constant")(dic_input_node["lane_num_vehicle"])
-        relation_embedding = Embedding(2, 4, name="relation_embedding")(
-            constant_layer)
+        relation_embedding = Embedding(
+            2, 4, name="relation_embedding")(constant_layer)
 
         list_phase_pressure_recomb = []
-        num_phase = 8
-        for i in range(num_phase):
-            for j in range(num_phase):
+
+        for i in range(self.num_phase):
+            for j in range(self.num_phase):
                 if i != j:
                     list_phase_pressure_recomb.append(
                         concatenate(
@@ -142,25 +141,23 @@ class FRAPAgent(Agent):
 
         list_phase_pressure_recomb = concatenate(list_phase_pressure_recomb,
                                                  name="concat_all")
-        feature_map = Reshape((8, 7, 32))(list_phase_pressure_recomb)
-        lane_conv = Conv2D(self.dic_agent_conf["D_DENSE"],
+        feature_map = Reshape((self.num_phase, self.num_phase - 1, 32)
+                              )(list_phase_pressure_recomb)
+        lane_conv = Conv2D(20,
                            kernel_size=(1, 1), activation="relu",
                            name="lane_conv")(feature_map)
-        relation_conv = Conv2D(self.dic_agent_conf["D_DENSE"],
-                               kernel_size=(1, 1), activation="relu",
+        relation_conv = Conv2D(20, kernel_size=(1, 1), activation="relu",
                                name="relation_conv")(relation_embedding)
         combine_feature = multiply([lane_conv, relation_conv],
                                    name="combine_feature")
-        hidden_layer = Conv2D(self.dic_agent_conf["D_DENSE"],
-                              kernel_size=(1, 1), activation="relu",
+        hidden_layer = Conv2D(20, kernel_size=(1, 1), activation="relu",
                               name="combine_conv")(combine_feature)
         before_merge = Conv2D(1, kernel_size=(1, 1), activation="linear",
                               name="before_merge")(hidden_layer)
         q_values = Lambda(lambda x: K.sum(x, axis=2), name="q_values")(
-            Reshape((8, 7))(before_merge))
+            Reshape((self.num_phase, self.num_phase - 1))(before_merge))
         inputs = [dic_input_node[feature_name] for feature_name in
                   sorted(self.dic_traffic_env_conf["LIST_STATE_FEATURE"])]
-        # TODO check value inputs, [[], []]
         network = Model(inputs=inputs, outputs=q_values)
 
         network.compile(optimizer=Adam(lr=self.dic_agent_conf["LEARNING_RATE"],
@@ -187,15 +184,13 @@ class FRAPAgent(Agent):
             os.path.join(self.dic_path["PATH_TO_MODEL"],
                          "%s.h5" % file_name))
 
-    def build_network_from_copy(self, network_copy):
-        network_structure = network_copy.to_json()
-        network_weights = network_copy.get_weights()
+    def build_network_bar(self):
+        network_structure = self.q_network.to_json()
+        network_weights = self.q_network.get_weights()
         network = model_from_json(network_structure,
                                   custom_objects={"Selector": Selector})
         network.set_weights(network_weights)
-        network.compile(
-            optimizer=RMSprop(lr=self.dic_agent_conf["LEARNING_RATE"]),
-            loss='mean_squared_error')
+        network.compile(optimizer=Adam(), loss='mean_squared_error')
         return network
 
     def prepare_Xs_Y(self, sample_set):

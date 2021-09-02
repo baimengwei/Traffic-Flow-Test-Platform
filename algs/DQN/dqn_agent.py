@@ -15,16 +15,18 @@ class DQN(nn.Module):
         self.line_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
 
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
-        self.phase_dim = dim_feature['cur_phase'][0]
-        self.vehicle_dim = dim_feature['lane_num_vehicle'][0]
+        phase_dim = dim_feature['cur_phase'][0]
+        vehicle_dim = dim_feature['lane_num_vehicle'][0]
+        self.state_dim = phase_dim + vehicle_dim
+        self.action_dim = len(self.lane_phase_info['phase'])
 
         self.weight_feature_line = torch.nn.Linear(
-            self.phase_dim + self.vehicle_dim, 50)
+            self.state_dim, 50)
         self.activate_feature_line = torch.nn.ReLU()
 
         self.linear_combine = torch.nn.Linear(50, 50)
         self.activate_linear_combine = torch.nn.ReLU()
-        self.linear_final = torch.nn.Linear(50, 8)
+        self.linear_final = torch.nn.Linear(50, self.action_dim)
 
     def forward(self, feature_input):
         combine = self.weight_feature_line(feature_input)
