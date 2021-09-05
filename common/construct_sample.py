@@ -46,8 +46,6 @@ class ConstructSample:
             rs["lane_num_vehicle_left"])
         reward["sum_duration_vehicle_left"] = np.sum(
             rs["lane_sum_duration_vehicle_left"])
-        reward["sum_stop_vehicle_thres01"] = np.sum(
-            rs["stop_vehicle_thres01"])
         reward["sum_stop_vehicle_thres1"] = np.sum(
             rs["stop_vehicle_thres1"])
         return reward

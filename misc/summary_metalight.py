@@ -146,7 +146,7 @@ def cal_travel_time(df_vehicle_actual_enter_leave,
     return travel_time
 
 
-def summary_meta_test(memo):
+def summary_meta_test(project):
     ''' directly copy the write_summary'''
     total_summary = {
         "traffic": [],
@@ -161,15 +161,15 @@ def summary_meta_test(memo):
         "min_duration2": []
     }
 
-    path = os.path.join("records", memo)
+    path = os.path.join("records", project)
     for traffic in os.listdir(path):
         traffic_name = traffic[:traffic.find(".json") + len(".json")]
         task_name = traffic_name
         res_path = os.path.join(
             path, traffic, "test_round", task_name, "test_results.csv")
-        res_summary_path = os.path.join("summary", memo, "total_results")
-        fig_summary_path = os.path.join("summary", memo, "total_figures")
-        figures_path = os.path.join("summary", memo, "figures")
+        res_summary_path = os.path.join("summary", project, "total_results")
+        fig_summary_path = os.path.join("summary", project, "total_figures")
+        figures_path = os.path.join("summary", project, "figures")
         if not os.path.exists(res_summary_path):
             os.makedirs(res_summary_path)
         if not os.path.exists(fig_summary_path):
@@ -192,14 +192,14 @@ def summary_meta_test(memo):
     total_result.to_csv(
         os.path.join(
             "summary",
-            memo,
+            project,
             "total_test_results.csv"))
 
 
 def summary_meta_train(path=None, batch=2):
     """
     Args:
-        memo:
+        project:
         path: i.e. /records/meta_train/_xx_xx/learning_round:
     Returns:
         a plot and saved image
@@ -244,7 +244,7 @@ def summary_meta_train(path=None, batch=2):
 def summary_meta_test_custom(path=None):
     """
     Args:
-        memo:
+        project:
         path: i.e. /records/meta_train/_xx_xx/learning_round:
     Returns:
         a plot and saved image
@@ -281,7 +281,7 @@ def summary_meta_test_custom(path=None):
     plt.show()
 
 
-def summary_sotl(memo):
+def summary_sotl(project):
     # each_round_train_duration
     total_summary = {
         "traffic": [],
@@ -291,7 +291,7 @@ def summary_sotl(memo):
         "min_duration_round": []
     }
 
-    records_dir = os.path.join("records", memo)
+    records_dir = os.path.join("records", project)
     for traffic_file in os.listdir(records_dir):
         if ".xml" not in traffic_file and ".json" not in traffic_file:
             continue
@@ -345,7 +345,7 @@ def summary_sotl(memo):
         queue_length_each_round_list.append(ql)
 
         # result_dir = os.path.join(records_dir, traffic_file)
-        result_dir = os.path.join("summary", memo, traffic_file)
+        result_dir = os.path.join("summary", project, traffic_file)
         if not os.path.exists(result_dir):
             os.makedirs(result_dir)
         _res = {
@@ -366,7 +366,7 @@ def summary_sotl(memo):
     total_result.to_csv(
         os.path.join(
             "summary",
-            memo,
+            project,
             "total_sotl_test_results.csv"))
 
 
@@ -380,9 +380,9 @@ if __name__ == "__main__":
     args = parse.parse_args()
 
     if args.type == "meta_test":
-        summary_meta_test(memo)
+        summary_meta_test(project)
     elif args.type == "sotl":
-        summary_sotl(memo)
+        summary_sotl(project)
     elif args.type == "meta_train":
         summary_meta_train(
             'records/meta_train/_08_05_12_05_18_FRAPPlus/meta_round',

@@ -180,7 +180,6 @@ class Intersection:
         dic_reward["sum_lane_wait_time"] = None
         dic_reward["sum_lane_num_vehicle_left"] = None
         dic_reward["sum_duration_vehicle_left"] = None
-        dic_reward["sum_stop_vehicle_thres01"] = None
         dic_reward["sum_stop_vehicle_thres1"] = \
             np.sum(self.dic_feature["stop_vehicle_thres1"])
         reward = 0

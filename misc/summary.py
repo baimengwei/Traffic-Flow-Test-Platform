@@ -224,17 +224,17 @@ def main(records_dir):
         "min_duration2": []
     }
 
-    # summary_detail_train(memo, copy.deepcopy(total_summary))
+    # summary_detail_train(project, copy.deepcopy(total_summary))
     summary_detail_test(records_dir, copy.deepcopy(dict_summary))
-    # summary_detail_test_segments(memo, copy.deepcopy(total_summary))
+    # summary_detail_test_segments(project, copy.deepcopy(total_summary))
 
 
-def summary_detail_train(memo, total_summary):
+def summary_detail_train(project, total_summary):
     # each_round_train_duration
 
     performance_duration = {}
     performance_at_min_duration_round = {}
-    records_dir = os.path.join("records", memo)
+    records_dir = os.path.join("records", project)
     for traffic_file in os.listdir(records_dir):
         if ".xml" not in traffic_file and ".json" not in traffic_file:
             continue
@@ -377,7 +377,7 @@ def summary_detail_train(memo, total_summary):
                 duration_each_round_list.append(NAN_LABEL)
                 queue_length_each_round_list.append(NAN_LABEL)
 
-        result_dir = os.path.join("summary", memo, traffic_file)
+        result_dir = os.path.join("summary", project, traffic_file)
         if not os.path.exists(result_dir):
             os.makedirs(result_dir)
 
@@ -433,7 +433,7 @@ def summary_detail_train(memo, total_summary):
             performance_duration[traffic_name].append(
                 (duration_each_round_list, traffic_time))
 
-    figure_dir = os.path.join("summary", memo, "figures")
+    figure_dir = os.path.join("summary", project, "figures")
     if not os.path.exists(figure_dir):
         os.makedirs(figure_dir)
     if dic_exp_conf["EARLY_STOP"]:
@@ -444,7 +444,7 @@ def summary_detail_train(memo, total_summary):
     total_result.to_csv(
         os.path.join(
             "summary",
-            memo,
+            project,
             "total_train_results.csv"))
     performance_at_min_duration_round_plot(
         performance_at_min_duration_round,
@@ -583,7 +583,7 @@ def summary_detail_test(records_dir, dict_summary):
                 (duration_each_round_list, traffic_file))
 
     total_result = pd.DataFrame(dict_summary)
-    # total_result.to_csv(os.path.join("summary", memo,
+    # total_result.to_csv(os.path.join("summary", project,
     # "total_test_results.csv"))
     figure_dir = dic_path_conf["PATH_TO_FIGURE"]
 
@@ -600,7 +600,7 @@ def summary_detail_test(records_dir, dict_summary):
     #     mode_name="test")
 
 
-def summary_detail_baseline(memo):
+def summary_detail_baseline(project):
     # each_round_train_duration
     total_summary = {
         "traffic": [],
@@ -610,7 +610,7 @@ def summary_detail_baseline(memo):
         "min_duration_round": []
     }
 
-    records_dir = os.path.join("records", memo)
+    records_dir = os.path.join("records", project)
     for traffic_file in os.listdir(records_dir):
         if ".xml" not in traffic_file and ".json" not in traffic_file:
             continue
@@ -670,7 +670,7 @@ def summary_detail_baseline(memo):
         queue_length_each_round_list.append(ql)
 
         # result_dir = os.path.join(records_dir, traffic_file)
-        result_dir = os.path.join("summary", memo, traffic_file)
+        result_dir = os.path.join("summary", project, traffic_file)
         if not os.path.exists(result_dir):
             os.makedirs(result_dir)
         _res = {
@@ -691,7 +691,7 @@ def summary_detail_baseline(memo):
     total_result.to_csv(
         os.path.join(
             "summary",
-            memo,
+            project,
             "total_baseline_test_results.csv"))
 
 
@@ -723,10 +723,10 @@ if __name__ == "__main__":
         "min_duration2": []
     }
 
-    memo = "TransferDQN"
-    # summary_detail_train(memo, copy.deepcopy(dict_summary))
-    # summary_detail_test(memo, copy.deepcopy(dict_summary))
-    # summary_detail_baseline(memo)
-    # summary_detail_test_segments(memo, copy.deepcopy(dict_summary))
+    project = "TransferDQN"
+    # summary_detail_train(project, copy.deepcopy(dict_summary))
+    # summary_detail_test(project, copy.deepcopy(dict_summary))
+    # summary_detail_baseline(project)
+    # summary_detail_test_segments(project, copy.deepcopy(dict_summary))
     summary_reward(
         'records/workspace/FRAPPlus_Min/_08_26_10_49_19_FRAPPlus/test_round/')

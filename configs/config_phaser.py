@@ -55,19 +55,19 @@ def update_path_basic(dic_conf, algorithm):
     """
     _time = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(time.time()))
     _time = _time + "_No" + str(random.random()) + "_"
-    inner_memo = "_" + _time + algorithm
+    inner_project = "_" + _time + algorithm
 
     dic_conf.update({
         "PATH_TO_MODEL":
-            os.path.join(dic_conf["PATH_TO_MODEL_ROOT"], inner_memo),
+            os.path.join(dic_conf["PATH_TO_MODEL_ROOT"], inner_project),
         "PATH_TO_WORK":
-            os.path.join(dic_conf["PATH_TO_WORK_ROOT"], inner_memo),
+            os.path.join(dic_conf["PATH_TO_WORK_ROOT"], inner_project),
         "PATH_TO_GRADIENT":
-            os.path.join(dic_conf["PATH_TO_GRADIENT_ROOT"], inner_memo),
+            os.path.join(dic_conf["PATH_TO_GRADIENT_ROOT"], inner_project),
         "PATH_TO_ERROR":
-            os.path.join(dic_conf["PATH_TO_ERROR_ROOT"], inner_memo),
+            os.path.join(dic_conf["PATH_TO_ERROR_ROOT"], inner_project),
         "PATH_TO_FIGURE":
-            os.path.join(dic_conf["PATH_TO_FIGURE_ROOT"], inner_memo),
+            os.path.join(dic_conf["PATH_TO_FIGURE_ROOT"], inner_project),
     })
     return dic_conf
 
@@ -115,11 +115,11 @@ def config_all(args):
     """
     # -------------------------------------------------------------------------
     dic_path_origin = {
-        "PATH_TO_MODEL_ROOT": "./records/weights/" + args.memo,
-        "PATH_TO_WORK_ROOT": "./records/workspace/" + args.memo,
-        "PATH_TO_ERROR_ROOT": "./records/errors/" + args.memo,
-        "PATH_TO_GRADIENT_ROOT": "./records/gradient/" + args.memo,
-        "PATH_TO_FIGURE_ROOT": "./records/figures/" + args.memo,
+        "PATH_TO_MODEL_ROOT": "./records/weights/" + args.project,
+        "PATH_TO_WORK_ROOT": "./records/workspace/" + args.project,
+        "PATH_TO_ERROR_ROOT": "./records/errors/" + args.project,
+        "PATH_TO_GRADIENT_ROOT": "./records/gradient/" + args.project,
+        "PATH_TO_FIGURE_ROOT": "./records/figures/" + args.project,
         "PATH_TO_DATA_ROOT": "./data/scenario/",
 
         "PATH_TO_MODEL": None,
@@ -203,7 +203,7 @@ def config_all(args):
 def parse():
     parser = argparse.ArgumentParser(description='RLSignal')
     # ------------------------------path.conf----------------------------------
-    parser.add_argument("--memo", type=str, default="memo_name")
+    parser.add_argument("--project", type=str, default="project_name")
     # ------------------------------exp.conf-----------------------------------
     parser.add_argument("--algorithm", type=str, default="MetaLight")
     parser.add_argument("--train_round", type=int, default=200,

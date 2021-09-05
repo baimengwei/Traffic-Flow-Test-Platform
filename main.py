@@ -6,7 +6,7 @@ def run_metalight():
     args = parse()
     print('start execute...')
     args.algorithm = 'MetaLight'
-    args.memo = 'MetaLight_XXGX'
+    args.project = 'MetaLight_XXGX'
     main(args)
 
 
@@ -15,7 +15,7 @@ def run_frapplus():
     args = parse()
     print('start execute frapplus...')
     args.algorithm = 'FRAPPlus'
-    args.memo = 'FRAPPlus_Min'
+    args.project = 'FRAPPlus_Min'
     main(args)
 
 
@@ -24,7 +24,7 @@ def run_frap():
     args = parse()
     print('start execute frap...')
     args.algorithm = 'FRAP'
-    args.memo = 'FRAP_MMM'
+    args.project = 'FRAP_MMM'
     main(args)
 
 
@@ -34,7 +34,7 @@ def run_frap():
 #     args = parse()
 #     print('start execute fraprq...')
 #     args.algorithm = 'FRAPRQ'
-#     args.memo = 'FRAP_RQ_T'
+#     args.project = 'FRAP_RQ_T'
 #     main(args)
 
 def run_dqn():
@@ -42,7 +42,7 @@ def run_dqn():
     args = parse()
     print('start execute dqn...')
     args.algorithm = "DQN"
-    args.memo = "DQN_C"
+    args.project = "DQN_C"
     main(args)
 
 
@@ -51,7 +51,7 @@ def run_sotl():
     args = parse()
     print('start execute sotl...')
     args.algorithm = "SOTL"
-    args.memo = "SOTL_AA"
+    args.project = "SOTL_AA"
     main(args)
 
 
@@ -60,7 +60,7 @@ def run_tddd():
     args = parse()
     print('start execute tddd')
     args.algorithm = "TDDD"
-    args.memo = "TDDD_ASD"
+    args.project = "TDDD_ASD"
     main(args)
 
 
@@ -69,7 +69,16 @@ def run_drqn():
     args = parse()
     print('start execute drqn')
     args.algorithm = "DRQN"
-    args.memo = "DRQN_PJ"
+    args.project = "DRQN_PJ"
+    main(args)
+
+
+def run_fraprq():
+    from algs.FRAPRQ.fraprq_train import main
+    args = parse()
+    print('start execute fraprq')
+    args.algorithm = "FRAPRQ"
+    args.project = "FRAPRQ_MSP"
     main(args)
 
 
@@ -78,7 +87,7 @@ def run_webster():
     args = parse()
     print('start execute webster..')
     args.algorithm = "WEBSTER"
-    args.memo = "WEBSTER_OZ"
+    args.project = "WEBSTER_OZ"
     main(args)
 
 
@@ -87,16 +96,18 @@ def run_fixtime():
     args = parse()
     print('start execute fixtime..')
     args.algorithm = "FIXTIME"
-    args.memo = "FIXTIME_AS"
+    args.project = "FIXTIME_AS"
     main(args)
+
 
 def run_maxpressure():
     from algs.MAXPRESSURE.maxpressure_train import main
     args = parse()
     print("start execute maxpressure.")
     args.algorithm = "MAXPRESSURE"
-    args.memo = "MAXPRESSURE_N"
+    args.project = "MAXPRESSURE_N"
     main(args)
+
 
 if __name__ == '__main__':
     # run_metalight()
@@ -108,4 +119,5 @@ if __name__ == '__main__':
     # run_drqn()
     # run_webster()
     # run_fixtime()
-    run_maxpressure()
+    # run_maxpressure()
+    run_fraprq()

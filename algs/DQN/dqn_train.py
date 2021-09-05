@@ -37,7 +37,8 @@ def main(args):
                 len(traffic_file_list_surplus) == 0:
             for p in list_pipeline:
                 p.join()
-        list_pipeline = []
+            print("join pipeline execute finished..")
+            list_pipeline = []
 
 
 if __name__ == "__main__":

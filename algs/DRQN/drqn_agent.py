@@ -61,7 +61,7 @@ class DRQN(nn.Module):
         self.activate_linear_combine = torch.nn.ReLU()
         self.linear_final = torch.nn.Linear(100, self.action_dim)
 
-        self.rnn_layer = Context(self.dic_traffic_env_conf, dic_agent_conf)
+        self.rnn_layer = Context(self.dic_traffic_env_conf, self.dic_agent_conf)
 
     def forward(self, feature_input, history_input):
         history_output = self.rnn_layer(history_input)
@@ -209,5 +209,3 @@ class DRQNAgent(Agent):
                     raise ValueError(length_cnt, " vs ", len(self.list_history))
                 with open(file_name, "wb") as f:
                     pickle.dump(logging_data, f)
-
-

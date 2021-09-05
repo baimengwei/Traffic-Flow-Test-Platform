@@ -3,6 +3,7 @@ from algs.DRQN.drqn_agent import DRQNAgent
 from algs.FIXTIME.fixtime_agent import FIXTIMEAgent
 from algs.FRAP.frap_agent import FRAPAgent
 from algs.FRAPPlus.frapplus_agent import FRAPPlusAgent
+from algs.FRAPRQ.fraprq_agent import FRAPRQAgent
 from algs.MAXPRESSURE.maxpressure_agent import MAXPRESSUREAgent
 from algs.TDDD.tddd_agent import TDDDAgent
 from algs.MetaLight.metalight_agent import MetaLightAgent
@@ -40,7 +41,6 @@ LIST_STATE_FEATURE = [
     "vehicle_waiting_time_img",
     "lane_num_vehicle",
     "stop_vehicle_thres1",
-    "stop_vehicle_thres01",
     "lane_queue_length",
     "lane_num_vehicle_left",
     "lane_sum_duration_vehicle_left",
@@ -54,7 +54,6 @@ DIC_REWARD_INFO = {
     "sum_lane_wait_time": 0,
     "sum_lane_num_vehicle_left": 0,
     "sum_duration_vehicle_left": 0,
-    "sum_stop_vehicle_thres01": 0,
     "sum_stop_vehicle_thres1": -0.25
 }
 
@@ -190,7 +189,21 @@ DIC_AGENT_CONF_FRAP = {
     "MIN_EPSILON": 0.2,
     "NORMAL_FACTOR": 20,
 }
-
+DIC_AGENT_CONF_FRAPRQ = {
+    "LR": 0.001,
+    "SAMPLE_SIZE": 1000,
+    "BATCH_SIZE": 32,
+    "EPOCHS": 100,
+    "UPDATE_Q_BAR_FREQ": 5,
+    "GAMMA": 0.8,
+    "MAX_MEMORY_LEN": 10000,
+    "EPSILON": 0.8,
+    "EPSILON_DECAY": 0.95,
+    "MIN_EPSILON": 0.2,
+    "NORMAL_FACTOR": 20,
+    "HIDDEN_DIM": 5,
+    "HISTORY_LEN": 20,
+}
 DIC_AGENT_CONF_DQN = {
     "LR": 0.001,
     "LR_DECAY": 1,
@@ -222,6 +235,7 @@ DIC_AGENTS = {
     "WEBSTER": WEBSTERAgent,
     "FIXTIME": FIXTIMEAgent,
     "MAXPRESSURE": MAXPRESSUREAgent,
+    "FRAPRQ": FRAPRQAgent,
 }
 RL_ALGORITHM = [
     "MetaLight",
@@ -230,6 +244,7 @@ RL_ALGORITHM = [
     "FRAP",
     "TDDD",
     "DRQN",
+    "FRAPRQ",
 ]
 TRAD_ALGORITHM = [
     "SOTL",

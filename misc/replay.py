@@ -10,7 +10,7 @@ from configs.config_constant import DIC_AGENTS, DIC_ENVS
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--memo", type=str, default="default")
+    parser.add_argument("--project", type=str, default="default")
     parser.add_argument("--round", type=int, default=0)
     return parser.parse_args()
 
@@ -105,10 +105,10 @@ def run_wrapper(dir, one_round, run_cnt, if_gui):
     return
 
 
-def main(memo=None):
+def main(project=None):
     # run name
-    if not memo:
-        memo = "learning_rate/anon_2_phase_done"
+    if not project:
+        project = "learning_rate/anon_2_phase_done"
 
     # args = parse_args()
 
@@ -135,21 +135,21 @@ def main(memo=None):
     multi_process = True
     n_workers = 100
     process_list = []
-    for traffic in os.listdir("records/" + memo):
+    for traffic in os.listdir("records/" + project):
         print(traffic)
         if not ".xml" in traffic and not ".json" in traffic:
             continue
 
         if traffic != "flow_1_1_700.json_01_06_02_45_01_10":
             continue
-        test_round_dir = os.path.join("records", memo, traffic, "test_round")
+        test_round_dir = os.path.join("records", project, traffic, "test_round")
         if os.path.exists(test_round_dir):
             print("exist")
             # continue
         # if traffic[0:-15] not in given_traffic_list:
         #    continue
 
-        work_dir = os.path.join(memo, traffic)
+        work_dir = os.path.join(project, traffic)
 
         if given_round_list:
             for one_round in given_round_list:
@@ -161,7 +161,7 @@ def main(memo=None):
                 else:
                     run_wrapper(work_dir, _round, run_cnt, if_gui)
         else:
-            train_round_dir = os.path.join("records", memo, traffic,
+            train_round_dir = os.path.join("records", project, traffic,
                                            "train_round")
             for one_round in os.listdir(train_round_dir):
                 if "round" not in one_round:
