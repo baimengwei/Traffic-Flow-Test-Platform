@@ -118,6 +118,7 @@ class FRAPPlusAgent(Agent):
                  dic_path, round_number):
         super().__init__(dic_agent_conf, dic_traffic_env_conf, dic_path,
                          round_number)
+        self.decay_epsilon(self.round_number)
 
         if self.round_number == 0:
             self.build_network()
@@ -133,7 +134,7 @@ class FRAPPlusAgent(Agent):
         self.lossfunc = torch.nn.MSELoss()
         self.optimizer = \
             torch.optim.Adam(self.model.parameters(),
-                             lr=self.dic_agent_conf["LEARNING_RATE"])
+                             lr=self.dic_agent_conf["LR"])
 
     def build_network_bar(self):
         self.model_target = FRAPPlus(self.dic_traffic_env_conf)
@@ -206,9 +207,9 @@ class FRAPPlusAgent(Agent):
     def choose_action(self, state, choice_random=True):
         """
         """
-        inputs = self.convert_state_to_input(state)
-        inputs = torch.Tensor(inputs).flatten().unsqueeze(0)
-        q_values = self.model.forward(inputs)
+        input = self.convert_state_to_input(state)
+        input = torch.Tensor(input).flatten().unsqueeze(0)
+        q_values = self.model.forward(input)
         if random.random() <= self.dic_agent_conf["EPSILON"] \
                 and choice_random:
             actions = random.randrange(len(q_values[0]))
@@ -217,12 +218,12 @@ class FRAPPlusAgent(Agent):
         return actions
 
     def convert_state_to_input(self, s):
-        inputs = []
+        input = []
         dic_phase_expansion = self.dic_traffic_env_conf[
             "LANE_PHASE_INFO"]['phase_map']
         for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
             if feature == "cur_phase":
-                inputs.append(np.array([dic_phase_expansion[s[feature][0]]]))
+                input.append(np.array([dic_phase_expansion[s[feature][0]]]))
             else:
-                inputs.append(np.array([s[feature]]))
-        return inputs
+                input.append(np.array([s[feature]]))
+        return input

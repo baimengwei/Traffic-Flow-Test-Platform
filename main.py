@@ -55,9 +55,57 @@ def run_sotl():
     main(args)
 
 
+def run_tddd():
+    from algs.TDDD.tddd_train import main
+    args = parse()
+    print('start execute tddd')
+    args.algorithm = "TDDD"
+    args.memo = "TDDD_ASD"
+    main(args)
+
+
+def run_drqn():
+    from algs.DRQN.drqn_train import main
+    args = parse()
+    print('start execute drqn')
+    args.algorithm = "DRQN"
+    args.memo = "DRQN_PJ"
+    main(args)
+
+
+def run_webster():
+    from algs.WEBSTER.webster_train import main
+    args = parse()
+    print('start execute webster..')
+    args.algorithm = "WEBSTER"
+    args.memo = "WEBSTER_OZ"
+    main(args)
+
+
+def run_fixtime():
+    from algs.FIXTIME.fixtime_train import main
+    args = parse()
+    print('start execute fixtime..')
+    args.algorithm = "FIXTIME"
+    args.memo = "FIXTIME_AS"
+    main(args)
+
+def run_maxpressure():
+    from algs.MAXPRESSURE.maxpressure_train import main
+    args = parse()
+    print("start execute maxpressure.")
+    args.algorithm = "MAXPRESSURE"
+    args.memo = "MAXPRESSURE_N"
+    main(args)
+
 if __name__ == '__main__':
     # run_metalight()
-    run_frap()
+    # run_frap()
     # run_frapplus()
     # run_dqn()
     # run_sotl()
+    # run_tddd()
+    # run_drqn()
+    # run_webster()
+    # run_fixtime()
+    run_maxpressure()

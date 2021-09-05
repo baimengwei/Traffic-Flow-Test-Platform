@@ -16,6 +16,7 @@ class MetaLightAgent(Agent):
         """
         super().__init__(dic_agent_conf, dic_traffic_env_conf, dic_path,
                          round_number)
+        self.decay_epsilon(self.round_number)
         self.mode = mode
         if self.round_number == 0 and self.mode == 'meta':
             self.build_network()
@@ -36,7 +37,7 @@ class MetaLightAgent(Agent):
         self.lossfunc_meta = torch.nn.MSELoss()
         self.optimizer_meta = \
             torch.optim.Adam(self.model_meta.parameters(),
-                             lr=self.dic_agent_conf["LEARNING_RATE"])
+                             lr=self.dic_agent_conf["LR"])
 
     def build_network_bar(self):
         pass
@@ -44,9 +45,9 @@ class MetaLightAgent(Agent):
     def choose_action(self, state, choice_random=True):
         """used for each task
         """
-        inputs = self.convert_state_to_input(state)
-        inputs = torch.Tensor(inputs).flatten().unsqueeze(0)
-        q_values = self.model.forward(inputs)
+        input = self.convert_state_to_input(state)
+        input = torch.Tensor(input).flatten().unsqueeze(0)
+        q_values = self.model.forward(input)
         if random.random() <= self.dic_agent_conf["EPSILON"] \
                 and choice_random:
             actions = random.randrange(len(q_values[0]))
@@ -57,15 +58,15 @@ class MetaLightAgent(Agent):
     def convert_state_to_input(self, s):
         """used for each task
         """
-        inputs = []
+        input = []
         dic_phase_expansion = self.dic_traffic_env_conf[
             "LANE_PHASE_INFO"]['phase_map']
         for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
             if feature == "cur_phase":
-                inputs.append(np.array([dic_phase_expansion[s[feature][0]]]))
+                input.append(np.array([dic_phase_expansion[s[feature][0]]]))
             else:
-                inputs.append(np.array([s[feature]]))
-        return inputs
+                input.append(np.array([s[feature]]))
+        return input
 
     def load_network(self, file_name):
         """ used for each task

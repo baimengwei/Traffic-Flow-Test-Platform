@@ -1,8 +1,3 @@
-import copy
-import pickle
-import random
-import numpy as np
-
 from configs.config_phaser import *
 
 
@@ -23,10 +18,6 @@ class Comparator:
             dic_path=self.dic_path,
             round_number=self.round_number,
             mode='meta')
-
-        self.env_name = self.dic_traffic_env_conf["ENV_NAME"]
-        self.env = DIC_ENVS[self.env_name](self.dic_path,
-                                           self.dic_traffic_env_conf)
 
     def generate_compare(self):
         self.list_samples = []
@@ -67,29 +58,14 @@ class Comparator:
                 round_number=self.dic_exp_conf["TASK_ROUND"] - 1,
                 mode='task')
             sample_set = self.list_samples[idx]
-            Xs, Y = agent_task.prepare_Xs_Y_meta(sample_set)
+            sample_size = min(self.dic_agent_conf["SAMPLE_SIZE"],
+                              len(sample_set))
+            sample_set_target = random.sample(sample_set, sample_size)
+            Xs, Y = agent_task.prepare_Xs_Y_meta(sample_set_target)
             self.list_targets += zip(Xs, Y)
 
     def update_meta_agent(self):
-        for i in range(len(self.traffic_tasks)):
-            self.forget_targets()
-            self.slice_targets()
-            self.list_targets_slice = np.array(self.list_targets_slice)
-            self.meta_agent.train_network_meta(self.list_targets_slice)
+        self.meta_agent.train_network_meta(np.array(self.list_targets))
 
     def save_meta_agent(self):
         self.meta_agent.save_network_meta('round_%d' % self.round_number)
-
-    def forget_targets(self):
-        ind_end = len(self.list_targets)
-        print("memory size before forget: {0}".format(ind_end))
-        ind_sta = max(0, ind_end - self.dic_agent_conf["MAX_MEMORY_LEN"])
-        self.list_targets_forget = self.list_targets[ind_sta: ind_end]
-        print("memory size after forget:", len(self.list_targets_forget))
-
-    def slice_targets(self):
-        sample_size = min(self.dic_agent_conf["SAMPLE_SIZE"],
-                          len(self.list_targets_forget))
-        self.list_targets_slice = \
-            random.sample(self.list_targets_forget, sample_size)
-        print("memory samples number:", sample_size)

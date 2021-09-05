@@ -1,14 +1,51 @@
 from multiprocessing import Process
-from misc.construct_sample import ConstructSample
+from common.construct_sample import ConstructSample
 from common.generator import Generator
 from common.updater import Updater
 from configs.config_phaser import *
+
+
+def generator_wrapper(round_number, dic_path, dic_exp_conf,
+                      dic_agent_conf, dic_traffic_env_conf):
+    generator = Generator(round_number=round_number,
+                          dic_path=dic_path,
+                          dic_exp_conf=dic_exp_conf,
+                          dic_agent_conf=dic_agent_conf,
+                          dic_traffic_env_conf=dic_traffic_env_conf)
+    generator.generate()
+
+
+def updater_wrapper(round_number, dic_agent_conf,
+                    dic_exp_conf, dic_traffic_env_conf,
+                    dic_path):
+    updater = Updater(
+        round_number=round_number,
+        dic_agent_conf=dic_agent_conf,
+        dic_exp_conf=dic_exp_conf,
+        dic_traffic_env_conf=dic_traffic_env_conf,
+        dic_path=dic_path
+    )
+    updater.load_sample()
+    updater.forget_sample()
+    updater.slice_sample()
+    updater.update_network()
+
+
+def test_eval(round_number, dic_path, dic_exp_conf, dic_agent_conf,
+              dic_traffic_env_conf):
+    generator = Generator(round_number=round_number,
+                          dic_path=dic_path,
+                          dic_exp_conf=dic_exp_conf,
+                          dic_agent_conf=dic_agent_conf,
+                          dic_traffic_env_conf=dic_traffic_env_conf)
+    generator.generate_test()
 
 
 class RoundLearner:
     """used for FRAP, FRAPPlus, DQN etc.
 
     """
+
     def __init__(self, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                  dic_path, round_number):
         self.dic_exp_conf = dic_exp_conf
@@ -20,24 +57,14 @@ class RoundLearner:
         pass
 
     def learn_round(self):
-        self.round_generate_step()
+        self.round_generate_step(generator_wrapper)
         self.round_make_samples()
-        self.round_update_network()
-        self.round_test_eval()
+        self.round_update_network(updater_wrapper)
+        self.round_test_eval(test_eval)
         pass
 
-    def round_generate_step(self):
-        def generator_wrapper(round_number, dic_path, dic_exp_conf,
-                              dic_agent_conf, dic_traffic_env_conf):
-            generator = Generator(round_number=round_number,
-                                  dic_path=dic_path,
-                                  dic_exp_conf=dic_exp_conf,
-                                  dic_agent_conf=dic_agent_conf,
-                                  dic_traffic_env_conf=dic_traffic_env_conf)
-            generator.generate()
-
+    def round_generate_step(self, callback_func):
         process_list = []
-
         for generate_number in range(self.dic_exp_conf["NUM_GENERATORS"]):
             work_dir = os.path.join(self.dic_path["PATH_TO_WORK"],
                                     "samples", "round_%d" % self.round_number,
@@ -45,7 +72,7 @@ class RoundLearner:
             dic_path = update_path_work(self.dic_path, work_dir)
             create_path_dir(dic_path)
             # -----------------------------------------------------
-            p = Process(target=generator_wrapper,
+            p = Process(target=callback_func,
                         args=(self.round_number, dic_path, self.dic_exp_conf,
                               self.dic_agent_conf, self.dic_traffic_env_conf))
             p.start()
@@ -64,23 +91,8 @@ class RoundLearner:
             dic_traffic_env_conf=self.dic_traffic_env_conf)
         cs.make_reward()
 
-    def round_update_network(self):
-        def updater_wrapper(round_number, dic_agent_conf,
-                            dic_exp_conf, dic_traffic_env_conf,
-                            dic_path):
-            updater = Updater(
-                round_number=round_number,
-                dic_agent_conf=dic_agent_conf,
-                dic_exp_conf=dic_exp_conf,
-                dic_traffic_env_conf=dic_traffic_env_conf,
-                dic_path=dic_path
-            )
-            updater.load_sample()
-            updater.forget_sample()
-            updater.slice_sample()
-            updater.update_network()
-
-        p = Process(target=updater_wrapper,
+    def round_update_network(self, callback_func):
+        p = Process(target=callback_func,
                     args=(self.round_number,
                           self.dic_agent_conf,
                           self.dic_exp_conf,
@@ -101,15 +113,7 @@ class RoundLearner:
                 )
                 downsample(path_to_log_file)
 
-    def round_test_eval(self):
-        def test_eval(round_number, dic_path, dic_exp_conf, dic_agent_conf,
-                      dic_traffic_env_conf):
-            generator = Generator(round_number=round_number,
-                                  dic_path=dic_path,
-                                  dic_exp_conf=dic_exp_conf,
-                                  dic_agent_conf=dic_agent_conf,
-                                  dic_traffic_env_conf=dic_traffic_env_conf)
-            generator.generate_test()
+    def round_test_eval(self, callback_func):
 
         path_to_log = os.path.join(self.dic_path["PATH_TO_WORK"],
                                    "test_round",
@@ -117,7 +121,7 @@ class RoundLearner:
         dic_path = update_path_work(self.dic_path, path_to_log)
         create_path_dir(dic_path)
 
-        p = Process(target=test_eval,
+        p = Process(target=callback_func,
                     args=(self.round_number,
                           dic_path,
                           self.dic_exp_conf,

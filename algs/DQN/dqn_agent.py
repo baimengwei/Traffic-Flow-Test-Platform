@@ -12,7 +12,7 @@ class DQN(nn.Module):
     def __init__(self, dic_traffic_env_conf):
         super().__init__()
         self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.line_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
+        self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
 
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
         phase_dim = dim_feature['cur_phase'][0]
@@ -42,6 +42,7 @@ class DQNAgent(Agent):
                  dic_path, round_number):
         super().__init__(dic_agent_conf, dic_traffic_env_conf, dic_path,
                          round_number)
+        self.decay_epsilon(self.round_number)
 
         if self.round_number == 0:
             self.build_network()
@@ -55,9 +56,8 @@ class DQNAgent(Agent):
     def build_network(self):
         self.model = DQN(self.dic_traffic_env_conf)
         self.lossfunc = torch.nn.MSELoss()
-        self.optimizer = \
-            torch.optim.Adam(self.model.parameters(),
-                             lr=self.dic_agent_conf["LEARNING_RATE"])
+        self.optimizer = torch.optim.Adam(self.model.parameters(),
+                                          lr=self.dic_agent_conf["LR"])
 
     def build_network_bar(self):
         self.model_target = DQN(self.dic_traffic_env_conf)
@@ -67,12 +67,9 @@ class DQNAgent(Agent):
         file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
                                  file_name + '.pt')
         ckpt = torch.load(file_path)
-        self.model = DQN(self.dic_traffic_env_conf)
+        self.build_network()
         self.model.load_state_dict(ckpt['state_dict'])
-
-        self.optimizer = torch.optim.Adam(self.model.parameters())
         self.optimizer.load_state_dict(ckpt['optimizer'])
-        self.lossfunc = torch.nn.MSELoss()
         self.lossfunc.load_state_dict(ckpt['lossfunc'])
 
     def load_network_bar(self, file_name):
@@ -83,9 +80,9 @@ class DQNAgent(Agent):
         self.model_target.load_state_dict((ckpt['state_dict']))
 
     def choose_action(self, state, choice_random=True):
-        inputs = self.convert_state_to_input(state)
-        inputs = torch.Tensor(inputs).flatten().unsqueeze(0)
-        q_values = self.model.forward(inputs)
+        input = self.convert_state_to_input(state)
+        input = torch.Tensor(input).flatten().unsqueeze(0)
+        q_values = self.model.forward(input)
         if random.random() <= self.dic_agent_conf["EPSILON"] \
                 and choice_random:
             actions = random.randrange(len(q_values[0]))
@@ -94,22 +91,21 @@ class DQNAgent(Agent):
         return actions
 
     def convert_state_to_input(self, s):
-        inputs = []
+        input = []
         dic_phase_expansion = self.dic_traffic_env_conf[
             "LANE_PHASE_INFO"]['phase_map']
         for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
             if feature == "cur_phase":
-                inputs.append(np.array([dic_phase_expansion[s[feature][0]]]))
+                input.append(np.array([dic_phase_expansion[s[feature][0]]]))
             else:
-                inputs.append(np.array([s[feature]]))
-        return inputs
+                input.append(np.array([s[feature]]))
+        return input
 
     def prepare_Xs_Y(self, sample_set):
         state = []
         action = []
         next_state = []
         reward_avg = []
-        # TODO temp use, need to modify
         for each in sample_set:
             state.append(each[0]['cur_phase'] + each[0]['lane_num_vehicle'])
             action.append(each[1])

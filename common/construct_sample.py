@@ -4,7 +4,6 @@ import os
 from misc.utils import set_seed
 
 class ConstructSample:
-
     def __init__(self, path_to_samples, round_number, dic_traffic_env_conf):
 
         self.path_to_samples = path_to_samples
@@ -85,10 +84,13 @@ class ConstructSample:
         return r_instant, r_average
 
     def judge_action(self, time):
-        if self.logging_data[time]['action'] == -1:
-            raise ValueError
+        action = self.logging_data[time]['action']
+        if isinstance(action, np.ndarray) and len(action) > 1:
+            return action
+        elif action != -1:
+            return action
         else:
-            return self.logging_data[time]['action']
+            raise ValueError("sample action is a invalid value.")
 
     def make_reward(self):
         self.samples = []

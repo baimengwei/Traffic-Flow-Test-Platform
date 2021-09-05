@@ -1,8 +1,4 @@
-import copy
-from multiprocessing import Lock
-
 from configs.config_constant import *
-from configs.config_constant_traffic import *
 import time
 from configs import config_constant
 import argparse
@@ -20,6 +16,8 @@ def update_traffic_env_feature(dic_conf, algorithm):
             "cur_phase",
             "lane_num_vehicle",
             "stop_vehicle_thres1",
+            "time_this_phase",
+            "lane_num_vehicle_left",
         ]
     else:
         raise ValueError
@@ -144,6 +142,7 @@ def config_all(args):
         "MODEL_NAME": args.algorithm,
         "TRAIN_ROUND": args.train_round,
         "TASK_ROUND": args.task_round,
+        "TASK_COUNT": args.num_task,
         "ADAPT_ROUND": args.adapt_round,
         "NUM_GENERATORS": args.num_generators,
         "PIPELINE": args.pipeline,
@@ -191,7 +190,7 @@ def config_all(args):
     # dic_traffic_env_origin = \
     #     update_traffic_env_info(dic_traffic_env_origin, 'inter_name')
     # dic_traffic_env_origin = \
-    #     update_traffic_env_info(dic_traffic_env_origin, 'train_all')
+    #     update_traffic_env_tasks(dic_traffic_env_origin, 'train_all')
 
     dic_agent_origin = \
         getattr(config_constant, "DIC_AGENT_CONF_%s" %
@@ -207,11 +206,16 @@ def parse():
     parser.add_argument("--memo", type=str, default="memo_name")
     # ------------------------------exp.conf-----------------------------------
     parser.add_argument("--algorithm", type=str, default="MetaLight")
-    parser.add_argument("--train_round", type=int, default=200)
-    parser.add_argument("--task_round", type=int, default=2)
-    parser.add_argument("--adapt_round", type=int, default=2)
+    parser.add_argument("--train_round", type=int, default=200,
+                        help="for train process")
+    parser.add_argument("--task_round", type=int, default=20,
+                        help="for metalight train process")
+    parser.add_argument("--num_task", type=int, default=3,
+                        help="for metalight train process")
+    parser.add_argument("--adapt_round", type=int, default=50,
+                        help="for metalight valid test")
     parser.add_argument("--num_generators", type=int, default=3)
-    parser.add_argument("--pipeline", type=int, default=4)
+    parser.add_argument("--pipeline", type=int, default=3)
     parser.add_argument("--exp_debug", action="store_true")
     parser.add_argument("--seed", type=int, default=11)
     # -----------------------------traffic_env.conf---------------------------

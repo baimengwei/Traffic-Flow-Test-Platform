@@ -1,4 +1,4 @@
-class SOTLAgent():
+class SOTLAgent:
     def __init__(self, dic_agent_conf, dic_traffic_env_conf,
                  dic_path, round_number):
 

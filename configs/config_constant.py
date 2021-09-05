@@ -1,8 +1,13 @@
 from algs.DQN.dqn_agent import DQNAgent
+from algs.DRQN.drqn_agent import DRQNAgent
+from algs.FIXTIME.fixtime_agent import FIXTIMEAgent
 from algs.FRAP.frap_agent import FRAPAgent
 from algs.FRAPPlus.frapplus_agent import FRAPPlusAgent
+from algs.MAXPRESSURE.maxpressure_agent import MAXPRESSUREAgent
+from algs.TDDD.tddd_agent import TDDDAgent
 from algs.MetaLight.metalight_agent import MetaLightAgent
 from algs.SOTL.sotl_agent import SOTLAgent
+from algs.WEBSTER.webster_agent import WEBSTERAgent
 from envs.anon_env import AnonEnv
 
 # from envs.sumo_env import SumoEnv
@@ -59,8 +64,82 @@ DIC_AGENT_CONF_SOTL = {
     "MU": 5,
 }
 
+DIC_AGENT_CONF_WEBSTER = {
+    "L_LANE": 3,
+    "K1": 1.5,
+    "K2": 5,
+    "Y_MAX": 1650,
+}
+DIC_AGENT_CONF_FIXTIME = {
+    "TIME_PHASE_0": 15,
+    "TIME_PHASE_1": 15,
+    "TIME_PHASE_2": 15,
+    "TIME_PHASE_3": 15,
+    "TIME_PHASE_4": 15,
+    "TIME_PHASE_5": 15,
+    "TIME_PHASE_6": 15,
+    "TIME_PHASE_7": 15,
+}
+DIC_AGENT_CONF_MAXPRESSURE = {
+    "G_MIN": 5,
+}
+DIC_AGENT_CONF_TDDD = {
+    "LR": 0.001,
+    "LR_ACTOR" : 0.0001,
+    "SAMPLE_SIZE": 1000,
+    "BATCH_SIZE": 32,
+    "EPOCHS": 100,
+
+    "GAMMA": 0.8,
+    "MAX_MEMORY_LEN": 10000,
+
+    "NORMAL_FACTOR": 20,
+    "POLICY_FREQ": 2,
+    "TAU": 0.2,
+
+    "EXPL_NOISE": 0.2,
+    "EXPL_NOISE_END": 0.1,
+    "EXPL_NOISE_DECAY": 0.98,
+    "EXPL_NOISE_MIN": -0.1,
+    "EXPL_NOISE_MAX": 0.3,
+
+    "POLICY_NOISE": 0.05,
+    "POLICY_NOISE_MIN": 0,
+    "POLICY_NOISE_MAX": 0.5,
+
+    "ENABLE_CONTEXT": True,
+    "HISTORY_LENGTH": 20,
+    "HIDDEN_DIM": 10,
+    "BETA_CLIP": 1.5,
+    "ENABLE_ADAPT": True,
+}
+
+
+DIC_AGENT_CONF_DRQN = {
+    "LR": 0.001,
+    "LR_DECAY": 1,
+    "MIN_LR": 0.0001,
+    "SAMPLE_SIZE": 5000,
+    "BATCH_SIZE": 32,
+    "EPOCHS": 100,
+    "UPDATE_Q_BAR_FREQ": 5,
+    "UPDATE_Q_BAR_EVERY_C_ROUND": False,
+    "GAMMA": 0.8,
+    "MAX_MEMORY_LEN": 50000,
+    "PATIENCE": 10,
+    "D_DENSE": 20,
+    "N_LAYER": 2,
+    "EPSILON": 0.8,
+    "EPSILON_DECAY": 0.90,
+    "MIN_EPSILON": 0.2,
+    "NORMAL_FACTOR": 20,
+
+    "HISTORY_LEN": 20,
+    "HIDDEN_DIM": 10,
+}
+
 DIC_AGENT_CONF_METALIGHT = {
-    "LEARNING_RATE": 0.001,
+    "LR": 0.001,
     "ALPHA": 0.1,
     "MIN_ALPHA": 0.00025,
     "ALPHA_DECAY_RATE": 0.95,
@@ -83,11 +162,10 @@ DIC_AGENT_CONF_METALIGHT = {
     "MIN_EPSILON": 0.2,
     "NORMAL_FACTOR": 20,
     "EARLY_STOP": False,
-    "TASK_COUNT": 3,
 }
 
 DIC_AGENT_CONF_FRAPPLUS = {
-    "LEARNING_RATE": 0.001,
+    "LR": 0.001,
     "SAMPLE_SIZE": 1000,
     "BATCH_SIZE": 32,
     "EPOCHS": 100,
@@ -100,7 +178,7 @@ DIC_AGENT_CONF_FRAPPLUS = {
     "NORMAL_FACTOR": 20,
 }
 DIC_AGENT_CONF_FRAP = {
-    "LEARNING_RATE": 0.001,
+    "LR": 0.001,
     "SAMPLE_SIZE": 1000,
     "BATCH_SIZE": 32,
     "EPOCHS": 100,
@@ -114,7 +192,7 @@ DIC_AGENT_CONF_FRAP = {
 }
 
 DIC_AGENT_CONF_DQN = {
-    "LEARNING_RATE": 0.001,
+    "LR": 0.001,
     "LR_DECAY": 1,
     "MIN_LR": 0.0001,
     "SAMPLE_SIZE": 5000,
@@ -139,15 +217,25 @@ DIC_AGENTS = {
     "DQN": DQNAgent,
     "SOTL": SOTLAgent,
     "FRAP": FRAPAgent,
+    "TDDD": TDDDAgent,
+    "DRQN": DRQNAgent,
+    "WEBSTER": WEBSTERAgent,
+    "FIXTIME": FIXTIMEAgent,
+    "MAXPRESSURE": MAXPRESSUREAgent,
 }
 RL_ALGORITHM = [
     "MetaLight",
     "FRAPPlus",
     "DQN",
     "FRAP",
+    "TDDD",
+    "DRQN",
 ]
 TRAD_ALGORITHM = [
     "SOTL",
+    "WEBSTER",
+    "FIXTIME",
+    "MAXPRESSURE",
 ]
 DIC_ENVS = {
     # "sumo": SumoEnv,

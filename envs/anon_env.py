@@ -1,11 +1,6 @@
-import pickle
-import numpy as np
-import json
+from misc.utils import *
 import sys
-import os
 import engine
-from misc.utils import get_total_traffic_volume, get_vehicle_list, \
-    convert_dic_to_df
 
 
 class Intersection:
@@ -17,9 +12,9 @@ class Intersection:
         self.dic_traffic_env_conf["LANE_PHASE_INFO"] = \
             self.dic_traffic_env_conf["LANE_PHASE_INFOS"][self.inter_name]
         self.list_entering_lanes = \
-            dic_traffic_env_conf["LANE_PHASE_INFO"]["start_lane"]
+            self.dic_traffic_env_conf["LANE_PHASE_INFO"]["start_lane"]
         self.list_exiting_lanes = \
-            dic_traffic_env_conf["LANE_PHASE_INFO"]["end_lane"]
+            self.dic_traffic_env_conf["LANE_PHASE_INFO"]["end_lane"]
         self.list_lanes = self.list_entering_lanes + self.list_exiting_lanes
         self.yellow_phase_index = self.dic_traffic_env_conf[
             "LANE_PHASE_INFO"]["yellow_phase"]
@@ -152,18 +147,18 @@ class Intersection:
         dic_feature["lane_num_vehicle"] = \
             [len(self.dic_lane_vehicle_current_step[lane]) for lane in
              self.list_entering_lanes]
-        dic_feature["stop_vehicle_thres01"] = \
-            [self.dic_lane_vehicle_waiting_current_step[lane]
-             for lane in self.list_entering_lanes]
         dic_feature["stop_vehicle_thres1"] = \
             [self.dic_lane_vehicle_waiting_current_step[lane]
              for lane in self.list_entering_lanes]
         dic_feature["lane_queue_length"] = \
             [self.dic_lane_vehicle_waiting_current_step[lane]
              for lane in self.list_entering_lanes]
-        dic_feature["lane_num_vehicle_left"] = None
+        dic_feature["lane_num_vehicle_left"] = \
+            [len(self.dic_lane_vehicle_current_step[lane]) for lane in
+             self.list_exiting_lanes]
+
         dic_feature["lane_sum_duration_vehicle_left"] = None
-        dic_feature["lane_sum_waiting_time"] = None  #
+        dic_feature["lane_sum_waiting_time"] = None
         dic_feature["terminal"] = None
         self.dic_feature = dic_feature
 
@@ -211,7 +206,13 @@ class AnonEnv:
                                  self.dic_traffic_env_conf["THREADNUM"],
                                  self.dic_traffic_env_conf["SAVEREPLAY"],
                                  self.dic_traffic_env_conf["RLTRAFFICLIGHT"])
-        # TODO check path here.
+        if not os.path.isfile(self.dic_path["PATH_TO_ROADNET_FILE"]):
+            raise FileExistsError("file not exist! check it %s" %
+                                  self.dic_path["PATH_TO_ROADNET_FILE"])
+        if not os.path.isfile(self.dic_path["PATH_TO_FLOW_FILE"]):
+            raise FileExistsError("file not exist! check it %s" %
+                                  self.dic_path["PATH_TO_FLOW_FILE"])
+
         self.eng.load_roadnet(self.dic_path["PATH_TO_ROADNET_FILE"])
         self.eng.load_flow(self.dic_path["PATH_TO_FLOW_FILE"])
 
@@ -239,6 +240,7 @@ class AnonEnv:
             list_action_in_sec_display.append(
                 np.full_like(action, fill_value=-1).tolist())
         average_reward = 0
+        next_state, reward, done = None, None, None
         for i in range(self.dic_traffic_env_conf["MIN_ACTION_TIME"]):
             action_in_sec = list_action_in_sec[i]
             action_in_sec_display = list_action_in_sec_display[i]
@@ -353,12 +355,12 @@ class AnonEnv:
 
 if __name__ == '__main__':
     os.chdir('../')
+    # Out of date. refresh please.
     print('anon env test start...')
-    from configs.config_example import dic_traffic_env, dic_path
-    from configs.config_phaser import create_dir
+    from configs.config_example import *
+    from configs.config_phaser import *
 
-    create_dir(dic_path)
-
+    create_path_dir(dic_path)
     env = AnonEnv(dic_path, dic_traffic_env)
     state = env.reset()
     done = False

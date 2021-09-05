@@ -67,6 +67,7 @@ class FRAPAgent(Agent):
                  round_number):
         super().__init__(dic_agent_conf, dic_traffic_env_conf, dic_path,
                          round_number)
+        self.decay_epsilon(self.round_number)
 
         session = tf.Session()
         KTF.set_session(session)
@@ -156,11 +157,11 @@ class FRAPAgent(Agent):
                               name="before_merge")(hidden_layer)
         q_values = Lambda(lambda x: K.sum(x, axis=2), name="q_values")(
             Reshape((self.num_phase, self.num_phase - 1))(before_merge))
-        inputs = [dic_input_node[feature_name] for feature_name in
+        input = [dic_input_node[feature_name] for feature_name in
                   sorted(self.dic_traffic_env_conf["LIST_STATE_FEATURE"])]
-        network = Model(inputs=inputs, outputs=q_values)
+        network = Model(input=input, outputs=q_values)
 
-        network.compile(optimizer=Adam(lr=self.dic_agent_conf["LEARNING_RATE"],
+        network.compile(optimizer=Adam(lr=self.dic_agent_conf["LR"],
                                        epsilon=1e-08),
                         loss='mean_squared_error')
         return network
@@ -219,20 +220,20 @@ class FRAPAgent(Agent):
         self.Y = np.array(Y)
 
     def convert_state_to_input(self, s):
-        inputs = []
+        input = []
         dic_phase_expansion = self.dic_traffic_env_conf[
             "LANE_PHASE_INFO"]['phase_map']
         for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
             if feature == "cur_phase":
-                inputs.append(
+                input.append(
                     np.array([dic_phase_expansion[s[feature][0]]]))
             else:
-                inputs.append(np.array([s[feature]]))
-        return inputs
+                input.append(np.array([s[feature]]))
+        return input
 
     def choose_action(self, state, choice_random=True):
-        inputs = self.convert_state_to_input(state)
-        q_values = self.q_network.predict(inputs)
+        input = self.convert_state_to_input(state)
+        q_values = self.q_network.predict(input)
         if random.random() <= self.dic_agent_conf["EPSILON"] and choice_random:
             action = random.randrange(len(q_values[0]))
         else:

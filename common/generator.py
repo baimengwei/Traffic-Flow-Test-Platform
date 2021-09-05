@@ -34,11 +34,14 @@ class Generator:
         step_num = 0
         total_step = int(self.dic_traffic_env_conf["EPISODE_LEN"] /
                          self.dic_traffic_env_conf["MIN_ACTION_TIME"])
+        next_state = None
         while step_num < total_step:
             action_list = []
             for one_state in state:
                 action = self.agent.choose_action(one_state)
                 action_list.append(action)
+                if action is None:
+                    print("a breakpoint")
             next_state, reward, done, _ = self.env.step(action_list)
             state = next_state
             step_num += 1

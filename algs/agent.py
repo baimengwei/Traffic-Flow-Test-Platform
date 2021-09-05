@@ -21,32 +21,10 @@ class Agent:
         self.dic_path = dic_path
         self.round_number = round_number
 
-        self.decay_epsilon(self.round_number)
-
-        # self._decouple_params()
-        # self.dim_input = self._get_input_dim()
-
-    def _decouple_params(self):
-        self.inter_name = self.dic_traffic_env_conf["INTER_NAME"]
-        self._alpha = self.dic_agent_conf['ALPHA']
-        self._min_alpha = self.dic_agent_conf['MIN_ALPHA']
-        self._alpha_decay_rate = self.dic_agent_conf['ALPHA_DECAY_RATE']
-        self._alpha_decay_step = self.dic_agent_conf['ALPHA_DECAY_STEP']
-        self._norm = self.dic_agent_conf['NORM']
-        self._num_updates = self.dic_agent_conf['NUM_UPDATES']
-
-    # TODO complete and use this function
-    def _get_input_dim(self):
-        dim_input = 0
-        for feature_name in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
-            dim_input += \
-                len(self.dic_traffic_env_conf[
-                        "LANE_PHASE_INFOS"][self.inter_name][
-                        "start_lane"])
-        return dim_input
-
     def decay_epsilon(self, round_number):
-        """Warning: MODIFIED DIC_AGENT_CONF : EPSILON VALUE
+        """For value based method.
+
+        Warning: MODIFIED DIC_AGENT_CONF : EPSILON VALUE
         When reached round i = (log(eps_min)-log(eps_init)) / log(decay)
         eps_init reached eps_min. default round: 27
         """
@@ -55,6 +33,16 @@ class Agent:
             np.power(self.dic_agent_conf["EPSILON_DECAY"], round_number)
         self.dic_agent_conf["EPSILON"] = max(
             decayed_epsilon, self.dic_agent_conf["MIN_EPSILON"])
+
+    def decay_noise(self, round_number):
+        """For TD3
+        Warning: MODIFIED DIC_AGENT_CONF : NOISE VALUE
+        """
+        decayed_expl_noise = \
+            self.dic_agent_conf["EXPL_NOISE"] * \
+            np.power(self.dic_agent_conf["EXPL_NOISE_DECAY"], round_number)
+        self.dic_agent_conf["EXPL_NOISE"] = max(
+            decayed_expl_noise, self.dic_agent_conf["EXPL_NOISE_END"])
 
     def choose_action(self, state, choice_random):
         raise NotImplementedError
