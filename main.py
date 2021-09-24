@@ -106,6 +106,7 @@ def run_maxpressure():
     print("start execute maxpressure.")
     args.algorithm = "MAXPRESSURE"
     args.project = "MAXPRESSURE_N"
+    args.env = "sumo"
     main(args)
 
 
@@ -119,5 +120,5 @@ if __name__ == '__main__':
     # run_drqn()
     # run_webster()
     # run_fixtime()
-    # run_maxpressure()
-    run_fraprq()
+    run_maxpressure()
+    # run_fraprq()

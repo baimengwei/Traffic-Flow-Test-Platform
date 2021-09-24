@@ -120,7 +120,7 @@ def config_all(args):
         "PATH_TO_ERROR_ROOT": "./records/errors/" + args.project,
         "PATH_TO_GRADIENT_ROOT": "./records/gradient/" + args.project,
         "PATH_TO_FIGURE_ROOT": "./records/figures/" + args.project,
-        "PATH_TO_DATA_ROOT": "./data/scenario/",
+        "PATH_TO_DATA_ROOT": os.path.join("./data/", args.env + "_scenario/"),
 
         "PATH_TO_MODEL": None,
         "PATH_TO_WORK": None,
@@ -156,6 +156,7 @@ def config_all(args):
         "THREADNUM": 1,
         "SAVEREPLAY": args.replay,
         "RLTRAFFICLIGHT": True,
+        "IF_GUI": args.if_gui,
         # ---------------for mdp process----------------
         "EPISODE_LEN": args.episode_len,
         "DONE_ENABLE": args.done,
@@ -192,9 +193,8 @@ def config_all(args):
     # dic_traffic_env_origin = \
     #     update_traffic_env_tasks(dic_traffic_env_origin, 'train_all')
 
-    dic_agent_origin = \
-        getattr(config_constant, "DIC_AGENT_CONF_%s" %
-                format(args.algorithm.upper()))
+    dic_agent_origin = getattr(config_constant, "DIC_AGENT_CONF_%s" %
+                               format(args.algorithm.upper()))
 
     return dic_exp_origin, dic_agent_origin, \
            dic_traffic_env_origin, dic_path_origin
@@ -220,11 +220,12 @@ def parse():
     parser.add_argument("--seed", type=int, default=11)
     # -----------------------------traffic_env.conf---------------------------
     parser.add_argument("--replay", action="store_true", help='for engine')
+    parser.add_argument("--if_gui", action="store_true", help='for sumo gui')
     parser.add_argument("--episode_len", type=int, default=3600, help='for mdp')
     parser.add_argument("--done", action="store_true", help='for mdp')
     parser.add_argument("--reward_norm", action="store_true", help='for mdp')
     parser.add_argument("--env_debug", action="store_true", help='for setting')
-    parser.add_argument("--env", type=str, default="AnonEnv", help='for se...')
+    parser.add_argument("--env", type=str, default="anno", help='for se...')
     # ------------------------------------------------------------------
     args = parser.parse_args()
     return args

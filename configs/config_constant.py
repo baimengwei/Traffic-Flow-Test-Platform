@@ -10,8 +10,8 @@ from algs.MetaLight.metalight_agent import MetaLightAgent
 from algs.SOTL.sotl_agent import SOTLAgent
 from algs.WEBSTER.webster_agent import WEBSTERAgent
 from envs.anon_env import AnonEnv
-
-# from envs.sumo_env import SumoEnv
+from envs.cityflow_env import CityFlowEnv
+from envs.sumo_env import SumoEnv
 
 DIC_FEATURE_DIM = dict(
     cur_phase=(8,),
@@ -84,7 +84,7 @@ DIC_AGENT_CONF_MAXPRESSURE = {
 }
 DIC_AGENT_CONF_TDDD = {
     "LR": 0.001,
-    "LR_ACTOR" : 0.0001,
+    "LR_ACTOR": 0.0001,
     "SAMPLE_SIZE": 1000,
     "BATCH_SIZE": 32,
     "EPOCHS": 100,
@@ -112,7 +112,6 @@ DIC_AGENT_CONF_TDDD = {
     "BETA_CLIP": 1.5,
     "ENABLE_ADAPT": True,
 }
-
 
 DIC_AGENT_CONF_DRQN = {
     "LR": 0.001,
@@ -253,7 +252,7 @@ TRAD_ALGORITHM = [
     "MAXPRESSURE",
 ]
 DIC_ENVS = {
-    # "sumo": SumoEnv,
-    "AnonEnv": AnonEnv,
-    # 'dist':
+    "sumo": SumoEnv,
+    "anno": AnonEnv,
+    "cityflow": CityFlowEnv,
 }

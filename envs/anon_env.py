@@ -215,6 +215,11 @@ class AnonEnv:
         self.eng.load_roadnet(self.dic_path["PATH_TO_ROADNET_FILE"])
         self.eng.load_flow(self.dic_path["PATH_TO_FLOW_FILE"])
 
+        self.reset_prepare()
+        state = self.get_state()
+        return state
+
+    def reset_prepare(self):
         self.list_intersection = []
         self.list_inter_log = dict()
         self.list_lanes = []
@@ -228,8 +233,6 @@ class AnonEnv:
 
         for inter in self.list_intersection:
             inter.update_current_measurements()
-        state = self.get_state()
-        return state
 
     def step(self, action):
         list_action_in_sec = [action]
@@ -243,7 +246,7 @@ class AnonEnv:
         for i in range(self.dic_traffic_env_conf["MIN_ACTION_TIME"]):
             action_in_sec = list_action_in_sec[i]
             action_in_sec_display = list_action_in_sec_display[i]
-            instant_time = self.get_current_time()
+            instant_time = self.eng.get_current_time()
             before_action_feature = self.get_feature()
 
             self._inner_step(action_in_sec)
@@ -301,9 +304,6 @@ class AnonEnv:
             inter in self.list_intersection]
         return list_reward
 
-    def get_current_time(self):
-        return self.eng.get_current_time()
-
     def log(self, cur_time, before_action_feature, action):
         for idx, inter_name in enumerate(sorted(self.lane_phase_infos.keys())):
             self.list_inter_log[inter_name].append(
@@ -331,7 +331,9 @@ class AnonEnv:
                 valid_flag[inter_ind] = 1
         json.dump(valid_flag,
                   open(os.path.join(self.path_to_log, "valid_flag.json"), "w"))
+        self.save_replay()
 
+    def save_replay(self):
         for inter_name in sorted(self.lane_phase_infos.keys()):
             path_to_log_file = os.path.join(
                 self.path_to_log, "%s.pkl" % inter_name)
@@ -340,15 +342,15 @@ class AnonEnv:
             f.close()
         vol = get_total_traffic_volume(
             self.dic_traffic_env_conf["TRAFFIC_FILE"])
-        self.eng.print_log(os.path.join(self.path_to_log, "roadnet_1_1.json"),
-                           os.path.join(self.path_to_log,
-                                        "replay_1_1_%s.txt" % vol))
+        self.eng.print_log(
+            os.path.join(self.path_to_log, "roadnet_1_1.json"),
+            os.path.join(self.path_to_log, "replay_1_1_%s.txt" % vol))
 
     def log_phase(self):
         for inter in self.list_intersection:
             print(
                 "%f, %f" %
-                (self.get_current_time(), inter.current_phase_index),
+                (self.eng.get_current_time(), inter.current_phase_index),
                 file=open(os.path.join(self.path_to_log, "log_phase.txt"), "a"))
 
 
