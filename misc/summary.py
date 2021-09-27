@@ -225,6 +225,7 @@ def main(records_dir):
     }
 
     # summary_detail_train(project, copy.deepcopy(total_summary))
+
     summary_detail_test(records_dir, copy.deepcopy(dict_summary))
     # summary_detail_test_segments(project, copy.deepcopy(total_summary))
 
@@ -453,6 +454,8 @@ def summary_detail_train(project, total_summary):
 
 
 def summary_detail_test(records_dir, dict_summary):
+    """DISGUSTING CODE * 3
+    """
     performance_duration = {}
     performance_at_min_duration_round = {}
 
@@ -497,13 +500,18 @@ def summary_detail_test(records_dir, dict_summary):
         queue_length_each_round = 0
         for sample in samples:
             queue_length_each_round += sum(
-                sample['state']['lane_queue_length'])
+                sample['state']['stop_vehicle_thres1'])
         sample_num = len(samples)
         f.close()
 
+        inter_name = None
+        for file_name in os.listdir(round_dir):
+            if "vehicle_inter_" in file_name:
+                inter_name = file_name
+
         # summary items (duration) from csv
         df_vehicle_inter_0 = pd.read_csv(
-            os.path.join(round_dir, "vehicle_inter_0.csv"),
+            os.path.join(round_dir, inter_name),
             sep=',', header=0,
             dtype={0: str, 1: float, 2: float},
             names=["vehicle_id", "enter_time", "leave_time"])

@@ -53,16 +53,16 @@ class BatchEpisodes(object):
             self.total_samples.append(
                 [observation, action, new_observation, reward, 0, 0])
             self.tot_x.append(
-                observation[0]['lane_num_vehicle'] +
+                observation[0]['lane_vehicle_cnt'] +
                 observation[0]["cur_phase"])
             self.current_x.append(
-                observation[0]['lane_num_vehicle'] +
+                observation[0]['lane_vehicle_cnt'] +
                 observation[0]["cur_phase"])
             self.tot_next_x.append(
-                new_observation[0]['lane_num_vehicle'] +
+                new_observation[0]['lane_vehicle_cnt'] +
                 new_observation[0]["cur_phase"])
             self.current_next_x.append(
-                new_observation[0]['lane_num_vehicle'] +
+                new_observation[0]['lane_vehicle_cnt'] +
                 new_observation[0]["cur_phase"])
 
     def get_x(self):

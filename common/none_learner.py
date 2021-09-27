@@ -12,7 +12,8 @@ def test_eval(round_number, dic_path, dic_exp_conf, dic_agent_conf,
                           dic_agent_conf=dic_agent_conf,
                           dic_traffic_env_conf=dic_traffic_env_conf)
     generator.generate(done_enable=False)
-    write_summary(dic_path, round_number)
+    for inter_name in dic_traffic_env_conf["LANE_PHASE_INFOS"]:
+        write_summary(dic_path, round_number, inter_name)
 
 
 class NoneLearner:

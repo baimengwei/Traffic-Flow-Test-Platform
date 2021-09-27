@@ -110,28 +110,6 @@ def get_metrics(duration_list, min_duration, min_duration_id,
     return total_summary
 
 
-def get_planed_entering(flowFile, episode_len):
-    list_flow = json.load(open(flowFile, "r"))
-    dic_traj = {'vehicle_id': [], 'planed_enter_time': []}
-    for flow_id, flow in enumerate(list_flow):
-        list_ts_this_flow = []
-        for step in range(
-            flow["startTime"], min(
-                flow["endTime"] + 1, episode_len)):
-            if step == flow["startTime"]:
-                list_ts_this_flow.append(step)
-            elif step - list_ts_this_flow[-1] >= flow["interval"]:
-                list_ts_this_flow.append(step)
-
-        for vec_id, ts in enumerate(list_ts_this_flow):
-            dic_traj['vehicle_id'].append(
-                "flow_{0}_{1}".format(flow_id, vec_id))
-            dic_traj['planed_enter_time'].append(ts)
-
-    df = pd.DataFrame(dic_traj)
-    return df
-
-
 def cal_travel_time(df_vehicle_actual_enter_leave,
                     df_vehicle_planed_enter, episode_len):
     df_vehicle_planed_enter.set_index('vehicle_id', inplace=True)

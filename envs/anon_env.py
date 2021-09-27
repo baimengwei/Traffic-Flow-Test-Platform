@@ -1,6 +1,9 @@
 from misc.utils import *
 import sys
-import engine
+import platform
+
+if platform.system() == "Linux":
+    import engine
 
 
 class Intersection:
@@ -37,7 +40,7 @@ class Intersection:
         # -1: all yellow
         self.all_yellow_phase_index = -1
 
-        self.eng.set_tl_phase(self.inter_name, self.current_phase_index)
+        self.set_tl_phase(self.inter_name, self.current_phase_index)
         self.next_phase_to_set_index = None
         self.current_phase_duration = -1
         self.all_yellow_flag = False
@@ -48,8 +51,7 @@ class Intersection:
         if self.all_yellow_flag:
             if self.current_phase_duration >= yellow_time:  # yellow time
                 self.current_phase_index = self.next_phase_to_set_index
-                self.eng.set_tl_phase(self.inter_name,
-                                      self.current_phase_index)  # if
+                self.set_tl_phase(self.inter_name, self.current_phase_index)
                 self.all_yellow_flag = False
             else:
                 pass
@@ -58,9 +60,14 @@ class Intersection:
             if self.current_phase_index == self.next_phase_to_set_index:
                 pass
             else:
-                self.eng.set_tl_phase(self.inter_name, self.yellow_phase_index)
+                self.set_tl_phase(self.inter_name, self.yellow_phase_index)
                 self.current_phase_index = self.all_yellow_phase_index
                 self.all_yellow_flag = True
+
+    def set_tl_phase(self, inter_name, phase_index):
+        """API in different environment
+        """
+        self.eng.set_tl_phase(inter_name, phase_index)
 
     def update_previous_measurements(self):
         self.previous_phase_index = self.current_phase_index
@@ -74,6 +81,7 @@ class Intersection:
             self.dic_vehicle_distance_current_step
 
     def update_current_measurements(self):
+        # DISGUSTING code for these names
         # same to __init__ function values. AND UPDATE FEATURE etc.
         if self.current_phase_index == self.previous_phase_index:
             self.current_phase_duration += 1
@@ -90,19 +98,22 @@ class Intersection:
         vehicle_now = get_vehicle_list(self.dic_lane_vehicle_current_step)
         vehicle_pre = get_vehicle_list(self.dic_lane_vehicle_previous_step)
         list_vehicle_new_arrive = list(set(vehicle_now) - set(vehicle_pre))
-        # TODO this maybe the true value. the function below maybe
-        #  think the vehicle leave entering lane is leaving the env
-        list_vehicle_new_left = list(set(vehicle_pre) - set(vehicle_now))
+        #  this maybe the true value. the function below maybe
+        #  think the vehicle leave the lane of entering is leaving the env
 
-        list_vehicle_new_left_entering_lane_by_lane = \
+        # the comment think the vehicle leave the env is in the leaving env
+        # if for multi intersection, the former maybe better.
+        # and get lower value
+        # list_vehicle_new_left = list(set(vehicle_pre) - set(vehicle_now))
+
+        list_entering_lane_vehicle_left = \
             self._update_leave_entering_approach_vehicle()
         list_vehicle_new_left_entering_lane = []
-        for l in list_vehicle_new_left_entering_lane_by_lane:
+        for l in list_entering_lane_vehicle_left:
             list_vehicle_new_left_entering_lane += l
-        # update vehicle arrive and left time
-        self._update_arrive_time(list_vehicle_new_arrive)
-        # self._update_left_time(list_vehicle_new_left)
-        self._update_left_time(list_vehicle_new_left_entering_lane)
+
+        self._update_vehicle_arrive_left(list_vehicle_new_arrive,
+                                         list_vehicle_new_left_entering_lane)
         self._update_feature()
 
     def _update_leave_entering_approach_vehicle(self):
@@ -120,18 +131,17 @@ class Intersection:
                 )
         return list_entering_lane_vehicle_left
 
-    def _update_arrive_time(self, list_vehicle_arrive):
-        ts = self.eng.get_current_time()
-        for vehicle in list_vehicle_arrive:
+    def _update_vehicle_arrive_left(self, list_arrive, list_left):
+        # arrive
+        ts = self.get_current_time()
+        for vehicle in list_arrive:
             if vehicle not in self.dic_vehicle_arrive_leave_time:
                 self.dic_vehicle_arrive_leave_time[vehicle] = \
                     {"enter_time": ts, "leave_time": np.nan}
             else:
                 pass
-
-    def _update_left_time(self, list_vehicle_left):
-        ts = self.eng.get_current_time()
-        for vehicle in list_vehicle_left:
+        # left
+        for vehicle in list_left:
             try:
                 self.dic_vehicle_arrive_leave_time[vehicle]["leave_time"] = ts
             except KeyError:
@@ -141,10 +151,10 @@ class Intersection:
     def _update_feature(self):
         dic_feature = dict()
 
-        dic_feature["cur_phase"] = [self.current_phase_index]
-        dic_feature["time_this_phase"] = [self.current_phase_duration]
+        dic_feature["cur_phase"] = self.current_phase_index
+        dic_feature["time_this_phase"] = self.current_phase_duration
 
-        dic_feature["lane_num_vehicle"] = \
+        dic_feature["lane_vehicle_cnt"] = \
             [len(self.dic_lane_vehicle_current_step[lane]) for lane in
              self.list_entering_lanes]
         dic_feature["stop_vehicle_thres1"] = \
@@ -153,12 +163,12 @@ class Intersection:
         dic_feature["lane_queue_length"] = \
             [self.dic_lane_vehicle_waiting_current_step[lane]
              for lane in self.list_entering_lanes]
-        dic_feature["lane_num_vehicle_left"] = \
+        dic_feature["lane_vehicle_left_cnt"] = \
             [len(self.dic_lane_vehicle_current_step[lane]) for lane in
              self.list_exiting_lanes]
 
-        dic_feature["lane_sum_duration_vehicle_left"] = None
-        dic_feature["lane_sum_waiting_time"] = None
+        dic_feature["lane_duration_vehicle_left"] = None
+        dic_feature["lane_waiting_time"] = None
         dic_feature["terminal"] = None
         self.dic_feature = dic_feature
 
@@ -169,8 +179,8 @@ class Intersection:
 
     # ================= get functions from outside ======================
     def get_state(self, list_state_features):
-        dic_state = {state_feature_name: self.dic_feature[state_feature_name]
-                     for state_feature_name in list_state_features}
+        dic_state = {feature: self.dic_feature[feature]
+                     for feature in list_state_features}
         return dic_state
 
     def get_reward(self, dic_reward_info):
@@ -178,7 +188,7 @@ class Intersection:
         dic_reward["flickering"] = None
         dic_reward["sum_lane_queue_length"] = None
         dic_reward["sum_lane_wait_time"] = None
-        dic_reward["sum_lane_num_vehicle_left"] = None
+        dic_reward["sum_lane_vehicle_left_cnt"] = None
         dic_reward["sum_duration_vehicle_left"] = None
         dic_reward["sum_stop_vehicle_thres1"] = \
             np.sum(self.dic_feature["stop_vehicle_thres1"])
@@ -187,6 +197,10 @@ class Intersection:
             if dic_reward_info[r] != 0:
                 reward += dic_reward_info[r] * dic_reward[r]
         return reward
+
+    def get_current_time(self):
+        # a API for different env.
+        return self.eng.get_current_time()
 
 
 class AnonEnv:
@@ -246,7 +260,7 @@ class AnonEnv:
         for i in range(self.dic_traffic_env_conf["MIN_ACTION_TIME"]):
             action_in_sec = list_action_in_sec[i]
             action_in_sec_display = list_action_in_sec_display[i]
-            instant_time = self.eng.get_current_time()
+            instant_time = self.get_current_time()
             before_action_feature = self.get_feature()
 
             self._inner_step(action_in_sec)
@@ -280,7 +294,7 @@ class AnonEnv:
             self.log_phase()
 
     def _check_episode_done(self, state):
-        if 39 in state[0]["lane_num_vehicle"]:
+        if 39 in state[0]["lane_vehicle_cnt"]:
             self.stop_cnt += 1
         if self.stop_cnt == 100:
             self.stop_cnt = 0
@@ -313,22 +327,21 @@ class AnonEnv:
 
     def bulk_log(self):
         valid_flag = {}
-        for inter_ind in range(len(self.list_intersection)):
+        for inter in self.list_intersection:
+            inter_name = inter.inter_name
             path_to_log_file = os.path.join(
-                self.path_to_log, "vehicle_inter_{0}.csv".format(inter_ind))
-            dic_vehicle = \
-                self.list_intersection[inter_ind].dic_vehicle_arrive_leave_time
+                self.path_to_log, "vehicle_inter_%s.csv" % inter_name)
+            dic_vehicle = inter.dic_vehicle_arrive_leave_time
             df = convert_dic_to_df(dic_vehicle)
             df.to_csv(path_to_log_file, na_rep="nan")
 
-            inter = self.list_intersection[inter_ind]
             feature = inter.dic_feature
 
-            if max(feature['lane_num_vehicle']) > self.dic_traffic_env_conf[
-                "VALID_THRESHOLD"]:
-                valid_flag[inter_ind] = 0
+            if max(feature['lane_vehicle_cnt']) > \
+                    self.dic_traffic_env_conf["VALID_THRESHOLD"]:
+                valid_flag[inter_name] = 0
             else:
-                valid_flag[inter_ind] = 1
+                valid_flag[inter_name] = 1
         json.dump(valid_flag,
                   open(os.path.join(self.path_to_log, "valid_flag.json"), "w"))
         self.save_replay()
@@ -350,8 +363,11 @@ class AnonEnv:
         for inter in self.list_intersection:
             print(
                 "%f, %f" %
-                (self.eng.get_current_time(), inter.current_phase_index),
+                (self.get_current_time(), inter.current_phase_index),
                 file=open(os.path.join(self.path_to_log, "log_phase.txt"), "a"))
+
+    def get_current_time(self):
+        return self.eng.get_current_time()
 
 
 if __name__ == '__main__':

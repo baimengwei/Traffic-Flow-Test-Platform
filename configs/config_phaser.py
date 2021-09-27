@@ -10,14 +10,14 @@ def update_traffic_env_feature(dic_conf, algorithm):
     """
     if algorithm in RL_ALGORITHM:
         dic_conf["LIST_STATE_FEATURE"] = \
-            ["cur_phase", "lane_num_vehicle"]
+            ["cur_phase", "lane_vehicle_cnt"]
     elif algorithm in TRAD_ALGORITHM:
         dic_conf["LIST_STATE_FEATURE"] = [
             "cur_phase",
-            "lane_num_vehicle",
+            "lane_vehicle_cnt",
             "stop_vehicle_thres1",
             "time_this_phase",
-            "lane_num_vehicle_left",
+            "lane_vehicle_left_cnt",
         ]
     else:
         raise ValueError
@@ -35,7 +35,14 @@ def update_traffic_env_infos(dic_conf, dic_path):
     """Update TRAFFIC_FILE, LANE_PHASE_INFOS, this function use dic_path for
     search the roadnet file. should ensure the correct config in dic_path
     """
-    lane_phase_infos = parse_roadnet(dic_path["PATH_TO_ROADNET_FILE"])
+    env_name = dic_path["PATH_TO_DATA_ROOT"].split('/')[2].split('_')[0]
+    if env_name == 'sumo':
+        lane_phase_infos = parse_roadnet_sumo(dic_path["PATH_TO_ROADNET_FILE"])
+    elif env_name in ['anno', 'cityflow']:
+        lane_phase_infos = \
+            parse_roadnet_cityflow(dic_path["PATH_TO_ROADNET_FILE"])
+    else:
+        raise ValueError(env_name, " is not in the env list.")
     dic_conf["LANE_PHASE_INFOS"] = lane_phase_infos
     dic_conf["TRAFFIC_FILE"] = dic_path["PATH_TO_DATA"].split('/')[-1]
     return dic_conf
@@ -49,13 +56,23 @@ def update_traffic_env_info(dic_conf, inter_name):
     return dic_conf
 
 
-def update_path_basic(dic_conf, algorithm):
+def update_traffic_env_port(dic_conf, port_num):
+    """Update INTER_NAME, LANE_PHASE_INFO
+    """
+    dic_conf["PORT"] = port_num
+    return dic_conf
+
+
+def update_path_basic(dic_conf, algorithm, *, inner_project=None):
     """update PATH_TO_MODEL, PATH_TO_WORK, PATH_TO_GRADIENT,
      PATH_TO_ERROR, PATH_TO_FIGURE
     """
     _time = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(time.time()))
     _time = _time + "_No" + str(random.random()) + "_"
-    inner_project = "_" + _time + algorithm
+    if inner_project is None:
+        inner_project = "_" + _time + algorithm
+    else:
+        inner_project = "_" + _time + inner_project
 
     dic_conf.update({
         "PATH_TO_MODEL":
@@ -76,6 +93,15 @@ def update_path_file(dic_conf, traffic_file):
     """Update PATH_TO_DATA, PATH_TO_ROADNET_FILE, PATH_TO_FLOW_FILE
     """
     _, roadnet_file, flow_file = get_file_detail(traffic_file)
+    env_name = dic_conf["PATH_TO_DATA_ROOT"].split('/')[2].split('_')[0]
+    if env_name == 'sumo':
+        roadnet_file = roadnet_file + ".net.xml"
+        flow_file = flow_file + ".rou.xml"
+    elif env_name in ['anno', 'cityflow']:
+        roadnet_file = roadnet_file + ".json"
+        flow_file = flow_file + ".json"
+    else:
+        raise ValueError(env_name)
     dic_conf.update({
         "PATH_TO_DATA":
             os.path.join(dic_conf["PATH_TO_DATA_ROOT"], traffic_file),
@@ -183,6 +209,7 @@ def config_all(args):
         "LANE_PHASE_INFO": None,
 
         "TRAFFIC_IN_TASKS": None,
+        "PORT": None,
     }
     dic_traffic_env_origin = \
         update_traffic_env_feature(dic_traffic_env_origin, args.algorithm)
@@ -192,6 +219,8 @@ def config_all(args):
     #     update_traffic_env_info(dic_traffic_env_origin, 'inter_name')
     # dic_traffic_env_origin = \
     #     update_traffic_env_tasks(dic_traffic_env_origin, 'train_all')
+    # dic_traffic_env_origin = \
+    #     update_traffic_env_port(dic_traffic_env_origin, "9000")
 
     dic_agent_origin = getattr(config_constant, "DIC_AGENT_CONF_%s" %
                                format(args.algorithm.upper()))
@@ -206,7 +235,7 @@ def parse():
     parser.add_argument("--project", type=str, default="project_name")
     # ------------------------------exp.conf-----------------------------------
     parser.add_argument("--algorithm", type=str, default="MetaLight")
-    parser.add_argument("--train_round", type=int, default=200,
+    parser.add_argument("--train_round", type=int, default=100,
                         help="for train process")
     parser.add_argument("--task_round", type=int, default=20,
                         help="for metalight train process")
@@ -215,7 +244,7 @@ def parse():
     parser.add_argument("--adapt_round", type=int, default=50,
                         help="for metalight valid test")
     parser.add_argument("--num_generators", type=int, default=3)
-    parser.add_argument("--pipeline", type=int, default=3)
+    parser.add_argument("--pipeline", type=int, default=6)
     parser.add_argument("--exp_debug", action="store_true")
     parser.add_argument("--seed", type=int, default=11)
     # -----------------------------traffic_env.conf---------------------------

@@ -6,7 +6,7 @@ from common.generator import Generator
 from misc.utils import *
 
 
-class MetaLightLearner:
+class MetaDQNLearner:
     def __init__(self, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                  dic_path, round_number):
         self.dic_exp_conf = dic_exp_conf
@@ -16,7 +16,7 @@ class MetaLightLearner:
         self.round_number = round_number
         pass
 
-    def learn_round(self):
+    def load_round(self):
         tasks_all = list(self.dic_traffic_env_conf["TRAFFIC_IN_TASKS"].keys())
         self.traffic_tasks = \
             np.random.choice(tasks_all, self.dic_exp_conf["TASK_COUNT"])

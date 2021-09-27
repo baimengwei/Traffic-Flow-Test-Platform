@@ -28,23 +28,24 @@ def run_frap():
     main(args)
 
 
-# TODO here
-# def run_fraprq():
-#     from algs.FRAPRQ.fraprq_train import main
-#     args = parse()
-#     print('start execute fraprq...')
-#     args.algorithm = 'FRAPRQ'
-#     args.project = 'FRAP_RQ_T'
-#     main(args)
-
 def run_dqn():
     from algs.DQN.dqn_train import main
     args = parse()
     print('start execute dqn...')
     args.algorithm = "DQN"
-    args.project = "DQN_C"
+    args.project = "DQN_Meta"
+    args.env = "anno"
     main(args)
 
+
+def run_metadqn():
+    from algs.MetaDQN.metadqn_train import main
+    args = parse()
+    print('start execute meta dqn...')
+    args.algorithm = "MetaDQN"
+    args.project = "Meta_DQN_RD"
+    args.env = "anno"
+    main(args)
 
 def run_sotl():
     from algs.SOTL.sotl_train import main
@@ -107,6 +108,7 @@ def run_maxpressure():
     args.algorithm = "MAXPRESSURE"
     args.project = "MAXPRESSURE_N"
     args.env = "sumo"
+    args.if_gui = False
     main(args)
 
 
@@ -114,11 +116,12 @@ if __name__ == '__main__':
     # run_metalight()
     # run_frap()
     # run_frapplus()
-    # run_dqn()
+    run_dqn()
     # run_sotl()
     # run_tddd()
     # run_drqn()
     # run_webster()
     # run_fixtime()
-    run_maxpressure()
+    # run_maxpressure()
     # run_fraprq()
+    # run_metadqn()

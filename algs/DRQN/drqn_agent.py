@@ -18,7 +18,7 @@ class Context(nn.Module):
 
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
         phase_dim = dim_feature['cur_phase'][0]
-        vehicle_dim = dim_feature['lane_num_vehicle'][0]
+        vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.state_dim = phase_dim + vehicle_dim
         self.action_dim = phase_dim  # one hot represent according to phase.
         self.input_dim = self.action_dim + 1 + self.state_dim
@@ -48,7 +48,7 @@ class DRQN(nn.Module):
 
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
         phase_dim = dim_feature['cur_phase'][0]
-        vehicle_dim = dim_feature['lane_num_vehicle'][0]
+        vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.state_dim = phase_dim + vehicle_dim
         self.action_dim = len(self.lane_phase_info['phase'])
         self.hidden_dim = self.dic_agent_conf["HIDDEN_DIM"]
@@ -149,10 +149,10 @@ class DRQNAgent(Agent):
         reward_avg = []
         history_input = []
         for each in sample_set:
-            state.append(each[0]['cur_phase'] + each[0]['lane_num_vehicle'])
+            state.append(each[0]['cur_phase'] + each[0]['lane_vehicle_cnt'])
             action.append(each[1])
             next_state.append(
-                each[2]['cur_phase'] + each[2]['lane_num_vehicle'])
+                each[2]['cur_phase'] + each[2]['lane_vehicle_cnt'])
             reward_avg.append(each[3])
             history_input.append(each[5])
 

@@ -3,6 +3,7 @@ from common.none_learner import NoneLearner
 from configs.config_phaser import *
 from misc import summary
 from misc.utils import log_round_time
+from multiprocessing import pool
 
 
 def maxpressure_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
@@ -49,6 +50,7 @@ def main(args):
         config_all(args)
     traffic_file = 'hangzhou_baochu_tiyuchang_1h_10_11_2021'
     dic_path = update_path_file(dic_path, traffic_file)
+
     dic_traffic_env_conf = \
         update_traffic_env_infos(dic_traffic_env_conf, dic_path)
     dic_traffic_env_conf = modify_traffic_env(dic_traffic_env_conf)
@@ -56,8 +58,11 @@ def main(args):
     copy_conf_file(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path)
 
     mult_pool = Pool(processes=3)
-    for round_number in range(4):
+    for round_number in range(1):
         t_round = time.time()
+        dic_traffic_env_conf = \
+            update_traffic_env_port(dic_traffic_env_conf,
+                                    str(9000 + round_number))
         mult_pool.apply_async(func=maxpressure_train,
                               args=(copy.deepcopy(dic_exp_conf),
                                     copy.deepcopy(dic_agent_conf),

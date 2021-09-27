@@ -22,9 +22,9 @@ def main(args):
     """main entrance. for dqn
     """
     dic_exp_conf, _, dic_traffic_env_conf, _ = config_all(args)
-    traffic_file_list = list(dic_traffic_env_conf[
-                                 "TRAFFIC_CATEGORY"]["train_all"].keys())
-    traffic_file_list = ['hangzhou_baochu_tiyuchang_1h_10_11_2021']
+    traffic_file_list = \
+        list(dic_traffic_env_conf["TRAFFIC_CATEGORY"]["train_all"].keys())
+    # traffic_file_list = ['hangzhou_baochu_tiyuchang_1h_10_11_2021']
     traffic_file_list_surplus = copy.deepcopy(traffic_file_list)
     list_pipeline = []
     for traffic_file in traffic_file_list:

@@ -20,17 +20,16 @@ class MAXPRESSUREAgent:
         self.list_action = []
 
     def get_phase_method(self, state):
-        x = np.array(state["lane_num_vehicle"])
-        y = np.array(state["lane_num_vehicle_left"])
+        x = np.array(state["lane_vehicle_cnt"])
+        y = np.array(state["lane_vehicle_left_cnt"])
         lane_pressure = x - y
-        if self.dic_traffic_env_conf["ENV_DEBUG"]:
-            print("\n x: %s, y: %s"%(x, y))
+
         phase_pressure = []
         for phase in self.phase_map:
             location = np.array(self.phase_map[phase]) == 1
             phase_pressure += [sum(lane_pressure[location])]
         action = np.argmax(phase_pressure)
-        self.list_action = [action for _ in range(self.phase_count)]
+        self.list_action = [action for _ in range(self.g_min)]
 
     def choose_action(self, state):
         if len(self.list_action) == 0:

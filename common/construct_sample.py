@@ -33,19 +33,20 @@ class ConstructSample:
         for key, value in state["state"].items():
             if key in features:
                 if key == "cur_phase":
-                    state_after_selection[key] = phase_expansion[value[0]]
+                    state_after_selection[key] = phase_expansion[value]
                 else:
                     state_after_selection[key] = value
         return state_after_selection
 
     def get_reward_from_features(self, rs):
         reward = dict()
-        reward["sum_lane_queue_length"] = np.sum(rs["lane_queue_length"])
-        reward["sum_lane_wait_time"] = np.sum(rs["lane_sum_waiting_time"])
-        reward["sum_lane_num_vehicle_left"] = np.sum(
-            rs["lane_num_vehicle_left"])
+        reward["sum_lane_queue_length"] = np.sum(rs["stop_vehicle_thres1"])
+        reward["sum_lane_wait_time"] = np.sum(rs["lane_waiting_time"])
+        reward["sum_lane_vehicle_left_cnt"] = np.sum(
+            rs["lane_vehicle_left_cnt"])
+        # TODO remove please.
         reward["sum_duration_vehicle_left"] = np.sum(
-            rs["lane_sum_duration_vehicle_left"])
+            rs["lane_vehicle_left_cnt"])
         reward["sum_stop_vehicle_thres1"] = np.sum(
             rs["stop_vehicle_thres1"])
         return reward

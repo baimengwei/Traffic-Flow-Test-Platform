@@ -7,6 +7,7 @@ def pipeline(args, traffic_file, callback_func):
     t_start = time.time()
     dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path = \
         config_all(args)
+    dic_path = update_path_basic(dic_path, "None", inner_project=traffic_file)
     dic_path = update_path_file(dic_path, traffic_file)
     dic_traffic_env_conf = \
         update_traffic_env_infos(dic_traffic_env_conf, dic_path)
@@ -30,4 +31,3 @@ def pipeline(args, traffic_file, callback_func):
     time_count = time.time() - t_start
     print('finished %s. cost time: %.3f min' %
           (callback_func.__name__, time_count / 60))
-

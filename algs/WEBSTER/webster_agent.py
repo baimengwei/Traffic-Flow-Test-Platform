@@ -13,7 +13,7 @@ class WEBSTERAgent():
         self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
 
-        self.vehicle_dim = dim_feature['lane_num_vehicle'][0]
+        self.vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.R = self.dic_agent_conf["L_LANE"] * self.vehicle_dim
         self.flow_rate = [0 for _ in range(self.vehicle_dim)]
         self.flow_cnt = [0 for _ in range(self.vehicle_dim)]
@@ -62,11 +62,11 @@ class WEBSTERAgent():
                   (self.global_cnt, self.list_action))
 
     def choose_action(self, state):
-        x = self.lane_num_vehicle_pre - np.array(state["lane_num_vehicle"])
+        x = self.lane_num_vehicle_pre - np.array(state["lane_vehicle_cnt"])
         for idx, each in enumerate(x):
             if each > 0:
                 self.flow_cnt[idx] += 1
-        self.lane_num_vehicle_pre = np.array(state["lane_num_vehicle"])
+        self.lane_num_vehicle_pre = np.array(state["lane_vehicle_cnt"])
 
         if len(self.list_action) > 0:
             self.global_cnt += 1

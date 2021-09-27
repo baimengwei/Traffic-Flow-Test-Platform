@@ -1,10 +1,8 @@
 import os
 import random
-
 import numpy as np
 import torch
 import torch.nn as nn
-
 from algs.agent import Agent
 
 
@@ -16,7 +14,7 @@ class DQN(nn.Module):
 
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
         phase_dim = dim_feature['cur_phase'][0]
-        vehicle_dim = dim_feature['lane_num_vehicle'][0]
+        vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.state_dim = phase_dim + vehicle_dim
         self.action_dim = len(self.lane_phase_info['phase'])
 
@@ -73,8 +71,8 @@ class DQNAgent(Agent):
         self.lossfunc.load_state_dict(ckpt['lossfunc'])
 
     def load_network_bar(self, file_name):
-        file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
-                                 file_name + '.pt')
+        file_path = \
+            os.path.join(self.dic_path["PATH_TO_MODEL"], file_name + '.pt')
         ckpt = torch.load(file_path)
         self.model_target = DQN(self.dic_traffic_env_conf)
         self.model_target.load_state_dict((ckpt['state_dict']))
@@ -96,7 +94,7 @@ class DQNAgent(Agent):
             "LANE_PHASE_INFO"]['phase_map']
         for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
             if feature == "cur_phase":
-                input.append(np.array([dic_phase_expansion[s[feature][0]]]))
+                input.append(np.array([dic_phase_expansion[s[feature]]]))
             else:
                 input.append(np.array([s[feature]]))
         return input
@@ -107,10 +105,10 @@ class DQNAgent(Agent):
         next_state = []
         reward_avg = []
         for each in sample_set:
-            state.append(each[0]['cur_phase'] + each[0]['lane_num_vehicle'])
+            state.append(each[0]['cur_phase'] + each[0]['lane_vehicle_cnt'])
             action.append(each[1])
             next_state.append(
-                each[2]['cur_phase'] + each[2]['lane_num_vehicle'])
+                each[2]['cur_phase'] + each[2]['lane_vehicle_cnt'])
             reward_avg.append(each[3])
 
         q_values = self.model.forward(torch.Tensor(state)).detach().numpy()

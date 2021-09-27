@@ -5,44 +5,14 @@ import random
 import os
 import shutil
 from collections import OrderedDict
-
+import sumolib
 import numpy as np
 import pandas as pd
 from math import isnan
 import torch
 import json
-
 from matplotlib import pyplot as plt
-
 from configs.config_constant_traffic import TRAFFIC_CATEGORY
-
-
-def get_planed_entering(flow_file, episode_len):
-    # todo--check with huichu about how each vehicle is inserted, according to
-    # the interval. 1s error may occur.
-    list_flow = json.load(open(flow_file, "r"))
-    dic_traj = {'vehicle_id': [], 'planed_enter_time': []}
-    for flow_id, flow in enumerate(list_flow):
-        list_ts_this_flow = []
-        for step in range(
-                flow["startTime"], min(
-                    flow["endTime"] + 1, episode_len)):
-            if step == flow["startTime"]:
-                list_ts_this_flow.append(step)
-            elif step - list_ts_this_flow[-1] >= flow["interval"]:
-                list_ts_this_flow.append(step)
-
-        for vec_id, ts in enumerate(list_ts_this_flow):
-            dic_traj['vehicle_id'].append(
-                "flow_{0}_{1}".format(flow_id, vec_id))
-            dic_traj['planed_enter_time'].append(ts)
-            # dic_traj["flow_{0}_{1}".format(flow_id, vec_id)] = {
-            # "planed_enter_time": ts}
-
-    df = pd.DataFrame(dic_traj)
-    # df.set_index('vehicle_id')
-    return df
-    # return pd.DataFrame(dic_traj).transpose()
 
 
 def cal_travel_time(
@@ -168,7 +138,7 @@ def downsample(path_to_log_file):
         pickle.dump(subset_data, f_subset)
 
 
-def write_summary(dic_path, cnt_round):
+def write_summary(dic_path, cnt_round, inter_name):
     work_dir = os.path.join(dic_path["PATH_TO_WORK"])
     log_dir = os.path.join(dic_path["PATH_TO_WORK"], "../",
                            "test_results.csv")
@@ -178,7 +148,7 @@ def write_summary(dic_path, cnt_round):
             columns=("round", "duration", "vec_in", "vec_out"))
         df_col.to_csv(log_dir, mode="a", index=False)
     df_vehicle_inter_0 = pd.read_csv(
-        os.path.join(work_dir, "vehicle_inter_0.csv"),
+        os.path.join(work_dir, "vehicle_inter_%s.csv" % inter_name),
         sep=',', header=0, dtype={0: str, 1: float, 2: float},
         names=["vehicle_id", "enter_time", "leave_time"])
 
@@ -279,8 +249,8 @@ def check_value_conf(dict_conf):
             raise ValueError('k: %s, v: %s' % (key, dict_conf[key]))
 
 
-def parse_roadnet(roadnet_file_dir):
-    """
+def parse_roadnet_cityflow(roadnet_file_dir):
+    """DISGUSTING code.
     Args:
         roadnet_file_dir: a full dir of the roadnet file.
     Returns:
@@ -289,9 +259,8 @@ def parse_roadnet(roadnet_file_dir):
     with open(roadnet_file_dir) as f:
         roadnet = json.load(f)
 
-    intersections = [inter
-                     for inter in roadnet["intersections"]
-                     if not inter["virtual"]]
+    intersections = \
+        [inter for inter in roadnet["intersections"] if not inter["virtual"]]
 
     lane_phase_info_dict = OrderedDict()
     for intersection in intersections:
@@ -302,7 +271,6 @@ def parse_roadnet(roadnet_file_dir):
              "phase": [],
              "yellow_phase": None,
              "phase_startLane_mapping": {},
-             "phase_noRightStartLane_mapping": {},
              "phase_sameStartLane_mapping": {},
              "phase_roadLink_mapping": {}}
         road_links = intersection["roadLinks"]
@@ -327,11 +295,15 @@ def parse_roadnet(roadnet_file_dir):
             tmp_same_start_lane = tuple(set(tmp_same_start_lane))
             roadlink_same_start_lane[idx].append(tmp_same_start_lane)
             same_start_lane.append(tmp_same_start_lane)
+        # --------------alien start_lane & end_lane---------------------------
 
         lane_phase_info_dict[intersection['id']
         ]["start_lane"] = sorted(list(set(start_lane)))
+        end_lane_ = sorted(list(set(end_lane)))
+        # this is used for alien start and end.
+        end_lane_ = end_lane_[:4] + end_lane_[-2:] + end_lane_[4:6]
         lane_phase_info_dict[intersection['id']
-        ]["end_lane"] = sorted(list(set(end_lane)))
+        ]["end_lane"] = end_lane_
         lane_phase_info_dict[intersection['id']
         ]["same_start_lane"] = sorted(list(set(same_start_lane)))
 
@@ -364,8 +336,7 @@ def parse_roadnet(roadnet_file_dir):
             lane_phase_info_dict[intersection['id']]["phase"].append(phase_i)
             lane_phase_info_dict[intersection['id']][
                 "phase_startLane_mapping"][phase_i] = start_lane
-            lane_phase_info_dict[intersection['id']][
-                "phase_noRightStartLane_mapping"][phase_i] = no_right_start_lane
+
             lane_phase_info_dict[intersection['id']][
                 "phase_sameStartLane_mapping"][phase_i] = same_start_lane
             lane_phase_info_dict[intersection['id']]["phase_roadLink_mapping"][
@@ -381,6 +352,126 @@ def parse_roadnet(roadnet_file_dir):
             lane_phase_info_dict[intersection['id']]['phase']
         )
     return lane_phase_info_dict
+
+
+def parse_roadnet_sumo(roadnet_file_dir):
+    roadnet = sumolib.net.readNet(roadnet_file_dir)
+    intersections = roadnet.getTrafficLights()
+    lane_phase_info_dict = OrderedDict()
+
+    for intersection in intersections:
+        inter_id = intersection.getID()
+        lane_phase_info_dict[inter_id] = dict()
+
+        list_phase = sorted(intersection.getLinks().keys())
+        lane_phase_info_dict[inter_id]["phase"] = list_phase
+
+        list_links = intersection.getLinks()
+        phase_lane_mapping = dict()
+        list_lane_enters = []
+        for phase in list_phase:
+            enter_exit_phase = list_links[phase]
+            start_ = []
+            for each in enter_exit_phase:
+                start, end = each[0].getID(), each[1].getID()
+                if start not in start_:
+                    start_.append(start)
+                    list_lane_enters.append(start)
+            phase_lane_mapping[phase] = start_
+
+        lane_phase_info_dict[inter_id]["relation"] = get_relation(
+            lane_phase_info_dict[inter_id]["phase"],
+            phase_lane_mapping,
+        )
+        lane_phase_info_dict[intersection.getID()]["phase_map"] = \
+            get_phase_map(phase_lane_mapping, list_lane_enters, list_phase)
+
+    return lane_phase_info_dict
+
+
+# def parse_roadnet_sumo(roadnet_file_dir):
+#     roadnet = sumolib.net.readNet(roadnet_file_dir)
+#     intersections = roadnet.getTrafficLights()
+#     lane_phase_info_dict = OrderedDict()
+#
+#     for intersection in intersections:
+#         inter_id = intersection.getID()
+#         lane_phase_info_dict[inter_id] = \
+#             {"start_lane": [],
+#              "same_start_lane": [],
+#              "end_lane": [],
+#              "phase": [],
+#              "yellow_phase": None,
+#              "phase_startLane_mapping": {},
+#              "phase_noRightStartLane_mapping": {},
+#              "phase_sameStartLane_mapping": {},
+#              "phase_roadLink_mapping": {}}
+#         road_links = intersection.getLinks()
+#         start_lane = []
+#         same_start_lane = []
+#         end_lane = []
+#         roadlink_lane_pair = {idx: [] for idx in road_links.keys()}
+#         roadlink_same_start_lane = {idx: [] for idx in road_links.keys()}
+#         for idx in road_links.keys():
+#             road_link = road_links[idx]
+#             tmp_same_start_lane = []
+#             for lane_link in road_link:
+#                 sl = lane_link[0].getID()
+#                 el = lane_link[1].getID()
+#                 type = lane_link[2]
+#                 start_lane.append(sl)
+#                 tmp_same_start_lane.append(sl)
+#                 end_lane.append(el)
+#                 roadlink_lane_pair[idx].append((sl, el, type))
+#             tmp_same_start_lane = tuple(set(tmp_same_start_lane))
+#             roadlink_same_start_lane[idx].append(tmp_same_start_lane)
+#             same_start_lane.append(tmp_same_start_lane)
+#
+#         lane_phase_info_dict[inter_id
+#         ]["start_lane"] = sorted(list(set(start_lane)))
+#         lane_phase_info_dict[inter_id
+#         ]["end_lane"] = sorted(list(set(end_lane)))
+#         lane_phase_info_dict[inter_id
+#         ]["same_start_lane"] = sorted(list(set(same_start_lane)))
+#
+#         for phase_i in sorted(road_links.keys()):
+#             phase_lane = road_links[phase_i]
+#             lane_pair = []
+#             start_lane = []
+#             same_start_lane = []
+#
+#             for each_start_end in phase_lane:
+#                 start_lane_ = each_start_end[0].getID()
+#                 end_lane_ = each_start_end[1].getID()
+#                 type_ = str(each_start_end[2])
+#                 start_lane.append(start_lane_)
+#                 if start_lane_ not in same_start_lane:
+#                     same_start_lane.append(start_lane_)
+#                 lane_pair.append((start_lane_, end_lane_, type_))
+#
+#             lane_phase_info_dict[inter_id]["phase"].append(phase_i)
+#             lane_phase_info_dict[inter_id][
+#                 "phase_startLane_mapping"][phase_i] = start_lane
+#
+#             lane_phase_info_dict[inter_id][
+#                 "phase_sameStartLane_mapping"][phase_i] = same_start_lane
+#             lane_phase_info_dict[inter_id]["phase_roadLink_mapping"][
+#                 phase_i] = lane_pair
+#
+#         if lane_phase_info_dict[inter_id]['yellow_phase'] is None:
+#             lane_phase_info_dict[inter_id]['yellow_phase'] = 0
+#
+#         lane_phase_info_dict[inter_id]["relation"] = get_relation(
+#             lane_phase_info_dict[inter_id]["phase"],
+#             lane_phase_info_dict[inter_id]["phase_roadLink_mapping"]
+#         )
+#         lane_phase_info_dict[intersection.getID()]["phase_map"] =
+#         get_phase_map(
+#             lane_phase_info_dict[inter_id]['phase_startLane_mapping'],
+#             lane_phase_info_dict[inter_id]['start_lane'],
+#             lane_phase_info_dict[inter_id]['phase']
+#         )
+#     return lane_phase_info_dict
 
 
 def get_deep_copy(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path):

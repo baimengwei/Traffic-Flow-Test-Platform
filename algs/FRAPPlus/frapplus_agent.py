@@ -22,7 +22,7 @@ class FRAPPlus(nn.Module):
 
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
         self.phase_dim = dim_feature['cur_phase'][0]
-        self.vehicle_dim = dim_feature['lane_num_vehicle'][0]
+        self.vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
 
         self.embeding_phase = nn.Embedding(2, 4)
         self.activate_phase = nn.Sigmoid()
@@ -174,10 +174,10 @@ class FRAPPlusAgent(Agent):
         reward_avg = []
         # TODO temp use, need to modify
         for each in sample_set:
-            state.append(each[0]['cur_phase'] + each[0]['lane_num_vehicle'])
+            state.append(each[0]['cur_phase'] + each[0]['lane_vehicle_cnt'])
             action.append(each[1])
             next_state.append(
-                each[2]['cur_phase'] + each[2]['lane_num_vehicle'])
+                each[2]['cur_phase'] + each[2]['lane_vehicle_cnt'])
             reward_avg.append(each[3])
 
         q_values = self.model.forward(torch.Tensor(state)).detach().numpy()

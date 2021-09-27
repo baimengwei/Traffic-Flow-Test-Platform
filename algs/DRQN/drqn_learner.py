@@ -11,7 +11,7 @@ class Generator(Generator):
         lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
         phase_dim = dim_feature['cur_phase'][0]
-        vehicle_dim = dim_feature['lane_num_vehicle'][0]
+        vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.history_len = self.dic_agent_conf["HISTORY_LEN"]
         self.state_dim = phase_dim + vehicle_dim
         self.action_dim = phase_dim  # one hot represent according to phase.
@@ -40,8 +40,8 @@ class Generator(Generator):
             step_num += 1
             if done_enable and done:
                 break
-        print('final inter 0: lane_num_vehicle ',
-              next_state[0]['lane_num_vehicle'])
+        print('final inter 0: lane_vehicle_cnt ',
+              next_state[0]['lane_vehicle_cnt'])
         self.env.bulk_log()
 
     def update_history_input(self):
@@ -55,7 +55,7 @@ class Generator(Generator):
                 "LANE_PHASE_INFO"]['phase_map']
             self.s = np.append(
                 np.array(dic_phase_expansion[self.s[0]["cur_phase"][0]]),
-                np.array(self.s[0]["lane_num_vehicle"]))
+                np.array(self.s[0]["lane_vehicle_cnt"]))
             # choose the action value 0-7 means phase 1-8, according to env
             self.a = np.array(dic_phase_expansion[self.a[0] + 1])
 

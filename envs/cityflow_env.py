@@ -1,7 +1,10 @@
 from misc.utils import *
-import cityflow
 from envs.anon_env import AnonEnv
+import platform
 import time
+
+if platform == "Linux":
+    import cityflow
 
 
 class CityFlowEnv(AnonEnv):

@@ -40,27 +40,25 @@ class Generator:
             for one_state in state:
                 action = self.agent.choose_action(one_state)
                 action_list.append(action)
-                if action is None:
-                    print("a breakpoint")
             next_state, reward, done, _ = self.env.step(action_list)
             state = next_state
             step_num += 1
             if done_enable and done:
                 break
-        print('final inter 0: lane_num_vehicle ',
-              next_state[0]['lane_num_vehicle'])
+        print('final inter 0: lane_vehicle_cnt ',
+              next_state[0]['lane_vehicle_cnt'])
         self.env.bulk_log()
 
     def generate_test(self):
         self.agent.load_network('round_%d' % self.round_number)
         self.generate(done_enable=False)
-        write_summary(self.dic_path, self.round_number)
+        for inter_name in self.dic_traffic_env_conf["LANE_PHASE_INFOS"]:
+            write_summary(self.dic_path, self.round_number, inter_name)
 
         if not self.dic_exp_conf["EXP_DEBUG"]:
             for inter_name in sorted(
                     self.dic_traffic_env_conf["LANE_PHASE_INFOS"].keys()):
                 path_to_log_file = os.path.join(
                     self.dic_path["PATH_TO_WORK"],
-                    "%s.pkl" % inter_name
-                )
+                    "%s.pkl" % inter_name)
                 downsample(path_to_log_file)
