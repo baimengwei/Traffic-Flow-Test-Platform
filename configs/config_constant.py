@@ -5,6 +5,7 @@ from algs.FRAP.frap_agent import FRAPAgent
 from algs.FRAPPlus.frapplus_agent import FRAPPlusAgent
 from algs.FRAPRQ.fraprq_agent import FRAPRQAgent
 from algs.MAXPRESSURE.maxpressure_agent import MAXPRESSUREAgent
+from algs.MetaDQN.metadqn_agent import MetaDQNAgent
 from algs.TDDD.tddd_agent import TDDDAgent
 from algs.MetaLight.metalight_agent import MetaLightAgent
 from algs.SOTL.sotl_agent import SOTLAgent
@@ -235,6 +236,7 @@ DIC_AGENTS = {
     "FIXTIME": FIXTIMEAgent,
     "MAXPRESSURE": MAXPRESSUREAgent,
     "FRAPRQ": FRAPRQAgent,
+    "MetaDQN": MetaDQNAgent,
 }
 RL_ALGORITHM = [
     "MetaLight",
@@ -244,6 +246,7 @@ RL_ALGORITHM = [
     "TDDD",
     "DRQN",
     "FRAPRQ",
+    "MetaDQN",
 ]
 TRAD_ALGORITHM = [
     "SOTL",

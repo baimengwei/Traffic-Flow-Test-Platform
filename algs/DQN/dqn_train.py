@@ -25,6 +25,13 @@ def main(args):
     traffic_file_list = \
         list(dic_traffic_env_conf["TRAFFIC_CATEGORY"]["train_all"].keys())
     # traffic_file_list = ['hangzhou_baochu_tiyuchang_1h_10_11_2021']
+
+    # traffic_file_list_ = []
+    # for traffic_file in traffic_file_list:
+    #     if traffic_file.split('_')[-1] in ['2055', '1504', '1664', '1530']:
+    #         traffic_file_list_.append(traffic_file)
+    # traffic_file_list = traffic_file_list_
+
     traffic_file_list_surplus = copy.deepcopy(traffic_file_list)
     list_pipeline = []
     for traffic_file in traffic_file_list:

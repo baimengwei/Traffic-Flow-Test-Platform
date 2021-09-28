@@ -33,7 +33,7 @@ def run_dqn():
     args = parse()
     print('start execute dqn...')
     args.algorithm = "DQN"
-    args.project = "DQN_Meta"
+    args.project = "DQN_Meta2"
     args.env = "anno"
     main(args)
 

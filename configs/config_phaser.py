@@ -244,7 +244,7 @@ def parse():
     parser.add_argument("--adapt_round", type=int, default=50,
                         help="for metalight valid test")
     parser.add_argument("--num_generators", type=int, default=3)
-    parser.add_argument("--pipeline", type=int, default=6)
+    parser.add_argument("--pipeline", type=int, default=3)
     parser.add_argument("--exp_debug", action="store_true")
     parser.add_argument("--seed", type=int, default=11)
     # -----------------------------traffic_env.conf---------------------------

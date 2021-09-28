@@ -138,6 +138,7 @@ class MetaDQNLearner:
         dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path = \
             get_deep_copy(self.dic_exp_conf, self.dic_agent_conf,
                           self.dic_traffic_env_conf, self.dic_path)
+        # just choose a random file for generating the init params
         # update path -> file dir, model dir
         x = list(dic_traffic_env_conf["TRAFFIC_IN_TASKS"].keys())[0]
         dic_path = update_path_file(dic_path, x)
