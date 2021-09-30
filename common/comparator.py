@@ -1,5 +1,7 @@
-from configs.config_phaser import *
+from multiprocessing import Process
 
+from configs.config_phaser import *
+import numpy as np
 
 class Comparator:
     def __init__(self, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
@@ -16,30 +18,48 @@ class Comparator:
             dic_agent_conf=self.dic_agent_conf,
             dic_traffic_env_conf=self.dic_traffic_env_conf,
             dic_path=self.dic_path,
-            round_number=self.round_number,
-            mode='meta')
+            traffic_tasks=self.traffic_tasks,
+            round_number=self.round_number)
 
-    def generate_compare(self):
-        self.list_samples = []
-        for traffic_task in self.traffic_tasks:
-            sample_set = []
-            file_name = os.path.join(
-                self.dic_path["PATH_TO_WORK"], "../", "task_round",
-                "round_%d" % self.round_number, traffic_task, "samples",
-                "total_samples.pkl")
-            sample_file = open(file_name, "rb")
-            try:
-                while True:
-                    sample_set += pickle.load(sample_file)
-            except EOFError:
-                sample_file.close()
-                pass
-            ind_end = len(sample_set)
-            print("memory size before forget: {0}".format(ind_end))
-            ind_sta = max(0, ind_end - self.dic_agent_conf["MAX_MEMORY_LEN"])
-            sample_set = sample_set[ind_sta: ind_end]
-            print("memory size after forget:", len(sample_set))
-            self.list_samples.append(sample_set)
+        self.env_name = self.dic_traffic_env_conf["ENV_NAME"]
+        self.env = DIC_ENVS[self.env_name](self.dic_path,
+                                           self.dic_traffic_env_conf)
+
+    def generate_compare(self, callback_func, done_enable=True):
+        def generate_compare():
+            state = self.env.reset()
+            step_num = 0
+            total_step = int(self.dic_traffic_env_conf["EPISODE_LEN"] /
+                             self.dic_traffic_env_conf["MIN_ACTION_TIME"])
+            next_state = None
+            while step_num < total_step:
+                action_list = []
+                for one_state in state:
+                    action = self.meta_agent.choose_action(one_state)
+                    action_list.append(action)
+                next_state, reward, done, _ = self.env.step(action_list)
+                state = next_state
+                step_num += 1
+                if done_enable and done:
+                    break
+            print('final inter 0: lane_vehicle_cnt ',
+                  next_state[0]['lane_vehicle_cnt'])
+            self.env.bulk_log()
+        process_list = []
+        for generate_task in self.traffic_tasks:
+            work_dir = os.path.join(self.dic_path["PATH_TO_WORK"],
+                                    "samples", "round_%d" % self.round_number,
+                                    "generator_%s" % generate_task)
+            dic_path = update_path_work(self.dic_path, work_dir)
+            create_path_dir(dic_path)
+            # -----------------------------------------------------
+            p = Process(target=callback_func,
+                        args=(self.round_number, dic_path, self.dic_exp_conf,
+                              self.dic_agent_conf, self.dic_traffic_env_conf))
+            p.start()
+            process_list.append(p)
+        for p in process_list:
+            p.join()
 
     def generate_target(self):
         self.list_targets = []

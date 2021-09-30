@@ -33,19 +33,23 @@ def run_dqn():
     args = parse()
     print('start execute dqn...')
     args.algorithm = "DQN"
-    args.project = "DQN_Meta2"
+    args.project = "DQN_ORG"
     args.env = "anno"
     main(args)
 
 
 def run_metadqn():
     from algs.MetaDQN.metadqn_train import main
+    from algs.MetaDQN.metadqn_train import main_test
     args = parse()
     print('start execute meta dqn...')
     args.algorithm = "MetaDQN"
     args.project = "Meta_DQN_RD"
     args.env = "anno"
-    main(args)
+    # main(args)
+    args.train_round = args.adapt_round
+    args.algorithm = "MetaDQNAdapt"
+    main_test(args)
 
 def run_sotl():
     from algs.SOTL.sotl_train import main
@@ -116,7 +120,7 @@ if __name__ == '__main__':
     # run_metalight()
     # run_frap()
     # run_frapplus()
-    run_dqn()
+    # run_dqn()
     # run_sotl()
     # run_tddd()
     # run_drqn()
@@ -124,4 +128,5 @@ if __name__ == '__main__':
     # run_fixtime()
     # run_maxpressure()
     # run_fraprq()
+    run_dqn()
     # run_metadqn()

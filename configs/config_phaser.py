@@ -235,13 +235,13 @@ def parse():
     parser.add_argument("--project", type=str, default="project_name")
     # ------------------------------exp.conf-----------------------------------
     parser.add_argument("--algorithm", type=str, default="MetaLight")
-    parser.add_argument("--train_round", type=int, default=100,
+    parser.add_argument("--train_round", type=int, default=20,
                         help="for train process")
     parser.add_argument("--task_round", type=int, default=20,
                         help="for metalight train process")
     parser.add_argument("--num_task", type=int, default=3,
                         help="for metalight train process")
-    parser.add_argument("--adapt_round", type=int, default=50,
+    parser.add_argument("--adapt_round", type=int, default=20,
                         help="for metalight valid test")
     parser.add_argument("--num_generators", type=int, default=3)
     parser.add_argument("--pipeline", type=int, default=3)

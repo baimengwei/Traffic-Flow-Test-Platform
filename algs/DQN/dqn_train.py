@@ -23,7 +23,7 @@ def main(args):
     """
     dic_exp_conf, _, dic_traffic_env_conf, _ = config_all(args)
     traffic_file_list = \
-        list(dic_traffic_env_conf["TRAFFIC_CATEGORY"]["train_all"].keys())
+        list(dic_traffic_env_conf["TRAFFIC_CATEGORY"]["test_homogeneous"].keys())
     # traffic_file_list = ['hangzhou_baochu_tiyuchang_1h_10_11_2021']
 
     # traffic_file_list_ = []

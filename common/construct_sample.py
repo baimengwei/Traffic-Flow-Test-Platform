@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 import os
-from misc.utils import set_seed
+
 
 class ConstructSample:
     def __init__(self, path_to_samples, round_number, dic_traffic_env_conf):
@@ -9,8 +9,6 @@ class ConstructSample:
         self.path_to_samples = path_to_samples
         self.round_number = round_number
         self.dic_traffic_env_conf = dic_traffic_env_conf
-
-        set_seed(self.round_number)
 
         self.parent_dir = os.path.join(self.path_to_samples, '../')
 

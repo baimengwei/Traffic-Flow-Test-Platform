@@ -1,3 +1,5 @@
+import copy
+
 from algs.DQN.dqn_agent import DQNAgent
 from algs.DRQN.drqn_agent import DRQNAgent
 from algs.FIXTIME.fixtime_agent import FIXTIMEAgent
@@ -6,6 +8,7 @@ from algs.FRAPPlus.frapplus_agent import FRAPPlusAgent
 from algs.FRAPRQ.fraprq_agent import FRAPRQAgent
 from algs.MAXPRESSURE.maxpressure_agent import MAXPRESSUREAgent
 from algs.MetaDQN.metadqn_agent import MetaDQNAgent
+from algs.MetaDQN.metadqn_agent_adapt import DQNAdaptAgent
 from algs.TDDD.tddd_agent import TDDDAgent
 from algs.MetaLight.metalight_agent import MetaLightAgent
 from algs.SOTL.sotl_agent import SOTLAgent
@@ -163,6 +166,34 @@ DIC_AGENT_CONF_METALIGHT = {
     "EARLY_STOP": False,
 }
 
+DIC_AGENT_CONF_METADQN = {
+    "LR": 0.001,
+    "ALPHA": 0.1,
+    "MIN_ALPHA": 0.00025,
+    "ALPHA_DECAY_RATE": 0.95,
+    "ALPHA_DECAY_STEP": 100,
+    "BETA": 0.1,
+    "LR_DECAY": 1,
+    "MIN_LR": 0.0001,
+    "SAMPLE_SIZE": 1000,
+    'UPDATE_START': 100,
+    'UPDATE_PERIOD': 10,
+    "TEST_PERIOD": 50,
+    "BATCH_SIZE": 32,
+    "EPOCHS": 100,
+    "UPDATE_Q_BAR_FREQ": 5,
+
+    "GAMMA": 0.8,
+    "MAX_MEMORY_LEN": 5000,
+    "EPSILON": 0.8,
+    "EPSILON_DECAY": 0.95,
+    "MIN_EPSILON": 0.2,
+    "NORMAL_FACTOR": 20,
+    "EARLY_STOP": False,
+}
+
+DIC_AGENT_CONF_METADQNADAPT = copy.deepcopy(DIC_AGENT_CONF_METADQN)
+
 DIC_AGENT_CONF_FRAPPLUS = {
     "LR": 0.001,
     "SAMPLE_SIZE": 1000,
@@ -237,6 +268,7 @@ DIC_AGENTS = {
     "MAXPRESSURE": MAXPRESSUREAgent,
     "FRAPRQ": FRAPRQAgent,
     "MetaDQN": MetaDQNAgent,
+    "MetaDQNAdapt":DQNAdaptAgent,
 }
 RL_ALGORITHM = [
     "MetaLight",
@@ -247,6 +279,7 @@ RL_ALGORITHM = [
     "DRQN",
     "FRAPRQ",
     "MetaDQN",
+    "MetaDQNAdapt",
 ]
 TRAD_ALGORITHM = [
     "SOTL",

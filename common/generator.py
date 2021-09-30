@@ -29,7 +29,6 @@ class Generator:
                                            self.dic_traffic_env_conf)
 
     def generate(self, done_enable=True):
-
         state = self.env.reset()
         step_num = 0
         total_step = int(self.dic_traffic_env_conf["EPISODE_LEN"] /

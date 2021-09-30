@@ -385,21 +385,30 @@ def parse_roadnet_sumo(roadnet_file_dir):
         )
         lane_phase_info_dict[intersection.getID()]["phase_map"] = \
             get_phase_map(phase_lane_mapping, list_lane_enters, list_phase)
-
     return lane_phase_info_dict
 
 
-def copy_files(source_dir, target_dir):
-    for f in os.listdir(source_dir):
+def copy_files_best(source_dir, target_dir):
+    list_files = os.listdir(source_dir)
+    for f in list_files:
         source_file = os.path.join(source_dir, f)
         target_file = os.path.join(target_dir, f)
         if os.path.isfile(source_file):
             if not os.path.exists(target_dir):
                 os.makedirs(target_dir)
-        if not os.path.exists(target_file):
-            open(target_file, "wb").write(open(source_file, "rb").read())
-        if os.path.isdir(source_file):
-            copy_files(source_file, target_file)
+            if not os.path.exists(target_file):
+                list_files = os.listdir(source_dir)
+                file_sorted = sorted(
+                    list_files, key=lambda x: int(x.split('.pt')[0].split('_')[-1]))
+                file_best = file_sorted[-1]
+                source_file = os.path.join(source_dir, file_best)
+                target_file = os.path.join(target_dir, file_best)
+                open(target_file, "wb").write(open(source_file, "rb").read())
+                break
+        elif os.path.isdir(source_file):
+            copy_files_best(source_file, target_file)
+        else:
+            raise ValueError(source_file)
 
 
 # def parse_roadnet_sumo(roadnet_file_dir):

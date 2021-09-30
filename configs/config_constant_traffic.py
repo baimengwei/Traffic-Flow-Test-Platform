@@ -69,15 +69,15 @@ TRAFFIC_CATEGORY = {
         },
         'test_heterogeneous': {
             'hangzhou_qingchun_yanan_1h_13_14_1536':
-                ['4c', 'roadnet_p4c_lt', 'flow'],
+                ['4c', 'roadnet_p4a_lt', 'flow'],
             'hangzhou_tianmushan_xueyuan_1h_9_10_2178':
-                ['4d', 'roadnet_p4d_lt', 'flow'],
+                ['4d', 'roadnet_p4a_lt', 'flow'],
             'hangzhou_baochu_tiyuchang_1h_8_9_2231':
-                ['6b', 'roadnet_p6b_lt', 'flow'],
+                ['6b', 'roadnet_p4a_lt', 'flow'],
             'hangzhou_shenban_shixiang_1h_8_9_2032':
-                ['6d', 'roadnet_p6d_lt', 'flow'],
+                ['6d', 'roadnet_p4a_lt', 'flow'],
             'hangzhou_tianmushan_xueyuan_1h_17_18_2062':
-                ['6f', 'roadnet_p6f_lt', 'flow'],
+                ['6f', 'roadnet_p4a_lt', 'flow'],
         },
         'demo_train': {
             "demo_train_1364":
