@@ -20,7 +20,7 @@ class FRAPPlus(nn.Module):
         self.constant_mask = \
             torch.Tensor(self.lane_phase_info['relation']).int()
 
-        dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
+
         self.phase_dim = dim_feature['cur_phase'][0]
         self.vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
 

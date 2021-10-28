@@ -11,8 +11,8 @@ class MAXPRESSUREAgent:
         self.round_number = round_number
 
         self.lane_phase_info = self.dic_traffic_env_conf["LANE_PHASE_INFO"]
-        self.phase_count = len(self.lane_phase_info["phase"])
-        self.phase_map = self.lane_phase_info["phase_map"]
+        self.phase_count = len(self.lane_phase_info["phase_lane_mapping"].keys())
+        self.phase_map = self.lane_phase_info["phase_lane_mapping"]
 
         self.g_min = self.dic_agent_conf["G_MIN"]
 

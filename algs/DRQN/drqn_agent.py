@@ -16,7 +16,7 @@ class Context(nn.Module):
         self.dic_agent_conf = dic_agent_conf
         self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
 
-        dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
+
         phase_dim = dim_feature['cur_phase'][0]
         vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.state_dim = phase_dim + vehicle_dim

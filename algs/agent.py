@@ -1,9 +1,9 @@
 import numpy as np
+from abc import ABCMeta, abstractmethod
 
-
-class Agent:
+class Agent(classmethod=ABCMeta):
     """
-        An abstract class for FRAPPlus
+        An abstract class for value based method
     """
 
     def __init__(self, dic_agent_conf, dic_traffic_env_conf, dic_path,

@@ -3,7 +3,6 @@ import copy
 from algs.DQN.dqn_agent import DQNAgent
 from algs.DRQN.drqn_agent import DRQNAgent
 from algs.FIXTIME.fixtime_agent import FIXTIMEAgent
-from algs.FRAP.frap_agent import FRAPAgent
 from algs.FRAPPlus.frapplus_agent import FRAPPlusAgent
 from algs.FRAPRQ.fraprq_agent import FRAPRQAgent
 from algs.MAXPRESSURE.maxpressure_agent import MAXPRESSUREAgent
@@ -13,27 +12,8 @@ from algs.TDDD.tddd_agent import TDDDAgent
 from algs.MetaLight.metalight_agent import MetaLightAgent
 from algs.SOTL.sotl_agent import SOTLAgent
 from algs.WEBSTER.webster_agent import WEBSTERAgent
-from envs.anon_env import AnonEnv
 from envs.cityflow_env import CityFlowEnv
 from envs.sumo_env import SumoEnv
-
-DIC_FEATURE_DIM = dict(
-    cur_phase=(8,),
-    lane_vehicle_cnt=(8,),
-    # "time_this_phase",
-    # "vehicle_position_img",
-    # "vehicle_speed_img",
-    # "vehicle_acceleration_img",
-    # "vehicle_waiting_time_img",
-    # "lane_vehicle_cnt",
-    # "stop_vehicle_thres1",
-    # "stop_vehicle_thres1",
-    # "lane_queue_length",
-    # "lane_vehicle_left_cnt",
-    # "lane_sum_duration_vehicle_left",
-    # "lane_sum_waiting_time",
-    # "terminal"
-)
 
 LIST_STATE_FEATURE = [
     "cur_phase",
@@ -260,7 +240,6 @@ DIC_AGENTS = {
     "FRAPPlus": FRAPPlusAgent,
     "DQN": DQNAgent,
     "SOTL": SOTLAgent,
-    "FRAP": FRAPAgent,
     "TDDD": TDDDAgent,
     "DRQN": DRQNAgent,
     "WEBSTER": WEBSTERAgent,
@@ -289,6 +268,5 @@ TRAD_ALGORITHM = [
 ]
 DIC_ENVS = {
     "sumo": SumoEnv,
-    "anno": AnonEnv,
     "cityflow": CityFlowEnv,
 }

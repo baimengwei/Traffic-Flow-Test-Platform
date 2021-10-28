@@ -16,7 +16,7 @@ class Context(nn.Module):
         self.dic_agent_conf = dic_agent_conf
         self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
 
-        dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
+
         # For each lane information. dim phase and vehicle should be 1.
 
         self.hidden_dim = self.dic_agent_conf["HIDDEN_DIM"]

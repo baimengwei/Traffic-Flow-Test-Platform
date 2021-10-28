@@ -31,13 +31,13 @@ def update_traffic_env_tasks(dic_conf, mode):
     return dic_conf
 
 
-def update_traffic_env_infos(dic_conf, dic_path):
+def update_traffic_env_infos(dic_conf, dic_path, infos=None):
     """Update TRAFFIC_FILE, LANE_PHASE_INFOS, this function use dic_path for
     search the roadnet file. should ensure the correct config in dic_path
     """
     env_name = dic_path["PATH_TO_DATA_ROOT"].split('/')[2].split('_')[0]
     if env_name == 'sumo':
-        lane_phase_infos = parse_roadnet_sumo(dic_path["PATH_TO_ROADNET_FILE"])
+        lane_phase_infos = infos
     elif env_name in ['anno', 'cityflow']:
         lane_phase_infos = \
             parse_roadnet_cityflow(dic_path["PATH_TO_ROADNET_FILE"])
@@ -187,7 +187,7 @@ def config_all(args):
         "EPISODE_LEN": args.episode_len,
         "DONE_ENABLE": args.done,
         "REWARD_NORM": args.reward_norm,
-        "DIC_FEATURE_DIM": DIC_FEATURE_DIM,
+
         "LIST_STATE_FEATURE_ALL": LIST_STATE_FEATURE,
         "DIC_REWARD_INFO_ALL": DIC_REWARD_INFO,
         "DIC_REWARD_INFO": {"sum_stop_vehicle_thres1": -0.25},
@@ -235,7 +235,7 @@ def parse():
     parser.add_argument("--project", type=str, default="project_name")
     # ------------------------------exp.conf-----------------------------------
     parser.add_argument("--algorithm", type=str, default="MetaLight")
-    parser.add_argument("--train_round", type=int, default=20,
+    parser.add_argument("--train_round", type=int, default=60,
                         help="for train process")
     parser.add_argument("--task_round", type=int, default=20,
                         help="for metalight train process")

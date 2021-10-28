@@ -6,12 +6,7 @@ from configs.config_phaser import *
 
 def dqn_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
               dic_path, round_number):
-    inter_names = list(dic_traffic_env_conf["LANE_PHASE_INFOS"].keys())
-    # warn("using a fix inter_name[0]")
-    inter_name = inter_names[0]
-    dic_traffic_env_conf = \
-        update_traffic_env_info(dic_traffic_env_conf, inter_name)
-    # ---------------------------------------------------------
+
     print('round %s start...' % round_number)
     learner = RoundLearner(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                            dic_path, round_number)
@@ -24,6 +19,7 @@ def main(args):
     dic_exp_conf, _, dic_traffic_env_conf, _ = config_all(args)
     traffic_file_list = \
         list(dic_traffic_env_conf["TRAFFIC_CATEGORY"]["test_homogeneous"].keys())
+    traffic_file_list = ['cps_multi_1888']
     # traffic_file_list = ['hangzhou_baochu_tiyuchang_1h_10_11_2021']
 
     # traffic_file_list_ = []

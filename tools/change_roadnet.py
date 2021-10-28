@@ -24,11 +24,8 @@ def change_roadnet(root_dir):
         shutil.copy(source_file, file_dir)
 
 
-
 if __name__ == "__main__":
     os.chdir('../')
     root_dir = './data/anno_scenario'
     change_roadnet(root_dir)
-
-
     print("finished.")

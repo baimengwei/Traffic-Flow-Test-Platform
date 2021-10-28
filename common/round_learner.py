@@ -15,20 +15,16 @@ def generator_wrapper(round_number, dic_path, dic_exp_conf,
     generator.generate()
 
 
-def updater_wrapper(round_number, dic_agent_conf,
-                    dic_exp_conf, dic_traffic_env_conf,
-                    dic_path):
+def updater_wrapper(round_number, work_dir):
     updater = Updater(
         round_number=round_number,
-        dic_agent_conf=dic_agent_conf,
-        dic_exp_conf=dic_exp_conf,
-        dic_traffic_env_conf=dic_traffic_env_conf,
-        dic_path=dic_path
+        work_dir=work_dir
     )
     updater.load_sample()
     updater.forget_sample()
     updater.slice_sample()
     updater.update_network()
+    updater.downsamples()
 
 
 def test_eval(round_number, dic_path, dic_exp_conf, dic_agent_conf,
@@ -37,7 +33,8 @@ def test_eval(round_number, dic_path, dic_exp_conf, dic_agent_conf,
                           dic_path=dic_path,
                           dic_exp_conf=dic_exp_conf,
                           dic_agent_conf=dic_agent_conf,
-                          dic_traffic_env_conf=dic_traffic_env_conf)
+                          dic_traffic_env_conf=dic_traffic_env_conf,
+                          test_flag=True)
     generator.generate_test()
 
 
@@ -87,31 +84,16 @@ class RoundLearner:
 
         cs = ConstructSample(
             path_to_samples=path_to_sample,
-            round_number=self.round_number,
-            dic_traffic_env_conf=self.dic_traffic_env_conf)
+            round_number=self.round_number)
         cs.make_reward()
 
     def round_update_network(self, callback_func):
+        work_dir = self.dic_path["PATH_TO_WORK"]
         p = Process(target=callback_func,
                     args=(self.round_number,
-                          self.dic_agent_conf,
-                          self.dic_exp_conf,
-                          self.dic_traffic_env_conf,
-                          self.dic_path))
+                          work_dir))
         p.start()
         p.join()
-
-        for cnt_gen in range(self.dic_exp_conf["NUM_GENERATORS"]):
-            for inter_name in sorted(
-                    self.dic_traffic_env_conf["LANE_PHASE_INFOS"].keys()):
-                path_to_log_file = os.path.join(
-                    self.dic_path["PATH_TO_WORK"],
-                    "samples",
-                    "round_" + str(self.round_number),
-                    "generator_" + str(cnt_gen),
-                    "%s.pkl" % inter_name
-                )
-                downsample(path_to_log_file)
 
     def round_test_eval(self, callback_func):
 

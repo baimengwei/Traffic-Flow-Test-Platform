@@ -11,7 +11,7 @@ class WEBSTERAgent():
         self.round_number = round_number
 
         self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
-        dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
+
 
         self.vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.R = self.dic_agent_conf["L_LANE"] * self.vehicle_dim

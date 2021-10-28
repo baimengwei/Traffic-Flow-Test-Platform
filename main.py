@@ -34,7 +34,7 @@ def run_dqn():
     print('start execute dqn...')
     args.algorithm = "DQN"
     args.project = "DQN_ORG"
-    args.env = "anno"
+    args.env = "sumo"
     main(args)
 
 
@@ -111,7 +111,7 @@ def run_maxpressure():
     print("start execute maxpressure.")
     args.algorithm = "MAXPRESSURE"
     args.project = "MAXPRESSURE_N"
-    args.env = "sumo"
+    args.env = "cityflow"
     args.if_gui = False
     main(args)
 
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     # run_drqn()
     # run_webster()
     # run_fixtime()
-    # run_maxpressure()
+    run_maxpressure()
     # run_fraprq()
-    run_dqn()
+    # run_dqn()
     # run_metadqn()

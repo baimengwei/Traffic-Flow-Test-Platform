@@ -226,7 +226,7 @@ def main(records_dir):
 
     # summary_detail_train(project, copy.deepcopy(total_summary))
 
-    summary_detail_test(records_dir, copy.deepcopy(dict_summary))
+    summary_detail_test(records_dir)
     # summary_detail_test_segments(project, copy.deepcopy(total_summary))
 
 
@@ -453,159 +453,32 @@ def summary_detail_train(project, total_summary):
         mode_name="train")
 
 
-def summary_detail_test(records_dir, dict_summary):
+def summary_detail_test(records_dir):
     """DISGUSTING CODE * 3
     """
-    performance_duration = {}
-    performance_at_min_duration_round = {}
 
-    min_queue_length = min_duration = min_duration2 = float('inf')
-    min_queue_length_id = min_duration_ind = 0
+    test_round_dir = os.path.join(records_dir, "test_round")
+    list_files = os.listdir(test_round_dir)
+    for file in list_files:
+        if '.csv' in file:
+            file_full = os.path.join(test_round_dir, file)
+            df = pd.read_csv(file_full)
+            list_duration = df['duration']
+            list_vehicle_in = df['vec_in']
+            list_vehicle_out = df['vec_out']
 
-    exp_conf = open(os.path.join(records_dir, "exp.conf"), 'r')
-    dic_exp_conf = json.load(exp_conf)
-    path_conf = open(os.path.join(records_dir, "path.conf"), 'r')
-    dic_path_conf = json.load(path_conf)
-    traffic_env_conf = open(os.path.join(records_dir, "traffic_env.conf"), 'r')
-    dic_traffic_env_conf = json.load(traffic_env_conf)
-    traffic_file = dic_traffic_env_conf["TRAFFIC_FILE"]
-    # TODO restruct this file.
-    run_counts = dic_traffic_env_conf["EPISODE_LEN"]
-    num_rounds = dic_exp_conf["ADAPT_ROUND"]
-    num_seg = run_counts // 3600
-    nan_thres = 120
-    duration_each_round_list = []
-    duration_each_round_list2 = []
-    queue_length_each_round_list = []
-    num_of_vehicle_in = []
-    num_of_vehicle_out = []
-
-    train_round_dir = os.path.join(records_dir, "test_round")
-    round_files = os.listdir(train_round_dir)
-    round_files = [f for f in round_files if "round" in f]
-    round_files.sort(key=lambda x: int(x[6:]))
-
-    round_summary = {"round": list(range(num_rounds))}
-    for round in round_files:
-        round_dir = os.path.join(train_round_dir, round)
-        list_duration_seg = [float('inf')] * num_seg
-        list_queue_length_seg = [float('inf')] * num_seg
-        list_queue_length_id_seg = [0] * num_seg
-        list_duration_id_seg = [0] * num_seg
-
-        # summary items (queue_length) from pickle
-        # TODO use a adaptive method rather than a fixed value
-        f = open(os.path.join(round_dir, "intersection_1_1.pkl"), "rb")
-        samples = pkl.load(f)
-        queue_length_each_round = 0
-        for sample in samples:
-            queue_length_each_round += sum(
-                sample['state']['stop_vehicle_thres1'])
-        sample_num = len(samples)
-        f.close()
-
-        inter_name = None
-        for file_name in os.listdir(round_dir):
-            if "vehicle_inter_" in file_name:
-                inter_name = file_name
-
-        # summary items (duration) from csv
-        df_vehicle_inter_0 = pd.read_csv(
-            os.path.join(round_dir, inter_name),
-            sep=',', header=0,
-            dtype={0: str, 1: float, 2: float},
-            names=["vehicle_id", "enter_time", "leave_time"])
-        index = df_vehicle_inter_0['leave_time'].notnull()
-        df_vehicle_inter_0 = df_vehicle_inter_0[index]
-
-        vehicle_in = sum(
-            [int(x) for x in
-             (df_vehicle_inter_0["enter_time"].values > 0)])
-        vehicle_out = sum(
-            [int(x) for x in
-             (df_vehicle_inter_0["leave_time"].values > 0)])
-        total_vol = get_total_traffic_volume(traffic_file)
-        duration = df_vehicle_inter_0["leave_time"].values - \
-                   df_vehicle_inter_0["enter_time"].values
-        ave_duration = np.mean(
-            [time for time in duration if not isnan(time)])
-        # print(ave_duration)
-
-        real_traffic_vol = 0
-        nan_num = 0
-        for time in duration:
-            if not isnan(time):
-                real_traffic_vol += 1
-            else:
-                nan_num += 1
-
-        duration_each_round_list.append(ave_duration)
-        queue_length_each_round_list.append(
-            queue_length_each_round / sample_num)
-        num_of_vehicle_in.append(vehicle_in)
-        num_of_vehicle_out.append(vehicle_out)
-
-        if min_queue_length > queue_length_each_round / sample_num:
-            min_queue_length = queue_length_each_round / sample_num
-            min_queue_length_id = int(round[6:])
-
-        valid_flag = json.load(
-            open(os.path.join(
-                round_dir,
-                "valid_flag.json")))
-        # if valid_flag['0']:  # temporary for one intersection
-        if vehicle_out > total_vol * 0.9:
-            if min_duration > ave_duration > 24:
-                print(">", traffic_file)
-                print(">>>", ave_duration, vehicle_out, total_vol)
-                min_duration = ave_duration
-                min_duration_ind = int(round[6:])
-
-        # result_dir = os.path.join(records_dir, traffic_file)
-        result_dir = dic_path_conf["PATH_TO_WORK"]
-
-        # total_summary
-        dict_summary = get_metrics(
-            duration_each_round_list,
-            queue_length_each_round_list,
-            min_duration,
-            min_duration_ind,
-            min_queue_length,
-            min_queue_length_id,
-            traffic_file,
-            dict_summary,
-            mode_name="test",
-            save_path=result_dir,
-            num_rounds=num_rounds,
-            min_duration2=None if "peak" not in traffic_file else min_duration2)
-
-        if ".xml" in traffic_file:
-            traffic_name, traffic_time = traffic_file.split(".xml")
-        elif ".json" in traffic_file:
-            traffic_name, traffic_time = traffic_file.split(".json")
-        if traffic_file not in performance_duration:
-            performance_duration[traffic_file] = [
-                (duration_each_round_list, traffic_file)]
-        else:
-            performance_duration[traffic_file].append(
-                (duration_each_round_list, traffic_file))
-
-    total_result = pd.DataFrame(dict_summary)
-    # total_result.to_csv(os.path.join("summary", project,
-    # "total_test_results.csv"))
-    figure_dir = dic_path_conf["PATH_TO_FIGURE"]
-
-    # if dic_exp_conf["EARLY_STOP"]:
-    #     performance_duration = padding_duration(performance_duration)
-    # summary_plot(
-    #     performance_duration,
-    #     figure_dir,
-    #     mode_name="test",
-    #     num_rounds=num_rounds)
-    # performance_at_min_duration_round_plot(
-    #     performance_at_min_duration_round,
-    #     figure_dir,
-    #     mode_name="test")
+            figure = plt.figure(figsize=(16, 9))
+            ax1 = figure.add_subplot(111)
+            ax1.plot(list_duration)
+            plt.legend(['duration'], loc='upper left')
+            ax2 = ax1.twinx()
+            ax2.plot(list_vehicle_in, linestyle=':')
+            ax2.plot(list_vehicle_out, linestyle=':')
+            plt.legend(['vehicle_in', 'vehicle_out'], loc='upper right')
+            plt.show()
+            figure_path = 'result_' + file.split('.')[0] + '.png'
+            figure_path = os.path.join(records_dir, figure_path)
+            plt.savefig(figure_path)
 
 
 def summary_detail_baseline(project):

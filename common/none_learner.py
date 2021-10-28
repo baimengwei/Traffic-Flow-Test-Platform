@@ -44,4 +44,3 @@ class NoneLearner:
                           self.dic_traffic_env_conf))
         p.start()
         p.join()
-

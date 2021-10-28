@@ -12,11 +12,10 @@ class DQN(nn.Module):
         self.dic_traffic_env_conf = dic_traffic_env_conf
         self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
 
-        dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
-        phase_dim = dim_feature['cur_phase'][0]
-        vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
+        phase_dim = len(self.lane_phase_info['phase_links'])
+        vehicle_dim = len(self.lane_phase_info['phase_links'])
         self.state_dim = phase_dim + vehicle_dim
-        self.action_dim = len(self.lane_phase_info['phase'])
+        self.action_dim = len(self.lane_phase_info['phase_lane_mapping'])
 
         self.weight_feature_line = torch.nn.Linear(
             self.state_dim, 50)
@@ -41,15 +40,17 @@ class DQNAgent(Agent):
         super().__init__(dic_agent_conf, dic_traffic_env_conf, dic_path,
                          round_number)
         self.decay_epsilon(self.round_number)
+        self.inter_name = self.dic_traffic_env_conf["INTER_NAME"]
 
         if self.round_number == 0:
             self.build_network()
             self.build_network_bar()
         else:
-            self.load_network("round_%d" % (self.round_number - 1))
+            self.load_network(
+                self.inter_name + "_round_%d" % (self.round_number - 1))
             bar_freq = self.dic_agent_conf["UPDATE_Q_BAR_FREQ"]
             bar_number = (self.round_number - 1) // bar_freq * bar_freq
-            self.load_network_bar("round_%d" % bar_number)
+            self.load_network_bar(self.inter_name + "_round_%d" % bar_number)
 
     def build_network(self):
         self.model = DQN(self.dic_traffic_env_conf)
@@ -80,6 +81,7 @@ class DQNAgent(Agent):
     def choose_action(self, state, choice_random=True):
         input = self.convert_state_to_input(state)
         input = torch.Tensor(input).flatten().unsqueeze(0)
+
         q_values = self.model.forward(input)
         if random.random() <= self.dic_agent_conf["EPSILON"] \
                 and choice_random:
@@ -91,12 +93,12 @@ class DQNAgent(Agent):
     def convert_state_to_input(self, s):
         input = []
         dic_phase_expansion = self.dic_traffic_env_conf[
-            "LANE_PHASE_INFO"]['phase_map']
+            "LANE_PHASE_INFO"]['phase_lane_mapping']
         for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
             if feature == "cur_phase":
-                input.append(np.array([dic_phase_expansion[s[feature]]]))
+                input.append(np.array(dic_phase_expansion[s[feature] - 1]))
             else:
-                input.append(np.array([s[feature]]))
+                input.append(np.array(s[feature]))
         return input
 
     def prepare_Xs_Y(self, sample_set):
