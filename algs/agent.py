@@ -1,6 +1,7 @@
 import numpy as np
 from abc import ABCMeta, abstractmethod
 
+
 class Agent(classmethod=ABCMeta):
     """
         An abstract class for value based method
@@ -34,36 +35,44 @@ class Agent(classmethod=ABCMeta):
         self.dic_agent_conf["EPSILON"] = max(
             decayed_epsilon, self.dic_agent_conf["MIN_EPSILON"])
 
-    def decay_noise(self, round_number):
-        """For TD3
-        Warning: MODIFIED DIC_AGENT_CONF : NOISE VALUE
-        """
-        decayed_expl_noise = \
-            self.dic_agent_conf["EXPL_NOISE"] * \
-            np.power(self.dic_agent_conf["EXPL_NOISE_DECAY"], round_number)
-        self.dic_agent_conf["EXPL_NOISE"] = max(
-            decayed_expl_noise, self.dic_agent_conf["EXPL_NOISE_END"])
+    # def decay_noise(self, round_number):
+    #     """For TD3
+    #     Warning: MODIFIED DIC_AGENT_CONF : NOISE VALUE
+    #     """
+    #     decayed_expl_noise = \
+    #         self.dic_agent_conf["EXPL_NOISE"] * \
+    #         np.power(self.dic_agent_conf["EXPL_NOISE_DECAY"], round_number)
+    #     self.dic_agent_conf["EXPL_NOISE"] = max(
+    #         decayed_expl_noise, self.dic_agent_conf["EXPL_NOISE_END"])
 
-    def choose_action(self, state, choice_random):
-        raise NotImplementedError
+    @abstractmethod
+    def choose_action(self, state, choice_random: bool):
+        pass
 
+    @abstractmethod
     def build_network(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def build_network_bar(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def load_network(self, file_name):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def load_network_bar(self, file_name):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def prepare_Xs_Y(self, sample_set):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def train_network(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def save_network(self, file_name):
-        raise NotImplementedError
+        pass

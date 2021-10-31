@@ -10,15 +10,14 @@ class DQN(nn.Module):
     def __init__(self, dic_traffic_env_conf):
         super().__init__()
         self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
 
+        self.lane_phase_info = self.dic_traffic_env_conf["LANE_PHASE_INFO"]
         phase_dim = len(self.lane_phase_info['phase_links'])
         vehicle_dim = len(self.lane_phase_info['phase_links'])
         self.state_dim = phase_dim + vehicle_dim
         self.action_dim = len(self.lane_phase_info['phase_lane_mapping'])
 
-        self.weight_feature_line = torch.nn.Linear(
-            self.state_dim, 50)
+        self.weight_feature_line = torch.nn.Linear(self.state_dim, 50)
         self.activate_feature_line = torch.nn.ReLU()
 
         self.linear_combine = torch.nn.Linear(50, 50)
