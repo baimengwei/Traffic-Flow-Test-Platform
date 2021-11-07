@@ -1,6 +1,5 @@
 from multiprocessing import Process
 from algs.DRQN.drqn_learner import DRQNLearner
-from common.parallelizer import pipeline
 from configs.config_phaser import *
 
 

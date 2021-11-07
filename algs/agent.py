@@ -1,5 +1,6 @@
 import numpy as np
 from abc import ABCMeta, abstractmethod
+from configs.conf_path import ConfPath
 
 
 class Agent(classmethod=ABCMeta):
@@ -7,43 +8,35 @@ class Agent(classmethod=ABCMeta):
         An abstract class for value based method
     """
 
-    def __init__(self, dic_agent_conf, dic_traffic_env_conf, dic_path,
-                 round_number):
+    def __init__(self, conf_path: ConfPath, round_number: int):
         """
-        Args:
-            dic_agent_conf:
-            dic_traffic_env_conf: should be item rather than list
-            dic_path: should be item rather than list
-        Returns:
-            saved value
         """
-        self.dic_agent_conf = dic_agent_conf
-        self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.dic_path = dic_path
+        _, self.conf_agent, self.conf_traffic = conf_path.load_conf_file()
+        self.conf_path = conf_path
         self.round_number = round_number
+        self.__decay_epsilon()
 
-    def decay_epsilon(self, round_number):
+    def convert_state_to_input(self, state, algorithm):
+        input = []
+        list_feature = self.conf_traffic.FEATURE
+        dic_phase_expansion = self.conf_traffic.LANE_PHASE_INFO['phase_lane_mapping']
+        for feature in list_feature:
+            if feature == "cur_phase":
+                input.append(np.array(dic_phase_expansion[state[feature] - 1]))
+            else:
+                input.append(np.array(state[feature]))
+        return input
+
+    def __decay_epsilon(self):
         """For value based method.
-
-        Warning: MODIFIED DIC_AGENT_CONF : EPSILON VALUE
         When reached round i = (log(eps_min)-log(eps_init)) / log(decay)
         eps_init reached eps_min. default round: 27
         """
-        decayed_epsilon = \
-            self.dic_agent_conf["EPSILON"] * \
-            np.power(self.dic_agent_conf["EPSILON_DECAY"], round_number)
-        self.dic_agent_conf["EPSILON"] = max(
-            decayed_epsilon, self.dic_agent_conf["MIN_EPSILON"])
-
-    # def decay_noise(self, round_number):
-    #     """For TD3
-    #     Warning: MODIFIED DIC_AGENT_CONF : NOISE VALUE
-    #     """
-    #     decayed_expl_noise = \
-    #         self.dic_agent_conf["EXPL_NOISE"] * \
-    #         np.power(self.dic_agent_conf["EXPL_NOISE_DECAY"], round_number)
-    #     self.dic_agent_conf["EXPL_NOISE"] = max(
-    #         decayed_expl_noise, self.dic_agent_conf["EXPL_NOISE_END"])
+        decayed_epsilon = self.conf_agent.EPSILON * \
+                          np.power(self.conf_agent.EPSILON_DECAY,
+                                   self.round_number)
+        self.conf_agent.EPSILON = max(decayed_epsilon,
+                                      self.conf_agent.MIN_EPSILON)
 
     @abstractmethod
     def choose_action(self, state, choice_random: bool):

@@ -33,7 +33,7 @@ def run_dqn():
     args = parse()
     print('start execute dqn...')
     args.algorithm = "DQN"
-    args.project = "DQN_ORG"
+    args.project = "DQN_TEST"
     args.env = "sumo"
     main(args)
 
@@ -120,13 +120,13 @@ if __name__ == '__main__':
     # run_metalight()
     # run_frap()
     # run_frapplus()
-    # run_dqn()
+    run_dqn()
     # run_sotl()
     # run_tddd()
     # run_drqn()
     # run_webster()
     # run_fixtime()
-    run_maxpressure()
+    # run_maxpressure()
     # run_fraprq()
     # run_dqn()
     # run_metadqn()

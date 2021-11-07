@@ -7,11 +7,11 @@ from algs.agent import Agent
 
 
 class DQN(nn.Module):
-    def __init__(self, dic_traffic_env_conf):
+    def __init__(self, conf_traffic_env):
         super().__init__()
-        self.dic_traffic_env_conf = dic_traffic_env_conf
+        self.conf_traffic_env = conf_traffic_env
 
-        self.lane_phase_info = self.dic_traffic_env_conf["LANE_PHASE_INFO"]
+        self.lane_phase_info = self.conf_traffic_env["LANE_PHASE_INFO"]
         phase_dim = len(self.lane_phase_info['phase_links'])
         vehicle_dim = len(self.lane_phase_info['phase_links'])
         self.state_dim = phase_dim + vehicle_dim
@@ -34,12 +34,11 @@ class DQN(nn.Module):
 
 
 class DQNAgent(Agent):
-    def __init__(self, dic_agent_conf, dic_traffic_env_conf,
-                 dic_path, round_number):
-        super().__init__(dic_agent_conf, dic_traffic_env_conf, dic_path,
-                         round_number)
-        self.decay_epsilon(self.round_number)
+    def __init__(self, conf_path, round_number):
+        super().__init__(conf_path, round_number)
+
         self.inter_name = self.dic_traffic_env_conf["INTER_NAME"]
+
 
         if self.round_number == 0:
             self.build_network()
@@ -78,7 +77,7 @@ class DQNAgent(Agent):
         self.model_target.load_state_dict((ckpt['state_dict']))
 
     def choose_action(self, state, choice_random=True):
-        input = self.convert_state_to_input(state)
+        input = self.convert_state_to_input(state, "DQN")
         input = torch.Tensor(input).flatten().unsqueeze(0)
 
         q_values = self.model.forward(input)
@@ -88,17 +87,6 @@ class DQNAgent(Agent):
         else:
             actions = np.argmax(q_values[0].detach().numpy())
         return actions
-
-    def convert_state_to_input(self, s):
-        input = []
-        dic_phase_expansion = self.dic_traffic_env_conf[
-            "LANE_PHASE_INFO"]['phase_lane_mapping']
-        for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
-            if feature == "cur_phase":
-                input.append(np.array(dic_phase_expansion[s[feature] - 1]))
-            else:
-                input.append(np.array(s[feature]))
-        return input
 
     def prepare_Xs_Y(self, sample_set):
         state = []

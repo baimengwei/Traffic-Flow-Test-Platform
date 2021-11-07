@@ -1,4 +1,3 @@
-# collect the common function
 import copy
 import pickle
 import random
@@ -11,6 +10,7 @@ from math import isnan
 import torch
 import json
 from matplotlib import pyplot as plt
+
 from configs.config_constant_traffic import TRAFFIC_CATEGORY
 
 
@@ -108,21 +108,10 @@ def get_total_traffic_volume(traffic_file):
     return vol
 
 
-def copy_conf_file(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
-                   dic_path):
-    work_dir = dic_path["PATH_TO_WORK"]
-    json.dump(dic_exp_conf,
-              open(os.path.join(work_dir, "exp.conf"), "w"), indent=4)
-    json.dump(dic_agent_conf,
-              open(os.path.join(work_dir, "agent.conf"), "w"), indent=4)
-    json.dump(dic_traffic_env_conf,
-              open(os.path.join(work_dir, "traffic_env.conf"), "w"), indent=4)
-    json.dump(dic_path,
-              open(os.path.join(work_dir, "path.conf"), "w"), indent=4)
-
 def copy_conf_traffic_env(dic_traffic_env_conf, work_dir):
     json.dump(dic_traffic_env_conf,
               open(os.path.join(work_dir, "traffic_env.conf"), "w"), indent=4)
+
 
 def get_conf_file(work_dir):
     with open(os.path.join(work_dir, 'exp.conf')) as f:
@@ -245,15 +234,6 @@ def get_file_detail(traffic_file):
     return phase, roadnet_file, flow_file
 
 
-def create_path_dir(dic_path):
-    """create dir for further work
-    """
-    for path_name in dic_path.keys():
-        if "ROOT" not in path_name and dic_path[path_name] is not None:
-            if not os.path.exists(dic_path[path_name]):
-                os.makedirs(dic_path[path_name])
-
-
 def check_value_conf(dict_conf):
     """check whether the dict value have None, None value will raise an
      exception
@@ -281,11 +261,7 @@ def parse_roadnet_cityflow(roadnet_file_dir):
         lane_phase_info = OrderedDict()
         lane_phase_infos[intersection['id']] = lane_phase_info
 
-
-
         lane_phase_info['phase_lane_mapping'] = phase_map
-
-
 
         lane_phase_info_dict[intersection['id']] = \
             {"start_lane": [],
@@ -407,3 +383,4 @@ def get_deep_copy(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path):
     dic_traffic_env_conf = copy.deepcopy(dic_traffic_env_conf)
     dic_path = copy.deepcopy(dic_path)
     return dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path
+

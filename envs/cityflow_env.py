@@ -1,6 +1,6 @@
 from misc.utils import *
 import platform
-from envs.env_base import Env_Base
+from envs.env_base import EnvBase
 if platform == "Linux":
     import cityflow
 
@@ -202,10 +202,10 @@ class Intersection:
         return self.eng.get_current_time()
 
 
-class CityFlowEnv(Env_Base):
-    def __init__(self, dic_path, dic_traffic_env_conf):
-        self.dic_path = dic_path
-        self.dic_traffic_env_conf = dic_traffic_env_conf
+class CityflowEnv(EnvBase):
+    def __init__(self, conf_path, conf_traffic):
+        self.__conf_path = conf_path
+        self.__conf_traffic = conf_traffic
 
         self.path_to_log = self.dic_path["PATH_TO_WORK"]
         self.path_to_data = self.dic_path["PATH_TO_DATA"]
@@ -230,11 +230,11 @@ class CityFlowEnv(Env_Base):
         self.eng = cityflow.Engine(
             config_file, self.dic_traffic_env_conf["THREADNUM"])
         os.remove(config_file)
-        self.reset_prepare()
+        self.__reset_prepare()
         state = self.get_state()
         return state
 
-    def reset_prepare(self):
+    def __reset_prepare(self):
         self.list_intersection = []
         self.list_inter_log = dict()
         self.list_lanes = []
@@ -281,7 +281,7 @@ class CityFlowEnv(Env_Base):
                 print("||done||")
         return next_state, reward, done, [average_reward]
 
-    def _inner_step(self, action):
+    def __inner_step(self, action):
         for inter in self.list_intersection:
             inter.update_previous_measurements()
         for inter_ind, inter in enumerate(self.list_intersection):
@@ -294,7 +294,7 @@ class CityFlowEnv(Env_Base):
         if self.dic_traffic_env_conf["ENV_DEBUG"]:
             self.log_phase()
 
-    def _check_episode_done(self, state):
+    def __check_episode_done(self, state):
         if 39 in state[0]["lane_vehicle_cnt"]:
             self.stop_cnt += 1
         if self.stop_cnt == 100:
@@ -303,23 +303,23 @@ class CityFlowEnv(Env_Base):
         else:
             return False
 
-    def get_feature(self):
+    def __get_feature(self):
         list_feature = [inter.dic_feature for inter in self.list_intersection]
         return list_feature
 
-    def get_state(self):
+    def __get_state(self):
         list_state = [
             inter.get_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"])
             for inter in self.list_intersection]
         return list_state
 
-    def get_reward(self):
+    def __get_reward(self):
         list_reward = [
             inter.get_reward(self.dic_traffic_env_conf["DIC_REWARD_INFO"]) for
             inter in self.list_intersection]
         return list_reward
 
-    def log(self, cur_time, before_action_feature, action):
+    def __log(self, cur_time, before_action_feature, action):
         for idx, inter_name in enumerate(sorted(self.lane_phase_infos.keys())):
             self.list_inter_log[inter_name].append(
                 {"time": cur_time,
@@ -347,17 +347,17 @@ class CityFlowEnv(Env_Base):
                   open(os.path.join(self.path_to_log, "valid_flag.json"), "w"))
         self.save_replay()
 
-    def log_phase(self):
+    def __log_phase(self):
         for inter in self.list_intersection:
             print(
                 "%f, %f" %
                 (self.get_current_time(), inter.current_phase_index),
                 file=open(os.path.join(self.path_to_log, "log_phase.txt"), "a"))
 
-    def get_current_time(self):
+    def __get_current_time(self):
         return self.eng.get_current_time()
 
-    def _save_config_file(self):
+    def __save_config_file(self):
         config_dict = {
             "interval": self.dic_traffic_env_conf["INTERVAL"],
             "seed": 0,
@@ -374,7 +374,7 @@ class CityFlowEnv(Env_Base):
             json.dump(config_dict, f)
         return config_name
 
-    def save_replay(self):
+    def __save_replay(self):
         for inter_name in sorted(self.lane_phase_infos.keys()):
             path_to_log_file = os.path.join(
                 self.path_to_log, "%s.pkl" % inter_name)

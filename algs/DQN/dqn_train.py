@@ -1,26 +1,15 @@
-from common.parallelizer import pipeline
-from common.round_learner import RoundLearner
-from multiprocessing import Process
+from algs.trainer import Trainer
 from configs.config_phaser import *
-
-
-def dqn_train(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
-              dic_path, round_number):
-
-    print('round %s start...' % round_number)
-    learner = RoundLearner(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
-                           dic_path, round_number)
-    learner.learn_round()
 
 
 def main(args):
     """main entrance. for dqn
     """
-    dic_exp_conf, _, dic_traffic_env_conf, _ = config_all(args)
-    traffic_file_list = \
-        list(dic_traffic_env_conf["TRAFFIC_CATEGORY"]["test_homogeneous"].keys())
-    traffic_file_list = ['cps_multi_1888']
-    # traffic_file_list = ['hangzhou_baochu_tiyuchang_1h_10_11_2021']
+    conf_exp, _, conf_traffic, _ = config_all(args)
+    # traffic_file_list = \
+    #     list(conf_traffic.TRAFFIC_CATEGORY["test_homogeneous"].keys())
+    # traffic_file_list = ['cps_multi_1888']
+    traffic_file_list = ['hangzhou_baochu_tiyuchang_1h_10_11_2021']
 
     # traffic_file_list_ = []
     # for traffic_file in traffic_file_list:
@@ -28,20 +17,8 @@ def main(args):
     #         traffic_file_list_.append(traffic_file)
     # traffic_file_list = traffic_file_list_
 
-    traffic_file_list_surplus = copy.deepcopy(traffic_file_list)
-    list_pipeline = []
-    for traffic_file in traffic_file_list:
-        p = Process(target=pipeline, args=(args, traffic_file, dqn_train,))
-        p.start()
-        list_pipeline.append(p)
-        del traffic_file_list_surplus[0]
-
-        if len(list_pipeline) >= dic_exp_conf["PIPELINE"] or \
-                len(traffic_file_list_surplus) == 0:
-            for p in list_pipeline:
-                p.join()
-            print("join pipeline execute finished..")
-            list_pipeline = []
+    trainer = Trainer(args, traffic_file_list)
+    trainer.train()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import numpy as np
 
-from envs.env_base import Env_Base
+from envs.env_base import EnvBase
 from misc.utils import *
 import traci
 import sys
@@ -10,9 +10,9 @@ sys.path.append(os.path.join(os.environ["SUMO_HOME"], "tools"))
 
 
 class Intersection:
-    def __init__(self, inter_id, dic_traffic_env_conf, eng):
+    def __init__(self, inter_id, conf_traffic, eng):
         self.inter_id = inter_id
-        self.dic_traffic_env_conf = dic_traffic_env_conf
+        self.conf_traffic = conf_traffic
         self.eng = eng
 
         self.lane_phase_info = self._get_inter_info()
@@ -172,35 +172,27 @@ class Intersection:
         return dic_lane_phase_info
 
 
-class SumoEnv(Env_Base):
-    def __init__(self, dic_path, dic_traffic_env_conf):
-        self.dic_path = dic_path
-        self.dic_traffic_env_conf = dic_traffic_env_conf
+class SumoEnv(EnvBase):
+    def __init__(self, conf_path: ConfPath, conf_traffic: ConfTrafficEnv):
+        self.conf_path = conf_path
+        self.conf_traffic = conf_traffic
 
-        self.path_to_log = self.dic_path["PATH_TO_WORK"]
-        self.path_to_data = self.dic_path["PATH_TO_DATA"]
-        self.yellow_time = self.dic_traffic_env_conf["YELLOW_TIME"]
+        self.path_to_work = self.conf_path.WORK
+        self.path_to_data = self.conf_path.DATA
+        self.yellow_time = self.conf_traffic.TIME_YELLOW
         self.stop_cnt = 0
 
     def get_agents_info(self):
-        file_sumocfg = self.dic_path["PATH_TO_ROADNET_FILE"
-                       ].split(".net.xml")[0] + ".sumocfg"
-        interval = str(self.dic_traffic_env_conf["INTERVAL"])
-        if self.dic_traffic_env_conf['IF_GUI']:
-            self.sumo_cmd = ["sumo-gui", '-c', file_sumocfg,
-                             "--no-warnings", "--no-step-log",
-                             "--step-length", interval]
-        else:
-            self.sumo_cmd = ["sumo", '-c', file_sumocfg,
-                             "--no-warnings", "--no-step-log",
-                             "--step-length", interval]
-        print("start sumo")
+        file_sumocfg = self.conf_path.ROADNET_FILE.split(".net.xml")[0] + ".sumocfg"
+        sumo_cmd = ["sumo", '-c', file_sumocfg,
+                    "--no-warnings", "--no-step-log",
+                    "--step-length", 1]
         self.eng = traci
-        self.eng.start(self.sumo_cmd)
-        self._get_agent_info()
+        self.eng.start(sumo_cmd)
+        self.__get_agent_info()
         return self.lane_phase_infos
 
-    def _get_agent_info(self):
+    def __get_agent_info(self):
         lane_phase_infos = OrderedDict()
         traffic_lights = self.eng.trafficlight
         tls_ids = traffic_lights.getIDList()
@@ -233,17 +225,17 @@ class SumoEnv(Env_Base):
     def reset(self):
         self.list_intersection = list(self.eng.trafficlight.getIDList())
 
-        self.reset_prepare()
-        state = self._get_state()
+        self.__reset_prepare()
+        state = self.__get_state()
         return state
 
-    def reset_prepare(self):
+    def __reset_prepare(self):
         self.list_inter_handler = []
         self.list_inter_log = dict()
 
         for inter_id in self.list_intersection:
             intersection = Intersection(
-                inter_id, self.dic_traffic_env_conf, self.eng)
+                inter_id, self.conf_traffic, self.eng)
             self.list_inter_handler.append(intersection)
 
             self.list_inter_log[inter_id] = []
@@ -251,43 +243,43 @@ class SumoEnv(Env_Base):
         for inter in self.list_inter_handler:
             inter.update_current_measurements()
 
-    def _get_state(self):
+    def __get_state(self):
         list_state = [
-            inter.get_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"])
+            inter.get_state(self.conf_traffic["LIST_STATE_FEATURE"])
             for inter in self.list_inter_handler]
         return list_state
 
-    def _get_reward(self):
+    def __get_reward(self):
         list_reward = [
-            inter.get_reward(self.dic_traffic_env_conf["DIC_REWARD_INFO"])
+            inter.get_reward(self.conf_traffic["DIC_REWARD_INFO"])
             for inter in self.list_inter_handler]
         return list_reward
 
     def step(self, action):
         list_action_in_sec = [action]
         list_action_in_sec_display = [action]
-        for i in range(self.dic_traffic_env_conf["MIN_ACTION_TIME"] - 1):
+        for i in range(self.conf_traffic["MIN_ACTION_TIME"] - 1):
             list_action_in_sec.append(np.copy(action).tolist())
             list_action_in_sec_display.append(
                 np.full_like(action, fill_value=-1).tolist())
         average_reward = 0
         next_state, reward, done = None, None, None
-        for i in range(self.dic_traffic_env_conf["MIN_ACTION_TIME"]):
+        for i in range(self.conf_traffic["MIN_ACTION_TIME"]):
             action_in_sec = list_action_in_sec[i]
             action_in_sec_display = list_action_in_sec_display[i]
             instant_time = self.eng.simulation.getTime()
-            before_action_feature = self._get_feature()
+            before_action_feature = self.__get_feature()
 
-            self._inner_step(action_in_sec)
-            reward = self._get_reward()
+            self.__inner_step(action_in_sec)
+            reward = self.__get_reward()
             average_reward = (average_reward * i + reward[0]) / (i + 1)
 
-            self._record_log(cur_time=instant_time,
+            self.__record_log(cur_time=instant_time,
                              before_action_feature=before_action_feature,
                              action=action_in_sec_display)
-            next_state = self._get_state()
+            next_state = self.__get_state()
             # TODO add function here.
-            if self.dic_traffic_env_conf["DONE_ENABLE"]:
+            if self.conf_traffic["DONE_ENABLE"]:
                 done = False
             else:
                 done = False
@@ -301,7 +293,7 @@ class SumoEnv(Env_Base):
         for inter in self.list_inter_handler:
             inter_name = inter.inter_id
             path_to_log_file = os.path.join(
-                self.path_to_log, "vehicle_inter_%s.csv" % inter_name)
+                self.path_to_work, "vehicle_inter_%s.csv" % inter_name)
 
             dic_vehicle = inter.dic_vehicle_arrive_leave_time
             df = convert_dic_to_df(dic_vehicle)
@@ -310,27 +302,25 @@ class SumoEnv(Env_Base):
             feature = inter.dic_feature
 
             if max(feature['lane_vehicle_cnt']) > \
-                    self.dic_traffic_env_conf["VALID_THRESHOLD"]:
+                    self.conf_traffic["VALID_THRESHOLD"]:
                 valid_flag[inter_name] = 0
             else:
                 valid_flag[inter_name] = 1
         json.dump(valid_flag,
-                  open(os.path.join(self.path_to_log, "valid_flag.json"), "w"))
-        self.save_replay()
+                  open(os.path.join(self.path_to_work, "valid_flag.json"), "w"))
+        self.__save_replay()
         self.eng.close()
 
-    def save_replay(self):
+    def __save_replay(self):
         for inter in self.list_inter_handler:
             inter_name = inter.inter_id
             path_to_log_file = os.path.join(
-                self.path_to_log, "%s.pkl" % inter_name)
+                self.path_to_work, "%s.pkl" % inter_name)
             f = open(path_to_log_file, "wb")
             pickle.dump(self.list_inter_log[inter_name], f)
             f.close()
-        vol = get_total_traffic_volume(
-            self.dic_traffic_env_conf["TRAFFIC_FILE"])
 
-    def _inner_step(self, action):
+    def __inner_step(self, action):
         for inter in self.list_inter_handler:
             inter.update_previous_measurements()
         for inter_ind, inter in enumerate(self.list_inter_handler):
@@ -341,11 +331,11 @@ class SumoEnv(Env_Base):
         for inter in self.list_inter_handler:
             inter.update_current_measurements()
 
-    def _get_feature(self):
+    def __get_feature(self):
         list_feature = [inter.dic_feature for inter in self.list_inter_handler]
         return list_feature
 
-    def _record_log(self, cur_time, before_action_feature, action):
+    def __record_log(self, cur_time, before_action_feature, action):
         for idx, inter_id in enumerate(self.list_intersection):
             self.list_inter_log[inter_id].append(
                 {"time": cur_time,

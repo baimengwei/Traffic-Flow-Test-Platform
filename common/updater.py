@@ -2,45 +2,35 @@ from configs.config_phaser import *
 
 
 class Updater:
-    def __init__(self, round_number, work_dir):
-        self.round_number = round_number
-        self.work_dir = work_dir
+    def __init__(self, conf_path: ConfPath, round_number):
+        self.__conf_path = conf_path
+        self.__round_number = round_number
+        self.__conf_exp, self.__conf_agent, self.__conf_traffic = self.__conf_path.load_conf_file()
 
-        self.dic_exp_conf, self.dic_agent_conf, self.dic_traffic_env_conf, \
-        self.dic_path = get_conf_file(work_dir)
+        agents_infos = self.__conf_traffic.TRAFFIC_INFOS
+        list_inters = sorted(list(agents_infos.keys()))
+        self.__conf_path.set_work_sample_total(list_inters)
+        gen_cnt = self.__conf_exp.NUM_GENERATORS
+        self.__conf_path.set_work_sample_each(self.__round_number, gen_cnt, list_inters)
 
-        set_seed(self.dic_exp_conf["SEED"] + self.round_number)
-
-        self.list_agent = []
-        agents_infos = self.dic_traffic_env_conf["LANE_PHASE_INFOS"]
-        self.agent_name = self.dic_exp_conf["MODEL_NAME"]
-
-        for inter_name in agents_infos.keys():
-            dic_traffic_env_conf = \
-                copy.deepcopy(update_traffic_env_info(
-                    self.dic_traffic_env_conf, inter_name))
-            agent = DIC_AGENTS[self.agent_name](
-                dic_agent_conf=self.dic_agent_conf,
-                dic_traffic_env_conf=dic_traffic_env_conf,
-                dic_path=self.dic_path,
-                round_number=self.round_number)
-            self.list_agent.append(agent)
+        agent_name = self.__conf_exp.MODEL_NAME
+        agent_class = __import__('algs.%s.%s_agent.%sAgent'
+                                 % (agent_name.upper(),
+                                    agent_name.lower(),
+                                    agent_name.title()))
+        self.__list_agent = []
+        for inter_name in list_inters:
+            self.__conf_traffic.set_intersection(inter_name)
+            agent = agent_class(self.__conf_agent,
+                                self.__conf_traffic,
+                                self.__conf_path)
+            self.__list_agent.append(agent)
 
     def load_sample(self):
         self.sample_set = []
-        file_dir = os.path.join(self.dic_path["PATH_TO_WORK"], "samples")
-        list_file_all = os.listdir(file_dir)
-        list_file = []
-        for each_file in list_file_all:
-            if 'total_samples' not in each_file:
-                continue
-            list_file.append(each_file)
-        list_file = sorted(list_file)
-
-        for sample_file in list_file:
-
+        for sample_file in self.__conf_path.WORK_SAMPLE_TOTAL:
             sample_each = []
-            file_name = os.path.join(self.dic_path["PATH_TO_WORK"],
+            file_name = os.path.join(self.__conf_path.WORK,
                                      "samples", sample_file)
             sample_file = open(file_name, "rb")
             try:
@@ -55,33 +45,24 @@ class Updater:
         for idx, sample_each in enumerate(self.sample_set):
             ind_end = len(sample_each)
             print("memory size before forget: {0}".format(ind_end))
-            ind_sta = max(0, ind_end - self.dic_agent_conf["MAX_MEMORY_LEN"])
+            ind_sta = max(0, ind_end - self.__conf_agent.MAX_MEMORY_LEN)
             self.sample_set[idx] = sample_each[ind_sta: ind_end]
             print("memory size after forget:", len(sample_each))
 
     def slice_sample(self):
         for idx, sample_each in enumerate(self.sample_set):
-            sample_size = min(self.dic_agent_conf["SAMPLE_SIZE"],
+            sample_size = min(self.__conf_agent.SAMPLE_SIZE,
                               len(sample_each))
             self.sample_set[idx] = random.sample(sample_each, sample_size)
             print("memory samples number:", sample_size)
 
     def update_network(self):
-        for sample_each, agent in zip(self.sample_set, self.list_agent):
+        for sample_each, agent in zip(self.sample_set, self.__list_agent):
             agent.prepare_Xs_Y(sample_each)
             agent.train_network()
             agent.save_network(
-                agent.inter_name + "_round_" + str(self.round_number))
+                agent.inter_name + "_round_" + str(self.__round_number))
 
     def downsamples(self):
-        for cnt_gen in range(self.dic_exp_conf["NUM_GENERATORS"]):
-            for inter_name in sorted(
-                    self.dic_traffic_env_conf["LANE_PHASE_INFOS"].keys()):
-                path_to_log_file = os.path.join(
-                    self.dic_path["PATH_TO_WORK"],
-                    "samples",
-                    "round_" + str(self.round_number),
-                    "generator_" + str(cnt_gen),
-                    "%s.pkl" % inter_name
-                )
-                downsample(path_to_log_file)
+        for log_file in self.__conf_path.WORK_SAMPLE_EACH:
+            downsample(log_file)

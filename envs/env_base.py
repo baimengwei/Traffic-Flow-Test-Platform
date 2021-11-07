@@ -1,16 +1,22 @@
-"""
-abstract class for each environment
-"""
+from abc import ABCMeta, abstractmethod
 
-class Env_Base:
+
+class EnvBase(metaclass=ABCMeta):
     def __init__(self):
         pass
 
+    @abstractmethod
     def get_agents_info(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def reset(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def step(self, action):
-        raise NotImplementedError
+        pass
+
+    @abstractmethod
+    def bulk_log(self):
+        pass

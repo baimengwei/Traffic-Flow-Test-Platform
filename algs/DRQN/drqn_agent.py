@@ -75,11 +75,8 @@ class DRQN(nn.Module):
 
 
 class DRQNAgent(Agent):
-    def __init__(self, dic_agent_conf, dic_traffic_env_conf,
-                 dic_path, round_number):
-        super().__init__(dic_agent_conf, dic_traffic_env_conf, dic_path,
-                         round_number)
-        self.decay_epsilon(self.round_number)
+    def __init__(self, config_dir, round_number):
+        super().__init__(config_dir, round_number)
         self.list_history = []
 
         if self.round_number == 0:
@@ -118,7 +115,7 @@ class DRQNAgent(Agent):
         self.model_target.load_state_dict((ckpt['state_dict']))
 
     def choose_action(self, state, history_input, choice_random=True):
-        state = self.convert_state_to_input(state)
+        state = self.convert_state_to_input(state, "DRQN")
         input = torch.Tensor(state).flatten().unsqueeze(0)
         history = torch.Tensor(history_input).unsqueeze(0)
         q_values = self.model.forward(input, history)
@@ -130,17 +127,6 @@ class DRQNAgent(Agent):
 
         self.list_history.append(np.array(history_input).tolist())
         return actions
-
-    def convert_state_to_input(self, s):
-        input = []
-        dic_phase_expansion = self.dic_traffic_env_conf[
-            "LANE_PHASE_INFO"]['phase_map']
-        for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
-            if feature == "cur_phase":
-                input.append(np.array([dic_phase_expansion[s[feature][0]]]))
-            else:
-                input.append(np.array([s[feature]]))
-        return input
 
     def prepare_Xs_Y(self, sample_set):
         state = []

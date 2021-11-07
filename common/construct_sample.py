@@ -2,33 +2,29 @@ from configs.config_phaser import *
 
 
 class ConstructSample:
-    def __init__(self, path_to_samples, round_number):
+    def __init__(self, conf_path: ConfPath, round_number):
+        self.__conf_path = conf_path
+        self.__round_number = round_number
+        self.__conf_exp, _, self.__conf_traffic = self.__conf_path.load_conf_file()
 
-        self.path_to_samples = path_to_samples
-        self.round_number = round_number
+        list_inters = sorted(list(self.__conf_traffic.TRAFFIC_INFOS.keys()))
+        self.__conf_path.set_work_sample_each(
+            self.__round_number, self.__conf_exp.NUM_GENERATORS, list_inters)
 
-        x = os.path.join(self.path_to_samples, '../', '../', 'traffic_env.conf')
-        with open(x) as f:
-            self.dic_traffic_env_conf = json.load(f)
+        self.__measure_time = self.__conf_traffic.MIN_ACTION_TIME
+        self.__interval = self.__conf_traffic.MIN_ACTION_TIME
 
-        self.parent_dir = os.path.join(self.path_to_samples, '../')
+    def __load_data(self, each_file):
+        logging_data = []
+        f_logging_data = open(each_file, "rb")
+        logging_data.append(pickle.load(f_logging_data))
+        f_logging_data.close()
+        return logging_data
 
-    def load_data(self, folder):
-        self.measure_time = self.dic_traffic_env_conf["MIN_ACTION_TIME"]
-        self.interval = self.dic_traffic_env_conf["MIN_ACTION_TIME"]
-        self.logging_data = []
-        for inter_name in self.dic_traffic_env_conf["LANE_PHASE_INFOS"].keys():
-            file_name = os.path.join(self.path_to_samples, folder,
-                                     "%s.pkl" % inter_name)
-            f_logging_data = open(file_name, "rb")
-            self.logging_data.append(pickle.load(f_logging_data))
-            f_logging_data.close()
-
-    def construct_state(self, logging_data, features, time):
+    def __construct_state(self, logging_data, features, time):
         state = logging_data[time]
         assert time == state["time"]
-        phase_expansion = self.dic_traffic_env_conf[
-            "LANE_PHASE_INFO"]['phase_lane_mapping']
+        phase_expansion = self.__conf_traffic.TRAFFIC_INFO['phase_lane_mapping']
         state_after_selection = {}
         for key, value in state["state"].items():
             if key in features:
@@ -38,7 +34,7 @@ class ConstructSample:
                     state_after_selection[key] = value
         return state_after_selection
 
-    def get_reward_from_features(self, rs):
+    def __get_reward_from_features(self, rs):
         reward = dict()
         reward["sum_lane_queue_length"] = np.sum(rs["stop_vehicle_thres1"])
         reward["sum_lane_wait_time"] = np.sum(rs["lane_waiting_time"])
@@ -51,7 +47,7 @@ class ConstructSample:
             rs["stop_vehicle_thres1"])
         return reward
 
-    def cal_reward(self, rs, rewards_components):
+    def __cal_reward(self, rs, rewards_components):
         r = 0
         for component, weight in rewards_components.items():
             if weight == 0:
@@ -63,26 +59,26 @@ class ConstructSample:
             r += rs[component] * weight
         return r
 
-    def construct_reward(self, logging_data, rewards_components, time):
-        rs = logging_data[time + self.measure_time - 1]
-        assert time + self.measure_time - 1 == rs["time"]
-        rs = self.get_reward_from_features(rs['state'])
-        r_instant = self.cal_reward(rs, rewards_components)
+    def __construct_reward(self, logging_data, rewards_components, time):
+        rs = logging_data[time + self.__measure_time - 1]
+        assert time + self.__measure_time - 1 == rs["time"]
+        rs = self.__get_reward_from_features(rs['state'])
+        r_instant = self.__cal_reward(rs, rewards_components)
 
         # average
         list_r = []
-        for t in range(time, time + self.measure_time):
+        for t in range(time, time + self.__measure_time):
             # print("t is ", t)
             rs = logging_data[t]
             assert t == rs["time"]
-            rs = self.get_reward_from_features(rs['state'])
-            r = self.cal_reward(rs, rewards_components)
+            rs = self.__get_reward_from_features(rs['state'])
+            r = self.__cal_reward(rs, rewards_components)
             list_r.append(r)
         r_average = np.average(list_r)
 
         return r_instant, r_average
 
-    def judge_action(self, logging_data, time):
+    def __judge_action(self, logging_data, time):
         action = logging_data[time]['action']
         if isinstance(action, np.ndarray) and len(action) > 1:
             return action
@@ -93,50 +89,37 @@ class ConstructSample:
 
     def make_reward(self):
         """round-> generator -> intersections
-
         Returns:
-
         """
-        for folder in os.listdir(self.path_to_samples):
-            if "generator" not in folder:
-                continue
+        gen_cnt = self.__conf_exp.NUM_GENERATORS
+        for idx, each_file in enumerate(self.__conf_path.WORK_SAMPLE_EACH):
+            logging_data = self.__load_data(each_file)
+            total_time = int(logging_data[-1]['time'] + 1)
+            list_samples = []
+            for time in range(0, total_time - self.__measure_time + 1,
+                              self.__interval):
+                state = self.__construct_state(
+                    logging_data, self.__conf_traffic.FEATURE, time)
+                reward_instant, reward_average = self.__construct_reward(
+                    logging_data, self.__conf_traffic.DIC_REWARD_INFO, time)
+                action = self.__judge_action(logging_data, time)
 
-            self.load_data(folder)
+                if time + self.__interval == total_time:
+                    next_state = self.__construct_state(
+                        logging_data, self.__conf_traffic.FEATURE,
+                        time + self.__interval - 1)
+                else:
+                    next_state = self.__construct_state(
+                        logging_data, self.__conf_traffic.FEATURE,
+                        time + self.__interval)
+                sample = [state, action, next_state, reward_average,
+                          reward_instant, time]
+                list_samples.append(sample)
 
-            list_inters = self.dic_traffic_env_conf['LANE_PHASE_INFOS'].keys()
-            for logging_data, inter_name in zip(self.logging_data, list_inters):
-                self.dic_traffic_env_conf = update_traffic_env_info(
-                    self.dic_traffic_env_conf, inter_name)
-                list_samples = []
-                total_time = int(logging_data[-1]['time'] + 1)
-                # construct samples
-                for time in range(0, total_time - self.measure_time + 1,
-                                  self.interval):
-                    state = self.construct_state(
-                        logging_data,
-                        self.dic_traffic_env_conf["LIST_STATE_FEATURE"], time)
-                    reward_instant, reward_average = self.construct_reward(
-                        logging_data,
-                        self.dic_traffic_env_conf["DIC_REWARD_INFO"], time)
-                    action = self.judge_action(logging_data, time)
+            self.dump_sample(
+                list_samples,
+                self.__conf_path.WORK_SAMPLE_TOTAL[(idx + 1) % gen_cnt])
 
-                    if time + self.interval == total_time:
-                        next_state = self.construct_state(
-                            logging_data,
-                            self.dic_traffic_env_conf["LIST_STATE_FEATURE"]
-                            , time + self.interval - 1)
-                    else:
-                        next_state = self.construct_state(
-                            logging_data,
-                            self.dic_traffic_env_conf["LIST_STATE_FEATURE"],
-                            time + self.interval)
-                    sample = [state, action, next_state, reward_average,
-                              reward_instant, time]
-                    list_samples.append(sample)
-                self.dump_sample(list_samples, inter_name)
-
-    def dump_sample(self, samples, inter_name):
-        with open(os.path.join(
-                self.parent_dir, "total_samples_%s.pkl" % inter_name),
-                "ab+") as f:
+    def dump_sample(self, samples, file_name):
+        with open(file_name, "ab+") as f:
             pickle.dump(samples, f, -1)
