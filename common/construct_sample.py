@@ -1,3 +1,7 @@
+import pickle
+
+import numpy as np
+
 from configs.config_phaser import *
 
 
@@ -5,19 +9,22 @@ class ConstructSample:
     def __init__(self, conf_path: ConfPath, round_number):
         self.__conf_path = conf_path
         self.__round_number = round_number
-        self.__conf_exp, _, self.__conf_traffic = self.__conf_path.load_conf_file()
 
-        list_inters = sorted(list(self.__conf_traffic.TRAFFIC_INFOS.keys()))
+        list_inters = sorted(list(self.__conf_path.load_conf_inters()))
+
+        self.__conf_exp, _, self.__conf_traffic = \
+            self.__conf_path.load_conf_file(inter_name=list_inters[0])
+
         self.__conf_path.set_work_sample_each(
             self.__round_number, self.__conf_exp.NUM_GENERATORS, list_inters)
+        self.__conf_path.set_work_sample_total(list_inters)
 
-        self.__measure_time = self.__conf_traffic.MIN_ACTION_TIME
-        self.__interval = self.__conf_traffic.MIN_ACTION_TIME
+        self.__measure_time = self.__conf_traffic.TIME_MIN_ACTION
+        self.__interval = self.__conf_traffic.TIME_MIN_ACTION
 
     def __load_data(self, each_file):
-        logging_data = []
         f_logging_data = open(each_file, "rb")
-        logging_data.append(pickle.load(f_logging_data))
+        logging_data = pickle.load(f_logging_data)
         f_logging_data.close()
         return logging_data
 
@@ -29,7 +36,7 @@ class ConstructSample:
         for key, value in state["state"].items():
             if key in features:
                 if key == "cur_phase":
-                    state_after_selection[key] = phase_expansion[str(value - 1)]
+                    state_after_selection[key] = phase_expansion[value - 1]
                 else:
                     state_after_selection[key] = value
         return state_after_selection
@@ -101,7 +108,7 @@ class ConstructSample:
                 state = self.__construct_state(
                     logging_data, self.__conf_traffic.FEATURE, time)
                 reward_instant, reward_average = self.__construct_reward(
-                    logging_data, self.__conf_traffic.DIC_REWARD_INFO, time)
+                    logging_data, self.__conf_traffic.REWARD_INFOS, time)
                 action = self.__judge_action(logging_data, time)
 
                 if time + self.__interval == total_time:
@@ -118,7 +125,7 @@ class ConstructSample:
 
             self.dump_sample(
                 list_samples,
-                self.__conf_path.WORK_SAMPLE_TOTAL[(idx + 1) % gen_cnt])
+                self.__conf_path.WORK_SAMPLE_TOTAL[int(idx / gen_cnt)])
 
     def dump_sample(self, samples, file_name):
         with open(file_name, "ab+") as f:

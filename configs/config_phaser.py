@@ -23,7 +23,7 @@ def parse():
     parser.add_argument("--project", type=str, default="project_name")
     # ------------------------------exp.conf-----------------------------------
     parser.add_argument("--algorithm", type=str, default="MetaLight")
-    parser.add_argument("--train_round", type=int, default=60,
+    parser.add_argument("--train_round", type=int, default=200,
                         help="for train process")
     parser.add_argument("--task_round", type=int, default=20,
                         help="for metalight train process")
@@ -37,10 +37,10 @@ def parse():
     # -----------------------------traffic_env.conf---------------------------
     parser.add_argument("--episode_len", type=int, default=3600, help='for mdp')
     parser.add_argument("--done", action="store_true", help='for mdp')
-    parser.add_argument("--reward_norm", action="store_true", help='for mdp')
-    parser.add_argument("--env", type=str, default="anno", help='for setting')
-    parser.add_argument("--time_min_action", type=str, default="anno", help='action time')
-    parser.add_argument("--time_yellow", type=str, default="anno", help='yellow time')
+    parser.add_argument("--reward_norm", type=int, default=20, help='for mdp')
+    parser.add_argument("--env", type=str, default="cityflow", help='for setting')
+    parser.add_argument("--time_min_action", type=int, default=10, help='action time')
+    parser.add_argument("--time_yellow", type=int, default=3, help='yellow time')
     # ------------------------------------------------------------------------
     args = parser.parse_args()
     return args

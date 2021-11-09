@@ -19,27 +19,18 @@ def run_frapplus():
     main(args)
 
 
-def run_frap():
-    from algs.FRAP.frap_train import main
-    args = parse()
-    print('start execute frap...')
-    args.algorithm = 'FRAP'
-    args.project = 'FRAP_MMM'
-    main(args)
-
-
 def run_dqn():
     from algs.DQN.dqn_train import main
     args = parse()
     print('start execute dqn...')
     args.algorithm = "DQN"
     args.project = "DQN_TEST"
-    args.env = "sumo"
+    args.env = "cityflow"
     main(args)
 
 
 def run_metadqn():
-    from algs.MetaDQN.metadqn_train import main
+    # from algs.MetaDQN.metadqn_train import main
     from algs.MetaDQN.metadqn_train import main_test
     args = parse()
     print('start execute meta dqn...')
@@ -120,12 +111,12 @@ if __name__ == '__main__':
     # run_metalight()
     # run_frap()
     # run_frapplus()
-    run_dqn()
+    # run_dqn()
     # run_sotl()
     # run_tddd()
     # run_drqn()
     # run_webster()
-    # run_fixtime()
+    run_fixtime()
     # run_maxpressure()
     # run_fraprq()
     # run_dqn()

@@ -453,11 +453,12 @@ def summary_detail_train(project, total_summary):
         mode_name="train")
 
 
-def summary_detail_test(records_dir):
+def summary_detail_test(conf_path):
     """DISGUSTING CODE * 3
     """
+    conf_path.set_work_test(0)
 
-    test_round_dir = os.path.join(records_dir, "test_round")
+    test_round_dir = os.path.join(conf_path.WORK_TEST, '../')
     list_files = os.listdir(test_round_dir)
     for file in list_files:
         if '.csv' in file:
@@ -477,7 +478,7 @@ def summary_detail_test(records_dir):
             plt.legend(['vehicle_in', 'vehicle_out'], loc='upper right')
             plt.show()
             figure_path = 'result_' + file.split('.')[0] + '.png'
-            figure_path = os.path.join(records_dir, figure_path)
+            figure_path = os.path.join(conf_path.WORK, figure_path)
             plt.savefig(figure_path)
 
 

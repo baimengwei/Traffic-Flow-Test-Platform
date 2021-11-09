@@ -73,7 +73,7 @@ def log_round_time(dic_path, round_number, t1, t2):
         t2: end time
     Returns:
     """
-    work_dir = dic_path["PATH_TO_WORK"]
+    work_dir = dic_path.WORK
     f_timing = open(os.path.join(work_dir, "timing.txt"), "a+")
     content = "round_%d: %.4f\n" % (round_number, t2 - t1)
     f_timing.write(content)
@@ -142,8 +142,7 @@ def downsample(path_to_log_file):
 
 
 def write_summary(dic_path, cnt_round, inter_name):
-    work_dir = os.path.join(dic_path["PATH_TO_WORK"])
-    log_dir = os.path.join(dic_path["PATH_TO_WORK"], "../",
+    log_dir = os.path.join(dic_path.WORK_TEST, "../",
                            "test_results_" + inter_name + ".csv")
 
     if not os.path.exists(log_dir):
@@ -151,7 +150,7 @@ def write_summary(dic_path, cnt_round, inter_name):
             columns=("round", "duration", "vec_in", "vec_out"))
         df_col.to_csv(log_dir, mode="a", index=False)
     df_vehicle_inter_0 = pd.read_csv(
-        os.path.join(work_dir, "vehicle_inter_%s.csv" % inter_name),
+        os.path.join(dic_path.WORK_TEST, "vehicle_inter_%s.csv" % inter_name),
         sep=',', header=0, dtype={0: str, 1: float, 2: float},
         names=["vehicle_id", "enter_time", "leave_time"])
 
@@ -241,116 +240,6 @@ def check_value_conf(dict_conf):
     for key in dict_conf.keys():
         if dict_conf[key] is None:
             raise ValueError('k: %s, v: %s' % (key, dict_conf[key]))
-
-
-def parse_roadnet_cityflow(roadnet_file_dir):
-    """DISGUSTING code.
-    Args:
-        roadnet_file_dir: a full dir of the roadnet file.
-    Returns:
-        file infos
-    """
-    with open(roadnet_file_dir) as f:
-        roadnet = json.load(f)
-
-    intersections = \
-        [inter for inter in roadnet["intersections"] if not inter["virtual"]]
-
-    lane_phase_infos = OrderedDict()
-    for intersection in intersections:
-        lane_phase_info = OrderedDict()
-        lane_phase_infos[intersection['id']] = lane_phase_info
-
-        lane_phase_info['phase_lane_mapping'] = phase_map
-
-        lane_phase_info_dict[intersection['id']] = \
-            {"start_lane": [],
-             "same_start_lane": [],
-             "end_lane": [],
-             "phase": [],
-             "yellow_phase": None,
-             "phase_startLane_mapping": {},
-             "phase_sameStartLane_mapping": {},
-             "phase_roadLink_mapping": {}}
-        road_links = intersection["roadLinks"]
-        start_lane = []
-        same_start_lane = []
-        end_lane = []
-        roadlink_lane_pair = {idx: [] for idx in range(len(road_links))}
-        roadlink_same_start_lane = {idx: [] for idx in range(len(road_links))}
-        for idx in range(len(road_links)):
-            road_link = road_links[idx]
-            tmp_same_start_lane = []
-            for lane_link in road_link["laneLinks"]:
-                sl = road_link['startRoad'] + "_" + \
-                     str(lane_link["startLaneIndex"])
-                el = road_link['endRoad'] + "_" + \
-                     str(lane_link["endLaneIndex"])
-                type = road_link['type']
-                start_lane.append(sl)
-                tmp_same_start_lane.append(sl)
-                end_lane.append(el)
-                roadlink_lane_pair[idx].append((sl, el, type))
-            tmp_same_start_lane = tuple(set(tmp_same_start_lane))
-            roadlink_same_start_lane[idx].append(tmp_same_start_lane)
-            same_start_lane.append(tmp_same_start_lane)
-        # --------------alien start_lane & end_lane---------------------------
-
-        lane_phase_info_dict[intersection['id']
-        ]["start_lane"] = sorted(list(set(start_lane)))
-        end_lane_ = sorted(list(set(end_lane)))
-        # this is used for alien start and end.
-        end_lane_ = end_lane_[:4] + end_lane_[-2:] + end_lane_[4:6]
-        lane_phase_info_dict[intersection['id']
-        ]["end_lane"] = end_lane_
-        lane_phase_info_dict[intersection['id']
-        ]["same_start_lane"] = sorted(list(set(same_start_lane)))
-
-        for phase_i in range(len(intersection["trafficLight"]["lightphases"])):
-            if len(intersection["trafficLight"]["lightphases"]
-                   [phase_i]["availableRoadLinks"]) == 0:
-                lane_phase_info_dict[intersection['id']
-                ]["yellow_phase"] = phase_i
-                continue
-            p = intersection["trafficLight"]["lightphases"][phase_i]
-            lane_pair = []
-            start_lane = []
-            same_start_lane = []
-            no_right_start_lane = []
-            # get no right roadlink, start_lane list, no_right_start_lane list
-            for ri in p["availableRoadLinks"]:
-                for i in range(len(roadlink_lane_pair[ri])):
-                    # roadlink_lane_pair each content: start_idx, end_idx, type
-                    if roadlink_lane_pair[ri][i][0] not in start_lane:
-                        start_lane.append(roadlink_lane_pair[ri][i][0])
-                    if roadlink_lane_pair[ri][i][0] not in no_right_start_lane \
-                            and roadlink_lane_pair[ri][i][2] != "turn_right":
-                        no_right_start_lane.append(
-                            roadlink_lane_pair[ri][i][0])
-                    if roadlink_lane_pair[ri][i][2] != "turn_right":
-                        lane_pair.extend(
-                            roadlink_lane_pair[ri])  # no right roadlink
-                if roadlink_same_start_lane[ri][0] not in same_start_lane:
-                    same_start_lane.append(roadlink_same_start_lane[ri][0])
-            lane_phase_info_dict[intersection['id']]["phase"].append(phase_i)
-            lane_phase_info_dict[intersection['id']][
-                "phase_startLane_mapping"][phase_i] = start_lane
-
-            lane_phase_info_dict[intersection['id']][
-                "phase_sameStartLane_mapping"][phase_i] = same_start_lane
-            lane_phase_info_dict[intersection['id']]["phase_roadLink_mapping"][
-                phase_i] = list(set(lane_pair))  # tmp to remove repeated
-
-        lane_phase_info_dict[intersection['id']]["relation"] = get_relation(
-            lane_phase_info_dict[intersection['id']]["phase"],
-            lane_phase_info_dict[intersection['id']]["phase_roadLink_mapping"]
-        )
-        lane_phase_info_dict[intersection['id']]["phase_map"] = get_phase_map(
-            lane_phase_info_dict[intersection['id']]['phase_startLane_mapping'],
-            lane_phase_info_dict[intersection['id']]['start_lane'],
-            lane_phase_info_dict[intersection['id']]['phase']
-        )
-    return lane_phase_info_dict
 
 
 def copy_files_best(source_dir, target_dir):

@@ -6,23 +6,11 @@ class ConfAgent(dict):
         config_name = "DIC_AGENT_CONF_" + args.algorithm.upper()
         self.__config = getattr(Constrant, config_name)
         super().__init__(self.__config)
-        # self.__delattr__('_ConfAgent__config')
+        self.__delattr__('_ConfAgent__config')
         pass
 
-    def __getattr__(self, key):
-        value = self.get(key)
-        return self.get(key)
-
-    def __setattr__(self, key, value):
-        if key not in self.keys():
-            self[key] = value
-        elif key in ['EPSILON']:
-            self[key] = value
-        else:
-            print("attribute shouldn't be changed")
-
-    def __delattr__(self, key):
-        del self[key]
+    def __repr__(self):
+        return "ConfAgent"
 
 
 class Constrant:
@@ -152,9 +140,11 @@ class Constrant:
         "ENABLE_ADAPT": True,
     }
 
+
 if __name__ == '__main__':
     class Args:
         algorithm = 'DQN'
+
 
     args = Args()
     x = ConfAgent(args)

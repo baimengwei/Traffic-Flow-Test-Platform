@@ -3,6 +3,7 @@ import time
 from multiprocessing import Process
 from common.round_learner import RoundLearner
 from configs.config_phaser import config_all
+from misc import summary
 from misc.utils import log_round_time
 
 
@@ -54,6 +55,7 @@ class Trainer:
             log_round_time(conf_path, round_number, t_round, time.time())
 
         # plot_msg(dic_path)
+        summary.summary_detail_test(conf_path)
         time_count = time.time() - t_start
         print('finished %s. cost time: %.3f min' %
               (callback_func.__name__, time_count / 60))

@@ -19,9 +19,11 @@ class ConfPath:
 
         self.__model = os.path.join(self.__model_root, _suffix)
         self.__work = os.path.join(self.__work_root, _suffix)
-        self.__work_sample = None
-        self.__work_sample_total = None
-        self.__work_sample_each = None
+        # INIT to self.__work
+        self.__work_sample = self.__work
+        self.__work_sample_total = self.__work
+        self.__work_sample_each = self.__work
+        self.__work_test = self.__work
         self.__figure = os.path.join(self.__figure_root, _suffix)
         self.__data = None
 
@@ -78,23 +80,56 @@ class ConfPath:
         self.__model = model_dir
 
     def create_path_dir(self):
-        os.makedirs(self.__work)
-        os.makedirs(self.__model)
-        os.makedirs(self.__figure)
+        os.makedirs(self.__work, exist_ok=True)
+        os.makedirs(self.__model, exist_ok=True)
+        os.makedirs(self.__figure, exist_ok=True)
+        os.makedirs(self.__work_sample, exist_ok=True)
+        os.makedirs(self.__work_test, exist_ok=True)
 
-    def dump_conf_file(self, conf_exp, conf_agent, conf_traffic):
+    def dump_conf_file(self, conf_exp, conf_agent, conf_traffic,
+                       *, inter_name=None, hard=False):
         work_dir = self.__work
-        pickle.dump(conf_exp, open(os.path.join(work_dir, "conf_exp.pkl"), mode='wb'))
-        pickle.dump(conf_agent, open(os.path.join(work_dir, "conf_agent.pkl"), mode='wb'))
-        pickle.dump(conf_traffic, open(os.path.join(work_dir, "conf_traffic.pkl"), mode='wb'))
-        pickle.dump(self, open(os.path.join(work_dir, "conf_path.pkl"), mode='wb'))
+        path_exp = os.path.join(work_dir, "conf_exp_%s.pkl" % inter_name)
+        if not os.path.exists(path_exp) or hard:
+            pickle.dump(conf_exp, open(path_exp, mode='wb'))
+            print(path_exp, 'stored')
+        #
+        path_agent = os.path.join(work_dir, "conf_agent_%s.pkl" % inter_name)
+        if not os.path.exists(path_agent) or hard:
+            pickle.dump(conf_agent, open(path_agent, mode='wb'))
+            print(path_agent, 'stored')
+        #
+        path_traffic = os.path.join(work_dir, "conf_traffic_%s.pkl" % inter_name)
+        if not os.path.exists(path_traffic) or hard:
+            pickle.dump(conf_traffic, open(path_traffic, mode='wb'))
+            print(path_traffic, 'stored')
+        #
+        path_path = os.path.join(work_dir, "conf_path_%s.pkl" % inter_name)
+        if not os.path.exists(path_path) or hard:
+            pickle.dump(self, open(path_path, mode='wb'))
+            print(path_path, 'stored')
 
-    def load_conf_file(self):
+    def load_conf_file(self, *, inter_name=None):
         work_dir = self.__work
-        conf_exp = pickle.load(open(os.path.join(work_dir, "conf_exp.pkl")))
-        conf_agent = pickle.load(open(os.path.join(work_dir, "conf_agent.pkl")))
-        conf_traffic = pickle.load(open(os.path.join(work_dir, "conf_traffic.pkl")))
+        conf_exp = pickle.load(open(os.path.join(
+            work_dir, "conf_exp_%s.pkl" % inter_name), mode='rb'))
+        conf_agent = pickle.load(open(os.path.join(
+            work_dir, "conf_agent_%s.pkl" % inter_name), mode='rb'))
+        conf_traffic = pickle.load(open(os.path.join(
+            work_dir, "conf_traffic_%s.pkl" % inter_name), mode='rb'))
         return conf_exp, conf_agent, conf_traffic
+
+    def load_conf_inters(self):
+        file_names = os.listdir(self.__work)
+        file_names = list(filter(lambda fn: 'conf' in fn, file_names))
+        file_names = list(filter(lambda fn: '.pkl' in fn, file_names))
+        file_names = list(filter(lambda fn: 'conf_exp' in fn, file_names))
+        file_names = list(filter(lambda fn: 'None' not in fn, file_names))
+
+        list_inters = map(lambda fn: fn.split('.pkl')[0].split('conf_exp_')[-1],
+                          file_names)
+        list_inters = sorted(list(set(list_inters)))
+        return list_inters
 
     @property
     def WORK_SAMPLE(self):
@@ -135,6 +170,7 @@ class ConfPath:
     @property
     def WORK_SAMPLE_EACH(self):
         return self.__work_sample_each
+
 
 if __name__ == '__main__':
     x = ConfPath('None')

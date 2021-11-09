@@ -1,25 +1,24 @@
+import uuid
+
 from misc.utils import *
-import platform
+import time
+import cityflow
 from envs.env_base import EnvBase
-if platform == "Linux":
-    import cityflow
 
 
 class Intersection:
-    def __init__(self, inter_name, dic_traffic_env_conf, eng):
-        self.inter_name = inter_name
-        self.dic_traffic_env_conf = dic_traffic_env_conf
+    def __init__(self, inter_id, conf_traffic, eng):
+        self.inter_id = inter_id
+        # TODO try copy obj
+        self.conf_traffic = conf_traffic
         self.eng = eng
-
-        self.dic_traffic_env_conf["LANE_PHASE_INFO"] = \
-            self.dic_traffic_env_conf["LANE_PHASE_INFOS"][self.inter_name]
-        self.list_entering_lanes = \
-            self.dic_traffic_env_conf["LANE_PHASE_INFO"]["start_lane"]
-        self.list_exiting_lanes = \
-            self.dic_traffic_env_conf["LANE_PHASE_INFO"]["end_lane"]
-        self.list_lanes = self.list_entering_lanes + self.list_exiting_lanes
-        self.yellow_phase_index = self.dic_traffic_env_conf[
-            "LANE_PHASE_INFO"]["yellow_phase"]
+        self.conf_traffic.set_intersection(self.inter_id)
+        #
+        self.traffic_info = self.conf_traffic.TRAFFIC_INFO
+        self.yellow_phase_index = self.traffic_info["yellow_phase"]
+        self.list_lane_enters = self.traffic_info["list_lane_enters"]
+        self.list_lane_exits = self.traffic_info["list_lane_exits"]
+        self.list_lanes = self.list_lane_enters + self.list_lane_exits
 
         # previous & current
         self.current_phase_index = 1
@@ -39,7 +38,7 @@ class Intersection:
         # -1: all yellow
         self.all_yellow_phase_index = -1
 
-        self.set_tl_phase(self.inter_name, self.current_phase_index)
+        self.set_tl_phase(self.inter_id, self.current_phase_index)
         self.next_phase_to_set_index = None
         self.current_phase_duration = -1
         self.all_yellow_flag = False
@@ -50,7 +49,7 @@ class Intersection:
         if self.all_yellow_flag:
             if self.current_phase_duration >= yellow_time:  # yellow time
                 self.current_phase_index = self.next_phase_to_set_index
-                self.set_tl_phase(self.inter_name, self.current_phase_index)
+                self.set_tl_phase(self.inter_id, self.current_phase_index)
                 self.all_yellow_flag = False
             else:
                 pass
@@ -59,14 +58,14 @@ class Intersection:
             if self.current_phase_index == self.next_phase_to_set_index:
                 pass
             else:
-                self.set_tl_phase(self.inter_name, self.yellow_phase_index)
+                self.set_tl_phase(self.inter_id, self.yellow_phase_index)
                 self.current_phase_index = self.all_yellow_phase_index
                 self.all_yellow_flag = True
 
-    def set_tl_phase(self, inter_name, phase_index):
+    def set_tl_phase(self, inter_id, phase_index):
         """API in different environment
         """
-        self.eng.set_tl_phase(inter_name, phase_index)
+        self.eng.set_tl_phase(inter_id, phase_index)
 
     def update_previous_measurements(self):
         self.previous_phase_index = self.current_phase_index
@@ -89,10 +88,6 @@ class Intersection:
         self.dic_lane_vehicle_current_step = self.eng.get_lane_vehicles()
         self.dic_lane_vehicle_waiting_current_step = \
             self.eng.get_lane_waiting_vehicle_count()
-        if self.dic_traffic_env_conf["ENV_DEBUG"]:
-            self.dic_vehicle_speed_current_step = self.eng.get_vehicle_speed()
-            self.dic_vehicle_distance_current_step = \
-                self.eng.get_vehicle_distance()
 
         vehicle_now = get_vehicle_list(self.dic_lane_vehicle_current_step)
         vehicle_pre = get_vehicle_list(self.dic_lane_vehicle_previous_step)
@@ -118,10 +113,10 @@ class Intersection:
     def _update_leave_entering_approach_vehicle(self):
         list_entering_lane_vehicle_left = []
         if not self.dic_lane_vehicle_previous_step:
-            for lane in self.list_entering_lanes:
+            for lane in self.list_lane_enters:
                 list_entering_lane_vehicle_left.append([])
         else:
-            for lane in self.list_entering_lanes:
+            for lane in self.list_lane_enters:
                 list_entering_lane_vehicle_left.append(
                     list(
                         set(self.dic_lane_vehicle_previous_step[lane]) - \
@@ -149,22 +144,21 @@ class Intersection:
 
     def _update_feature(self):
         dic_feature = dict()
-
         dic_feature["cur_phase"] = self.current_phase_index
         dic_feature["time_this_phase"] = self.current_phase_duration
 
         dic_feature["lane_vehicle_cnt"] = \
             [len(self.dic_lane_vehicle_current_step[lane]) for lane in
-             self.list_entering_lanes]
+             self.list_lane_enters]
         dic_feature["stop_vehicle_thres1"] = \
             [self.dic_lane_vehicle_waiting_current_step[lane]
-             for lane in self.list_entering_lanes]
+             for lane in self.list_lane_enters]
         dic_feature["lane_queue_length"] = \
             [self.dic_lane_vehicle_waiting_current_step[lane]
-             for lane in self.list_entering_lanes]
+             for lane in self.list_lane_enters]
         dic_feature["lane_vehicle_left_cnt"] = \
             [len(self.dic_lane_vehicle_current_step[lane]) for lane in
-             self.list_exiting_lanes]
+             self.list_lane_exits]
 
         dic_feature["lane_duration_vehicle_left"] = None
         dic_feature["lane_waiting_time"] = None
@@ -203,48 +197,114 @@ class Intersection:
 
 
 class CityflowEnv(EnvBase):
-    def __init__(self, conf_path, conf_traffic):
-        self.__conf_path = conf_path
-        self.__conf_traffic = conf_traffic
-
-        self.path_to_log = self.dic_path["PATH_TO_WORK"]
-        self.path_to_data = self.dic_path["PATH_TO_DATA"]
-        self.lane_phase_infos = self.dic_traffic_env_conf['LANE_PHASE_INFOS']
-        self.yellow_time = self.dic_traffic_env_conf["YELLOW_TIME"]
+    def __init__(self, conf_path, *, is_test=False):
+        self.conf_path = conf_path
+        _, _, self.conf_traffic = self.conf_path.load_conf_file()
+        if is_test:
+            self.path_to_work = self.conf_path.WORK_TEST
+        else:
+            self.path_to_work = self.conf_path.WORK_SAMPLE
+        self.path_to_data = self.conf_path.DATA
         self.stop_cnt = 0
 
     def get_agents_info(self):
+        self.traffic_infos = \
+            self.__get_agents_info(self.conf_path.ROADNET_FILE)
 
-        lane_phase_infos = \
-            parse_roadnet_cityflow(self.dic_path["PATH_TO_ROADNET_FILE"])
-        return lane_phase_infos
+        self.conf_traffic.set_traffic_infos(self.traffic_infos)
+        self.yellow_time = self.conf_traffic.TIME_YELLOW
+        return self.traffic_infos
+
+    def __get_agents_info(self, roadnet_file_dir):
+        """DISGUSTING code.
+        Args:
+            roadnet_file_dir: a full dir of the roadnet file.
+        Returns:
+            file infos
+        """
+        with open(roadnet_file_dir) as f:
+            roadnet = json.load(f)
+        traffic_infos = OrderedDict()
+        list_inter = [inter for inter in roadnet["intersections"]
+                      if not inter["virtual"]]
+
+        for inter in list_inter:
+            # bound
+            traffic_info = OrderedDict()
+            traffic_infos[inter['id']] = traffic_info
+            # phase_lane_mapping
+            phase_lane = inter['trafficLight']['lightphases']
+            list_indices = inter['trafficLight']['roadLinkIndices']
+            phase_lane_ = OrderedDict()
+            for idx, lanes in enumerate(phase_lane):
+                list_links = lanes['availableRoadLinks']
+                if len(list_links) > 0:
+                    list_lane = [0 for _ in range(len(list_indices))]
+                    for ll in list_links:
+                        list_lane[ll] = 1
+                    phase_lane_[idx - 1] = list_lane
+            phase_lane = phase_lane_
+            traffic_info['phase_lane_mapping'] = phase_lane
+            # phase_links
+            phase_links_ = OrderedDict()
+            phase_links = inter['roadLinks']
+            for idx, pl in enumerate(phase_links):
+                lane_s = pl['startRoad']
+                lane_e = pl['endRoad']
+                lane_links = pl['laneLinks']
+                si, ei = None, None
+                for ll in lane_links:
+                    si = ll['startLaneIndex']
+                    ei = ll['endLaneIndex']
+                    if si == ei:
+                        lane_s = ''.join([lane_s, '_', str(si)])
+                        lane_e = ''.join([lane_e, '_', str(ei)])
+                        break
+                else:
+                    lane_s = ''.join([lane_s, '_', str(si)])
+                    lane_e = ''.join([lane_e, '_', str(ei)])
+                phase_links_[idx] = [lane_s, lane_e]
+            phase_links = phase_links_
+            traffic_info['phase_links'] = phase_links
+            # relation
+            relation = None
+            # TODO implement relation
+            traffic_info['relation'] = relation
+            # phase_str, yellow_phase
+            # note that the phase_str is not used for cityflow
+            traffic_info['phase_str'] = None
+            traffic_info["yellow_phase"] = 0
+            # enters, exits
+            lane_enters = [pl[0] for _, pl in phase_links.items()]
+            lane_exits = [pl[1] for _, pl in phase_links.items()]
+            traffic_info['list_lane_enters'] = lane_enters
+            traffic_info['list_lane_exits'] = lane_exits
+        return traffic_infos
 
     def reset(self):
-        if not os.path.isfile(self.dic_path["PATH_TO_ROADNET_FILE"]):
+        if not os.path.isfile(self.conf_path.ROADNET_FILE):
             raise FileExistsError("file not exist! check it %s" %
-                                  self.dic_path["PATH_TO_ROADNET_FILE"])
-        if not os.path.isfile(self.dic_path["PATH_TO_FLOW_FILE"]):
+                                  self.conf_path.ROADNET_FILE)
+        if not os.path.isfile(self.conf_path.FLOW_FILE):
             raise FileExistsError("file not exist! check it %s" %
-                                  self.dic_path["PATH_TO_FLOW_FILE"])
-        config_file = self._save_config_file()
-        self.eng = cityflow.Engine(
-            config_file, self.dic_traffic_env_conf["THREADNUM"])
+                                  self.conf_path.FLOW_FILE)
+        config_file = self.__save_config_file()
+
+        self.eng = cityflow.Engine(config_file, 1)
+        print(config_file)
         os.remove(config_file)
         self.__reset_prepare()
-        state = self.get_state()
+        state = self.__get_state()
         return state
 
     def __reset_prepare(self):
         self.list_intersection = []
         self.list_inter_log = dict()
-        self.list_lanes = []
-        for inter_name in sorted(self.lane_phase_infos.keys()):
-            intersection = Intersection(
-                inter_name, self.dic_traffic_env_conf, self.eng)
+
+        for inter_id in sorted(self.traffic_infos.keys()):
+            intersection = Intersection(inter_id, self.conf_traffic, self.eng)
             self.list_intersection.append(intersection)
-            self.list_inter_log[inter_name] = []
-            self.list_lanes += intersection.list_lanes
-        self.list_lanes = np.unique(self.list_lanes).tolist()
+            self.list_inter_log[inter_id] = []
 
         for inter in self.list_intersection:
             inter.update_current_measurements()
@@ -252,31 +312,31 @@ class CityflowEnv(EnvBase):
     def step(self, action):
         list_action_in_sec = [action]
         list_action_in_sec_display = [action]
-        for i in range(self.dic_traffic_env_conf["MIN_ACTION_TIME"] - 1):
+        for i in range(self.conf_traffic.TIME_MIN_ACTION - 1):
             list_action_in_sec.append(np.copy(action).tolist())
             list_action_in_sec_display.append(
                 np.full_like(action, fill_value=-1).tolist())
         average_reward = 0
         next_state, reward, done = None, None, None
-        for i in range(self.dic_traffic_env_conf["MIN_ACTION_TIME"]):
+        for i in range(self.conf_traffic.TIME_MIN_ACTION):
             action_in_sec = list_action_in_sec[i]
             action_in_sec_display = list_action_in_sec_display[i]
-            instant_time = self.get_current_time()
-            before_action_feature = self.get_feature()
+            instant_time = self.__get_current_time()
+            before_action_feature = self.__get_feature()
 
-            self._inner_step(action_in_sec)
-            reward = self.get_reward()
+            self.__inner_step(action_in_sec)
+            reward = self.__get_reward()
             average_reward = (average_reward * i + reward[0]) / (i + 1)
 
-            self.log(cur_time=instant_time,
-                     before_action_feature=before_action_feature,
-                     action=action_in_sec_display)
-            next_state = self.get_state()
-            if self.dic_traffic_env_conf["DONE_ENABLE"]:
+            self.__log(cur_time=instant_time,
+                       before_action_feature=before_action_feature,
+                       action=action_in_sec_display)
+            next_state = self.__get_state()
+            if self.conf_traffic.DONE_ENABLE:
                 done = self._check_episode_done(next_state)
             else:
                 done = False
-            print('.', end='')
+            if i % 100 == 0: print('.', end='')
             if done:
                 print("||done||")
         return next_state, reward, done, [average_reward]
@@ -287,12 +347,9 @@ class CityflowEnv(EnvBase):
         for inter_ind, inter in enumerate(self.list_intersection):
             inter.set_signal(action=action[inter_ind],
                              yellow_time=self.yellow_time)
-        for i in range(int(1 / self.dic_traffic_env_conf["INTERVAL"])):
-            self.eng.next_step()
+        self.eng.next_step()
         for inter in self.list_intersection:
             inter.update_current_measurements()
-        if self.dic_traffic_env_conf["ENV_DEBUG"]:
-            self.log_phase()
 
     def __check_episode_done(self, state):
         if 39 in state[0]["lane_vehicle_cnt"]:
@@ -308,20 +365,18 @@ class CityflowEnv(EnvBase):
         return list_feature
 
     def __get_state(self):
-        list_state = [
-            inter.get_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"])
-            for inter in self.list_intersection]
+        list_state = [inter.get_state(self.conf_traffic.FEATURE)
+                      for inter in self.list_intersection]
         return list_state
 
     def __get_reward(self):
-        list_reward = [
-            inter.get_reward(self.dic_traffic_env_conf["DIC_REWARD_INFO"]) for
-            inter in self.list_intersection]
+        list_reward = [inter.get_reward(self.conf_traffic.REWARD_INFOS)
+                       for inter in self.list_intersection]
         return list_reward
 
     def __log(self, cur_time, before_action_feature, action):
-        for idx, inter_name in enumerate(sorted(self.lane_phase_infos.keys())):
-            self.list_inter_log[inter_name].append(
+        for idx, inter_id in enumerate(sorted(self.traffic_infos.keys())):
+            self.list_inter_log[inter_id].append(
                 {"time": cur_time,
                  "state": before_action_feature[idx],
                  "action": action[idx]})
@@ -329,9 +384,9 @@ class CityflowEnv(EnvBase):
     def bulk_log(self):
         valid_flag = {}
         for inter in self.list_intersection:
-            inter_name = inter.inter_name
+            inter_id = inter.inter_id
             path_to_log_file = os.path.join(
-                self.path_to_log, "vehicle_inter_%s.csv" % inter_name)
+                self.path_to_work, "vehicle_inter_%s.csv" % inter_id)
             dic_vehicle = inter.dic_vehicle_arrive_leave_time
             df = convert_dic_to_df(dic_vehicle)
             df.to_csv(path_to_log_file, na_rep="nan")
@@ -339,63 +394,65 @@ class CityflowEnv(EnvBase):
             feature = inter.dic_feature
 
             if max(feature['lane_vehicle_cnt']) > \
-                    self.dic_traffic_env_conf["VALID_THRESHOLD"]:
-                valid_flag[inter_name] = 0
+                    self.conf_traffic.VALID_THRESHOLD:
+                valid_flag[inter_id] = 0
             else:
-                valid_flag[inter_name] = 1
+                valid_flag[inter_id] = 1
         json.dump(valid_flag,
-                  open(os.path.join(self.path_to_log, "valid_flag.json"), "w"))
-        self.save_replay()
+                  open(os.path.join(self.path_to_work, "valid_flag.json"), "w"))
+        self.__save_replay()
 
     def __log_phase(self):
         for inter in self.list_intersection:
             print(
                 "%f, %f" %
                 (self.get_current_time(), inter.current_phase_index),
-                file=open(os.path.join(self.path_to_log, "log_phase.txt"), "a"))
+                file=open(os.path.join(self.path_to_work, "log_phase.txt"), "a"))
 
     def __get_current_time(self):
         return self.eng.get_current_time()
 
     def __save_config_file(self):
         config_dict = {
-            "interval": self.dic_traffic_env_conf["INTERVAL"],
+            "interval": 1,
             "seed": 0,
             "dir": "",
-            "roadnetFile": self.dic_path["PATH_TO_ROADNET_FILE"],
-            "flowFile": self.dic_path["PATH_TO_FLOW_FILE"],
-            "rlTrafficLight": self.dic_traffic_env_conf["RLTRAFFICLIGHT"],
-            "saveReplay": self.dic_traffic_env_conf["SAVEREPLAY"],
-            "roadnetLogFile": os.path.join(self.path_to_log, "roadnet_.json"),
-            "replayLogFile": os.path.join(self.path_to_log, "replay_.txt"),
+            "roadnetFile": self.conf_path.ROADNET_FILE,
+            "flowFile": self.conf_path.FLOW_FILE,
+            "rlTrafficLight": True,
+            "saveReplay": False,
+            "roadnetLogFile": None,
+            "replayLogFile": None,
         }
-        config_name = str(time.time()) + str(np.random.random()) + ".tmp"
+        config_name = str(time.time_ns()) + str(uuid.uuid1()) + ".tmp"
+
         with open(config_name, "w") as f:
+            # f.flush()
             json.dump(config_dict, f)
+            # os.fsync(f)
         return config_name
 
     def __save_replay(self):
-        for inter_name in sorted(self.lane_phase_infos.keys()):
+        for inter_id in sorted(self.traffic_infos.keys()):
             path_to_log_file = os.path.join(
-                self.path_to_log, "%s.pkl" % inter_name)
+                self.path_to_work, "%s.pkl" % inter_id)
             f = open(path_to_log_file, "wb")
-            pickle.dump(self.list_inter_log[inter_name], f)
+            pickle.dump(self.list_inter_log[inter_id], f)
             f.close()
 
 
 if __name__ == '__main__':
     os.chdir('../')
     # Out of date. refresh please.
-    print('env test start...')
-    print('test finished..')
-    os.chdir('../')
-    # Out of date. refresh please.
-    print('anon env test start...')
-    from configs.config_example import *
-    from configs.config_phaser import *
+    print('cityflow env test start...')
 
-    create_path_dir(dic_path)
-    env = SumoEnv(dic_path, dic_traffic_env)
+    from configs import config_phaser
+    args = config_phaser.parse()
+    conf_exp, conf_agent, conf_traffic_env, conf_path = \
+        config_phaser.config_all(args)
+
+    create_path_dir(conf_path)
+    env = CityflowEnv(conf_path)
     state = env.reset()
     done = False
     cnt = 0

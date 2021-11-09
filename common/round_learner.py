@@ -22,7 +22,7 @@ def updater_wrapper(conf_path, round_number):
 
 
 def test_eval(conf_path, round_number):
-    generator = Generator(conf_path, round_number)
+    generator = Generator(conf_path, round_number, is_test=True)
     generator.generate_test()
 
 
@@ -69,7 +69,7 @@ class RoundLearner:
 
     def __round_test_eval(self, callback_func):
         self.conf_path.set_work_test(self.round_number)
-        self.conf_path.create_work_dir()
+        self.conf_path.create_path_dir()
 
         p = Process(target=callback_func,
                     args=(self.conf_path, self.round_number,))

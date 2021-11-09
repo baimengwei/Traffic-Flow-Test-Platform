@@ -17,6 +17,7 @@ class ConfTrafficEnv:
         self.__list_state_feature = LIST_STATE_FEATURE
         self.__reward_info = DIC_REWARD_INFO
         self.__traffic_category = TRAFFIC_CATEGORY
+        self.__threshold = 30
 
         self.__traffic_file = None
         self.__traffic_infos = None
@@ -30,6 +31,8 @@ class ConfTrafficEnv:
     def __preprocess(self):
         if self.__algorithm == 'DQN':
             self.__feature = ['cur_phase', 'lane_vehicle_cnt']
+        elif self.__algorithm == 'FIXTIME':
+            self.__feature = None
         else:
             warnings.warn('using default feature, algorithm is %s' % self.__algorithm)
             self.__feature = self.__list_state_feature
@@ -46,6 +49,9 @@ class ConfTrafficEnv:
 
     def set_port(self, port):
         self.__port = port
+
+    def set_one_step(self):
+        self.__time_min_action = self.__time_yellow + 1
 
     @property
     def ENV_NAME(self):
@@ -68,6 +74,10 @@ class ConfTrafficEnv:
         return self.__traffic_info
 
     @property
+    def INTER_NAME(self):
+        return self.__inter_name
+
+    @property
     def FEATURE(self):
         return self.__feature
 
@@ -78,3 +88,19 @@ class ConfTrafficEnv:
     @property
     def TRAFFIC_CATEGORY(self):
         return self.__traffic_category
+
+    @property
+    def EPISODE_LEN(self):
+        return self.__episode_len
+
+    @property
+    def NORMAL_FACTOR(self):
+        return self.__reward_norm
+
+    @property
+    def DONE_ENABLE(self):
+        return self.__done_enable
+
+    @property
+    def VALID_THRESHOLD(self):
+        return self.__threshold

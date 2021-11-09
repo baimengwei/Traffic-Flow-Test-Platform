@@ -12,17 +12,18 @@ sys.path.append(os.path.join(os.environ["SUMO_HOME"], "tools"))
 class Intersection:
     def __init__(self, inter_id, conf_traffic, eng):
         self.inter_id = inter_id
+        # TODO try copy obj
         self.conf_traffic = conf_traffic
         self.eng = eng
 
-        self.lane_phase_info = self._get_inter_info()
-        self.yellow_phase_index = self.lane_phase_info["yellow_phase"]
-        self.list_phase_index = self.lane_phase_info["list_phase"]
-        self.list_lane_enters = self.lane_phase_info["list_lane_enters"]
-        self.list_lane_exits = self.lane_phase_info["list_lane_exits"]
+        self.conf_traffic.set_intersection(self.inter_id)
 
-        self.inter_id = self.lane_phase_info["inter_id"]
-        self.dic_phase_strs = self.lane_phase_info["phase_detail"]
+        self.traffic_info = self.conf_traffic.TRAFFIC_INFO
+        self.yellow_phase_index = self.traffic_info["yellow_phase"]
+        self.list_phase_index = list(self.traffic_info["phase_links"].keys())
+        self.list_lane_enters = self.traffic_info["list_lane_enters"]
+        self.list_lane_exits = self.traffic_info["list_lane_exits"]
+        self.dic_phase_strs = self.traffic_info["phase_str"]
 
         self.current_phase_index = 1
         self.previous_phase_index = 1
@@ -149,78 +150,78 @@ class Intersection:
         self.eng.trafficlight.setRedYellowGreenState(
             self.inter_id, phase_str)
 
-    def _get_inter_info(self):
-        dic_lane_phase_info = {}
-        phase_link = self.eng.trafficlight.getControlledLinks(self.inter_id)
-        phase_info = self.eng.trafficlight.getCompleteRedYellowGreenDefinition(
-            self.inter_id)[0]
-        phase_cnt = len(phase_info.getPhases())
-        list_phase = [i for i in range(1, phase_cnt + 1)]
-        phase_detail = [phase.state for phase in phase_info.getPhases()]
-
-        dic_lane_phase_info["list_phase"] = list_phase
-        dic_lane_phase_info["phase_detail"] = phase_detail
-
-        dic_lane_phase_info["yellow_phase"] = -1
-        dic_lane_phase_info["inter_id"] = self.inter_id
-
-        list_lane_enters = [inter[0][0] for inter in phase_link]
-        list_lane_exits = [inter[0][1] for inter in phase_link]
-        dic_lane_phase_info["list_lane_enters"] = list_lane_enters
-        dic_lane_phase_info["list_lane_exits"] = list_lane_exits
-
-        return dic_lane_phase_info
-
 
 class SumoEnv(EnvBase):
-    def __init__(self, conf_path: ConfPath, conf_traffic: ConfTrafficEnv):
+    def __init__(self, conf_path, *, is_test=False):
         self.conf_path = conf_path
-        self.conf_traffic = conf_traffic
+        _, _, self.conf_traffic = self.conf_path.load_conf_file()
 
-        self.path_to_work = self.conf_path.WORK
+        if is_test:
+            self.path_to_work = self.conf_path.WORK_TEST
+        else:
+            self.path_to_work = self.conf_path.WORK_SAMPLE
         self.path_to_data = self.conf_path.DATA
-        self.yellow_time = self.conf_traffic.TIME_YELLOW
         self.stop_cnt = 0
 
     def get_agents_info(self):
         file_sumocfg = self.conf_path.ROADNET_FILE.split(".net.xml")[0] + ".sumocfg"
         sumo_cmd = ["sumo", '-c', file_sumocfg,
                     "--no-warnings", "--no-step-log",
-                    "--step-length", 1]
+                    "--step-length", '1']
         self.eng = traci
+
         self.eng.start(sumo_cmd)
         self.__get_agent_info()
-        return self.lane_phase_infos
+        # update traffic infos
+        self.conf_traffic.set_traffic_infos(self.traffic_infos)
+        self.yellow_time = self.conf_traffic.TIME_YELLOW
+        return self.traffic_infos
 
     def __get_agent_info(self):
-        lane_phase_infos = OrderedDict()
+        traffic_infos = OrderedDict()
         traffic_lights = self.eng.trafficlight
         tls_ids = traffic_lights.getIDList()
 
         for tls_id in tls_ids:
-            lane_phase_info = OrderedDict()
-            lane_phase_infos[tls_id] = lane_phase_info
-
+            # bound
+            traffic_info = OrderedDict()
+            traffic_infos[tls_id] = traffic_info
+            # phase_lane_mapping
             signals = traffic_lights.getCompleteRedYellowGreenDefinition(tls_id)
             signals = signals[0]
             phases = traffic_lights.Logic.getPhases(signals)
             phase_map = {}
-
             for idx, phase in enumerate(phases):
                 phase_lane = [0 for _ in range(len(phase.state))]
                 for i, l in enumerate(phase.state):
                     if l == 'g' or l == 'G':
                         phase_lane[i] = 1
                 phase_map[idx] = phase_lane
-            lane_phase_info['phase_lane_mapping'] = phase_map
-
+            traffic_info['phase_lane_mapping'] = phase_map
+            # phase_links
             phase_links = traffic_lights.getControlledLinks(tls_id)
-            lane_phase_info['phase_links'] = phase_links
-
+            phase_links_ = OrderedDict()
+            for idx, pl in enumerate(phase_links):
+                if len(pl) > 0:
+                    phase_links_[idx] = pl
+            phase_links = phase_links_
+            traffic_info['phase_links'] = phase_links
+            # relation
             relation = None
             # TODO implement relation
-            lane_phase_info['relation'] = relation
-        self.lane_phase_infos = lane_phase_infos
+            traffic_info['relation'] = relation
+            # phase_str, yellow_phase
+            signals = traffic_lights.getCompleteRedYellowGreenDefinition(tls_id)[0]
+            phase_str = {idx: p.state for idx, p in enumerate(signals.phases)}
+            traffic_info["phase_str"] = phase_str
+            traffic_info["yellow_phase"] = -1
+            # enters, exits
+            list_lane_enters = [inter[0][0] for _, inter in phase_links.items()]
+            list_lane_exits = [inter[0][1] for _, inter in phase_links.items()]
+            traffic_info["list_lane_enters"] = list_lane_enters
+            traffic_info["list_lane_exits"] = list_lane_exits
+
+        self.traffic_infos = traffic_infos
 
     def reset(self):
         self.list_intersection = list(self.eng.trafficlight.getIDList())
@@ -245,26 +246,26 @@ class SumoEnv(EnvBase):
 
     def __get_state(self):
         list_state = [
-            inter.get_state(self.conf_traffic["LIST_STATE_FEATURE"])
+            inter.get_state(self.conf_traffic.FEATURE)
             for inter in self.list_inter_handler]
         return list_state
 
     def __get_reward(self):
         list_reward = [
-            inter.get_reward(self.conf_traffic["DIC_REWARD_INFO"])
+            inter.get_reward(self.conf_traffic.REWARD_INFOS)
             for inter in self.list_inter_handler]
         return list_reward
 
     def step(self, action):
         list_action_in_sec = [action]
         list_action_in_sec_display = [action]
-        for i in range(self.conf_traffic["MIN_ACTION_TIME"] - 1):
+        for i in range(self.conf_traffic.TIME_MIN_ACTION - 1):
             list_action_in_sec.append(np.copy(action).tolist())
             list_action_in_sec_display.append(
                 np.full_like(action, fill_value=-1).tolist())
         average_reward = 0
         next_state, reward, done = None, None, None
-        for i in range(self.conf_traffic["MIN_ACTION_TIME"]):
+        for i in range(self.conf_traffic.TIME_MIN_ACTION):
             action_in_sec = list_action_in_sec[i]
             action_in_sec_display = list_action_in_sec_display[i]
             instant_time = self.eng.simulation.getTime()
@@ -275,15 +276,16 @@ class SumoEnv(EnvBase):
             average_reward = (average_reward * i + reward[0]) / (i + 1)
 
             self.__record_log(cur_time=instant_time,
-                             before_action_feature=before_action_feature,
-                             action=action_in_sec_display)
+                              before_action_feature=before_action_feature,
+                              action=action_in_sec_display)
             next_state = self.__get_state()
-            # TODO add function here.
-            if self.conf_traffic["DONE_ENABLE"]:
+
+            # TODO add function to make done enable running.
+            if self.conf_traffic.DONE_ENABLE:
                 done = False
             else:
                 done = False
-            print('.', end='')
+            if i % 100 == 0: print('.', end='')
             if done:
                 print("||done||")
         return next_state, reward, done, [average_reward]
@@ -302,7 +304,7 @@ class SumoEnv(EnvBase):
             feature = inter.dic_feature
 
             if max(feature['lane_vehicle_cnt']) > \
-                    self.conf_traffic["VALID_THRESHOLD"]:
+                    self.conf_traffic.VALID_THRESHOLD:
                 valid_flag[inter_name] = 0
             else:
                 valid_flag[inter_name] = 1
