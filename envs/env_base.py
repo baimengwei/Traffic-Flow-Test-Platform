@@ -17,6 +17,5 @@ class EnvBase(metaclass=ABCMeta):
     def step(self, action):
         pass
 
-    @abstractmethod
-    def bulk_log(self):
+    def bulk_log(self, reward):
         pass

@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from misc.utils import *
@@ -144,12 +145,12 @@ class Intersection:
 
     def _update_feature(self):
         dic_feature = dict()
-        dic_feature["cur_phase"] = self.current_phase_index
+        dic_feature["cur_phase_index"] = self.current_phase_index
         dic_feature["time_this_phase"] = self.current_phase_duration
 
         dic_feature["lane_vehicle_cnt"] = \
-            [len(self.dic_lane_vehicle_current_step[lane]) for lane in
-             self.list_lane_enters]
+            [len(self.dic_lane_vehicle_current_step[lane])
+             for lane in self.list_lane_enters]
         dic_feature["stop_vehicle_thres1"] = \
             [self.dic_lane_vehicle_waiting_current_step[lane]
              for lane in self.list_lane_enters]
@@ -157,8 +158,8 @@ class Intersection:
             [self.dic_lane_vehicle_waiting_current_step[lane]
              for lane in self.list_lane_enters]
         dic_feature["lane_vehicle_left_cnt"] = \
-            [len(self.dic_lane_vehicle_current_step[lane]) for lane in
-             self.list_lane_exits]
+            [len(self.dic_lane_vehicle_current_step[lane])
+             for lane in self.list_lane_exits]
 
         dic_feature["lane_duration_vehicle_left"] = None
         dic_feature["lane_waiting_time"] = None
@@ -336,7 +337,6 @@ class CityflowEnv(EnvBase):
                 done = self._check_episode_done(next_state)
             else:
                 done = False
-            if i % 100 == 0: print('.', end='')
             if done:
                 print("||done||")
         return next_state, reward, done, [average_reward]
@@ -381,7 +381,7 @@ class CityflowEnv(EnvBase):
                  "state": before_action_feature[idx],
                  "action": action[idx]})
 
-    def bulk_log(self):
+    def bulk_log(self, reward):
         valid_flag = {}
         for inter in self.list_intersection:
             inter_id = inter.inter_id
@@ -398,6 +398,7 @@ class CityflowEnv(EnvBase):
                 valid_flag[inter_id] = 0
             else:
                 valid_flag[inter_id] = 1
+            valid_flag['%s_reward' % inter_id] = reward[inter_id]
         json.dump(valid_flag,
                   open(os.path.join(self.path_to_work, "valid_flag.json"), "w"))
         self.__save_replay()
@@ -447,18 +448,25 @@ if __name__ == '__main__':
     print('cityflow env test start...')
 
     from configs import config_phaser
+
     args = config_phaser.parse()
-    conf_exp, conf_agent, conf_traffic_env, conf_path = \
+    conf_exp, conf_agent, conf_traffic, conf_path = \
         config_phaser.config_all(args)
 
-    create_path_dir(conf_path)
+    conf_path.set_traffic_file('hangzhou_baochu_tiyuchang_1h_10_11_2021')
+    conf_path.create_path_dir()
+    conf_path.dump_conf_file(conf_exp, conf_agent, conf_traffic)
     env = CityflowEnv(conf_path)
+    traffic_info = env.get_agents_info()
+    print('----------traffic_info-------------')
+    print( json.dumps(traffic_info))
+    print('----------------------------------')
     state = env.reset()
     done = False
     cnt = 0
     while not done and cnt < 360:
         cnt += 1
-        action = [0]
+        action = [1]
         next_state, reward, done, _ = env.step(action)
         print(state, action, reward, next_state, done, _)
         state = next_state

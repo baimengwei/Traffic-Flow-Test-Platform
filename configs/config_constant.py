@@ -1,17 +1,12 @@
 LIST_STATE_FEATURE = [
-    "cur_phase",
     "cur_phase_index",
-    "time_this_phase",
-    "vehicle_position_img",
-    "vehicle_speed_img",
-    "vehicle_acceleration_img",
-    "vehicle_waiting_time_img",
     "lane_vehicle_cnt",
+
+    "time_this_phase",
     "stop_vehicle_thres1",
     "lane_queue_length",
     "lane_vehicle_left_cnt",
-    "lane_sum_duration_vehicle_left",
-    "lane_sum_waiting_time",
+    "lane_waiting_time",
     "terminal"
 ]
 
@@ -35,6 +30,7 @@ RL_ALGORITHM = [
     "MetaDQN",
     "MetaDQNAdapt",
 ]
+
 TRAD_ALGORITHM = [
     "SOTL",
     "WEBSTER",

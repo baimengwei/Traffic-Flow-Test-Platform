@@ -1,6 +1,7 @@
 import copy
 import json
 import pickle
+from collections import defaultdict
 from math import isnan
 import pickle as pkl
 import matplotlib.pyplot as plt
@@ -480,6 +481,24 @@ def summary_detail_test(conf_path):
             figure_path = 'result_' + file.split('.')[0] + '.png'
             figure_path = os.path.join(conf_path.WORK, figure_path)
             plt.savefig(figure_path)
+
+    dic_reward = defaultdict(lambda :[])
+    for file in list_files:
+        if 'round' in file:
+            file_full = os.path.join(test_round_dir, file, 'valid_flag.json')
+            valid_info = json.load(open(file_full))
+            for k in valid_info.keys():
+                if 'reward' in k:
+                    dic_reward[k] += [valid_info[k]]
+    figure = plt.figure(figsize=(16, 9))
+    ax1 = figure.add_subplot(111)
+    list_inter = list(sorted(dic_reward.keys()))
+    for inter in list_inter:
+        ax1.plot(dic_reward[inter])
+    plt.legend(list_inter)
+    plt.show()
+    figure_path = os.path.join(conf_path.WORK, 'reward_info.png')
+    plt.savefig(figure_path)
 
 
 def summary_detail_baseline(project):

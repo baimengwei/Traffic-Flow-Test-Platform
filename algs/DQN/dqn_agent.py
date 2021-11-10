@@ -42,8 +42,8 @@ class DQNAgent(Agent):
         self.__inter_name = inter_name
         self.__conf_exp, self.__conf_agent, self.__conf_traffic = \
             conf_path.load_conf_file(inter_name=inter_name)
-        self.__conf_agent = self.decay_epsilon(self.__conf_agent,
-                                               self.__round_number)
+        self.__conf_agent = self.decay_epsilon(
+            self.__conf_agent, self.__round_number)
 
         if self.__round_number == 0:
             self.build_network()
@@ -74,7 +74,7 @@ class DQNAgent(Agent):
 
     def load_network_bar(self, round_number):
         file_name = self.__inter_name + "_round_%d" % round_number + '.pt'
-        file_path = os.path.join(self.__conf_path.MODEL,file_name)
+        file_path = os.path.join(self.__conf_path.MODEL, file_name)
         ckpt = torch.load(file_path)
         self.model_target = DQN(self.__conf_traffic)
         self.model_target.load_state_dict((ckpt['state_dict']))
@@ -84,8 +84,7 @@ class DQNAgent(Agent):
         input = torch.Tensor(input).flatten().unsqueeze(0)
 
         q_values = self.model.forward(input)
-        if random.random() <= self.__conf_agent["EPSILON"] \
-                and choice_random:
+        if random.random() <= self.__conf_agent["EPSILON"] and choice_random:
             actions = random.randrange(len(q_values[0]))
         else:
             actions = np.argmax(q_values[0].detach().numpy())
@@ -97,10 +96,10 @@ class DQNAgent(Agent):
         next_state = []
         reward_avg = []
         for each in sample_set:
-            state.append(each[0]['cur_phase'] + each[0]['lane_vehicle_cnt'])
+            state.append(each[0]['cur_phase_index'] + each[0]['lane_vehicle_cnt'])
             action.append(each[1])
             next_state.append(
-                each[2]['cur_phase'] + each[2]['lane_vehicle_cnt'])
+                each[2]['cur_phase_index'] + each[2]['lane_vehicle_cnt'])
             reward_avg.append(each[3])
 
         q_values = self.model.forward(torch.Tensor(state)).detach().numpy()

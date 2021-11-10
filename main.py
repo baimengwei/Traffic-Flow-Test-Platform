@@ -42,6 +42,7 @@ def run_metadqn():
     args.algorithm = "MetaDQNAdapt"
     main_test(args)
 
+
 def run_sotl():
     from algs.SOTL.sotl_train import main
     args = parse()
@@ -93,6 +94,7 @@ def run_fixtime():
     print('start execute fixtime..')
     args.algorithm = "FIXTIME"
     args.project = "FIXTIME_AS"
+    args.train_round = 1
     main(args)
 
 
@@ -111,12 +113,12 @@ if __name__ == '__main__':
     # run_metalight()
     # run_frap()
     # run_frapplus()
-    # run_dqn()
+    run_dqn()
     # run_sotl()
     # run_tddd()
     # run_drqn()
     # run_webster()
-    run_fixtime()
+    # run_fixtime()
     # run_maxpressure()
     # run_fraprq()
     # run_dqn()

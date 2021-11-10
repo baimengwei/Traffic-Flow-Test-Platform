@@ -4,7 +4,7 @@ from common.generator import Generator
 
 def test_eval(conf_path, round_number):
     generator = Generator(conf_path, round_number, is_test=True)
-    generator.generate_test()
+    generator.generate_none()
 
 
 class NoneLearner:

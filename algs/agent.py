@@ -19,7 +19,7 @@ class Agent(metaclass=ABCMeta):
         list_feature = conf_traffic.FEATURE
         dic_phase_expansion = conf_traffic.TRAFFIC_INFO['phase_lane_mapping']
         for feature in list_feature:
-            if feature == "cur_phase":
+            if feature == "cur_phase_index":
                 input.append(np.array(dic_phase_expansion[state[feature] - 1]))
             else:
                 input.append(np.array(state[feature]))
@@ -34,7 +34,7 @@ class Agent(metaclass=ABCMeta):
         decayed_epsilon = conf_agent['EPSILON'] * \
                           np.power(conf_agent['EPSILON_DECAY'],
                                    round_number)
-        conf_agent.EPSILON = max(decayed_epsilon,
+        conf_agent['EPSILON'] = max(decayed_epsilon,
                                  conf_agent['MIN_EPSILON'])
         return conf_agent
 

@@ -35,7 +35,7 @@ class ConstructSample:
         state_after_selection = {}
         for key, value in state["state"].items():
             if key in features:
-                if key == "cur_phase":
+                if key == "cur_phase_index":
                     state_after_selection[key] = phase_expansion[value - 1]
                 else:
                     state_after_selection[key] = value

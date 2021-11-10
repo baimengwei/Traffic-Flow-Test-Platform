@@ -51,8 +51,11 @@ class Tester:
         conf_path.set_traffic_file(traffic_file)
         conf_path.create_path_dir()
         conf_path.dump_conf_file(conf_exp, conf_agent, conf_traffic)
-        mult_pool = CustomPool(processes=3)
-        for round_number in range(3):
+        round_cnt = conf_exp.TRAIN_ROUND
+        generator_cnt = conf_exp.NUM_GENERATORS
+
+        mult_pool = CustomPool(processes=generator_cnt)
+        for round_number in range(round_cnt):
             mult_pool.apply_async(func=callback_func,
                                   args=(conf_path, round_number,))
 

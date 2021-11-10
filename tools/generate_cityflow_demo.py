@@ -26,8 +26,8 @@ def save_config_file(roadnetFile, flowFile):
 
 
 @click.command()
-@click.option("--roadnet_file", default="default_net.json", help="roadnetFile")
-@click.option("--flow_file", default="default_flow.json", help="flowFile")
+@click.option("--roadnet_file", default="roadnet_p4a_lt.json", help="roadnetFile")
+@click.option("--flow_file", default="flow.json", help="flowFile")
 def main(roadnet_file, flow_file):
     if not os.path.isfile(roadnet_file):
         raise FileExistsError("file not exist! check it %s" % roadnet_file)
@@ -39,7 +39,7 @@ def main(roadnet_file, flow_file):
     os.remove(config_file)
     print('start')
     eng.reset()
-    for _ in range(3600):
+    for _ in range(360):
         eng.next_step()
         # eng.set_tl_phase('gneJ1', 1)
     print('end.')

@@ -129,7 +129,7 @@ class Intersection:
 
     def _update_feature(self):
         dic_feature = dict()
-        dic_feature["cur_phase"] = self.current_phase_index
+        dic_feature["cur_phase_index"] = self.current_phase_index
         dic_feature["time_this_phase"] = self.current_phase_duration
         dic_feature["lane_vehicle_cnt"] = self.lane_vehicle_cnt
         dic_feature["stop_vehicle_thres1"] = self.lane_vehicle_waiting
@@ -290,7 +290,7 @@ class SumoEnv(EnvBase):
                 print("||done||")
         return next_state, reward, done, [average_reward]
 
-    def bulk_log(self):
+    def bulk_log(self, reward):
         valid_flag = {}
         for inter in self.list_inter_handler:
             inter_name = inter.inter_id
@@ -308,6 +308,7 @@ class SumoEnv(EnvBase):
                 valid_flag[inter_name] = 0
             else:
                 valid_flag[inter_name] = 1
+            valid_flag['%s_reward' % inter_name] = reward[inter_name]
         json.dump(valid_flag,
                   open(os.path.join(self.path_to_work, "valid_flag.json"), "w"))
         self.__save_replay()

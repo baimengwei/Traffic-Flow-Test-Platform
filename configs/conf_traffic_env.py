@@ -30,9 +30,9 @@ class ConfTrafficEnv:
 
     def __preprocess(self):
         if self.__algorithm == 'DQN':
-            self.__feature = ['cur_phase', 'lane_vehicle_cnt']
+            self.__feature = ['cur_phase_index', 'lane_vehicle_cnt']
         elif self.__algorithm == 'FIXTIME':
-            self.__feature = None
+            self.__feature = ['cur_phase_index', 'lane_vehicle_cnt']
         else:
             warnings.warn('using default feature, algorithm is %s' % self.__algorithm)
             self.__feature = self.__list_state_feature
