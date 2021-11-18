@@ -1,3 +1,11 @@
+## Traffic Flow Test Platform
+
+Traffic flow test platform, especially for reinforcement learning, named TFTP.
+
+A traffic signal control framework that can combine a variety of reinforcement learning algorithms, traditional algorithms and discrete reinforcement learning algorithms. It has two environments: cityflow and sumo. Several algorithms have been implemented.
+
+
+
 #### How to run
 
 check and modify the main.py in the root folder, then run it.
@@ -37,13 +45,13 @@ this is still an on going project, some algorithm might be not implement or occu
 
 #### Structure of round learner
 
-![round_learner](picture\round_learner.png)
+<img src="picture\round_learner.png" alt="round_learner"  />
 
 
 
 #### the UML of the class
 
-![uml_class](picture\uml_class.jpg)
+<img src="picture\uml_class.jpg" alt="uml_class"  />
 
 
 
@@ -51,11 +59,11 @@ this is still an on going project, some algorithm might be not implement or occu
 
 sumo
 
-![ecust_compus_sumo](picture\ecust_compus_sumo.png)
+<img src="picture\ecust_compus_sumo.png" alt="ecust_compus_sumo"  />
 
 cityflow
 
-![ecust_compus_cityflow](picture\ecust_compus_cityflow.png)
+<img src="picture\ecust_compus_cityflow.png" alt="ecust_compus_cityflow"  />
 
 Curve example in dqn
 
