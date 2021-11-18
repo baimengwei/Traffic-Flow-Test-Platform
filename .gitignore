@@ -10,7 +10,6 @@ records/
 *.pyc
 *.swp
 *.csv
-*.png
 *.pdf
 *.pkl
 _*
