@@ -1,0 +1,9 @@
+<configuration>
+  <input>
+    <net-file value="roadnet_p6a_lt.net.xml"/>
+    <route-files value="flow.rou.xml"/>
+  </input>
+  <time>
+    <begin value="0"/>
+  </time>
+</configuration>
