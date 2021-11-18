@@ -12,26 +12,26 @@ class ConstructSample:
 
         list_inters = sorted(list(self.__conf_path.load_conf_inters()))
 
-        self.__conf_exp, _, self.__conf_traffic = \
+        self.__conf_exp, _, self.conf_traffic = \
             self.__conf_path.load_conf_file(inter_name=list_inters[0])
 
         self.__conf_path.set_work_sample_each(
             self.__round_number, self.__conf_exp.NUM_GENERATORS, list_inters)
         self.__conf_path.set_work_sample_total(list_inters)
 
-        self.__measure_time = self.__conf_traffic.TIME_MIN_ACTION
-        self.__interval = self.__conf_traffic.TIME_MIN_ACTION
+        self.measure_time = self.conf_traffic.TIME_MIN_ACTION
+        self.__interval = self.conf_traffic.TIME_MIN_ACTION
 
-    def __load_data(self, each_file):
+    def load_data(self, each_file):
         f_logging_data = open(each_file, "rb")
         logging_data = pickle.load(f_logging_data)
         f_logging_data.close()
         return logging_data
 
-    def __construct_state(self, logging_data, features, time):
+    def construct_state(self, logging_data, features, time):
         state = logging_data[time]
         assert time == state["time"]
-        phase_expansion = self.__conf_traffic.TRAFFIC_INFO['phase_lane_mapping']
+        phase_expansion = self.conf_traffic.TRAFFIC_INFO['phase_lane_mapping']
         state_after_selection = {}
         for key, value in state["state"].items():
             if key in features:
@@ -66,15 +66,15 @@ class ConstructSample:
             r += rs[component] * weight
         return r
 
-    def __construct_reward(self, logging_data, rewards_components, time):
-        rs = logging_data[time + self.__measure_time - 1]
-        assert time + self.__measure_time - 1 == rs["time"]
+    def construct_reward(self, logging_data, rewards_components, time):
+        rs = logging_data[time + self.measure_time - 1]
+        assert time + self.measure_time - 1 == rs["time"]
         rs = self.__get_reward_from_features(rs['state'])
         r_instant = self.__cal_reward(rs, rewards_components)
 
         # average
         list_r = []
-        for t in range(time, time + self.__measure_time):
+        for t in range(time, time + self.measure_time):
             # print("t is ", t)
             rs = logging_data[t]
             assert t == rs["time"]
@@ -85,7 +85,7 @@ class ConstructSample:
 
         return r_instant, r_average
 
-    def __judge_action(self, logging_data, time):
+    def judge_action(self, logging_data, time):
         action = logging_data[time]['action']
         if isinstance(action, np.ndarray) and len(action) > 1:
             return action
@@ -100,24 +100,24 @@ class ConstructSample:
         """
         gen_cnt = self.__conf_exp.NUM_GENERATORS
         for idx, each_file in enumerate(self.__conf_path.WORK_SAMPLE_EACH):
-            logging_data = self.__load_data(each_file)
+            logging_data = self.load_data(each_file)
             total_time = int(logging_data[-1]['time'] + 1)
             list_samples = []
-            for time in range(0, total_time - self.__measure_time + 1,
+            for time in range(0, total_time - self.measure_time + 1,
                               self.__interval):
-                state = self.__construct_state(
-                    logging_data, self.__conf_traffic.FEATURE, time)
-                reward_instant, reward_average = self.__construct_reward(
-                    logging_data, self.__conf_traffic.REWARD_INFOS, time)
-                action = self.__judge_action(logging_data, time)
+                state = self.construct_state(
+                    logging_data, self.conf_traffic.FEATURE, time)
+                reward_instant, reward_average = self.construct_reward(
+                    logging_data, self.conf_traffic.REWARD_INFOS, time)
+                action = self.judge_action(logging_data, time)
 
                 if time + self.__interval == total_time:
-                    next_state = self.__construct_state(
-                        logging_data, self.__conf_traffic.FEATURE,
+                    next_state = self.construct_state(
+                        logging_data, self.conf_traffic.FEATURE,
                         time + self.__interval - 1)
                 else:
-                    next_state = self.__construct_state(
-                        logging_data, self.__conf_traffic.FEATURE,
+                    next_state = self.construct_state(
+                        logging_data, self.conf_traffic.FEATURE,
                         time + self.__interval)
                 sample = [state, action, next_state, reward_average,
                           reward_instant, time]

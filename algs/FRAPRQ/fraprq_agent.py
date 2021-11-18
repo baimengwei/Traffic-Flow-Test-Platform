@@ -51,7 +51,7 @@ class FRAPRQ(nn.Module):
             torch.Tensor(self.lane_phase_info['relation']).int()
 
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
-        self.phase_dim = dim_feature['cur_phase'][0]
+        self.phase_dim = dim_feature['cur_phase_index'][0]
         self.vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.hidden_dim = self.dic_agent_conf["HIDDEN_DIM"]
 
@@ -222,10 +222,10 @@ class FRAPRQAgent(Agent):
         reward_avg = []
         history_input = []
         for each in sample_set:
-            state.append(each[0]['cur_phase'] + each[0]['lane_vehicle_cnt'])
+            state.append(each[0]['cur_phase_index'] + each[0]['lane_vehicle_cnt'])
             action.append(each[1])
             next_state.append(
-                each[2]['cur_phase'] + each[2]['lane_vehicle_cnt'])
+                each[2]['cur_phase_index'] + each[2]['lane_vehicle_cnt'])
             reward_avg.append(each[3])
             history_input.append(each[5])
 

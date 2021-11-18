@@ -17,7 +17,7 @@ class Actor(nn.Module):
 
         self.lane_phase_info = self.dic_traffic_env_conf["LANE_PHASE_INFO"]
 
-        phase_dim = dim_feature['cur_phase'][0]
+        phase_dim = dim_feature['cur_phase_index'][0]
         vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.state_dim = phase_dim + vehicle_dim
         self.action_dim = len(self.lane_phase_info['phase'])
@@ -56,7 +56,7 @@ class Critic(nn.Module):
 
         self.lane_phase_info = self.dic_traffic_env_conf["LANE_PHASE_INFO"]
         dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
-        phase_dim = dim_feature['cur_phase'][0]
+        phase_dim = dim_feature['cur_phase_index'][0]
         vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.state_dim = phase_dim + vehicle_dim
         self.action_dim = len(self.lane_phase_info['phase'])
@@ -239,10 +239,10 @@ class TDDDAgent(Agent):
         next_state = []
         reward_avg = []
         for each in sample_set:
-            state.append(each[0]['cur_phase'] + each[0]['lane_vehicle_cnt'])
+            state.append(each[0]['cur_phase_index'] + each[0]['lane_vehicle_cnt'])
             action_prob.append(each[1])
             next_state.append(
-                each[2]['cur_phase'] + each[2]['lane_vehicle_cnt'])
+                each[2]['cur_phase_index'] + each[2]['lane_vehicle_cnt'])
             reward_avg.append(each[3])
 
         action_prob_bar = self.model_actor_bar.forward(

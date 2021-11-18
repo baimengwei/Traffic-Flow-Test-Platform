@@ -32,7 +32,21 @@ class ConfTrafficEnv:
         if self.__algorithm == 'DQN':
             self.__feature = ['cur_phase_index', 'lane_vehicle_cnt']
         elif self.__algorithm == 'FIXTIME':
+            self.__feature = []
+        elif self.__algorithm == 'DRQN':
             self.__feature = ['cur_phase_index', 'lane_vehicle_cnt']
+        elif self.__algorithm == 'FRAPPlus':
+            self.__feature = ['cur_phase_index', 'lane_vehicle_cnt']
+        elif self.__algorithm == 'QL':
+            self.__feature = ['lane_vehicle_cnt']
+        elif self.__algorithm == 'GSQLDSEP':
+            self.__feature = ['lane_vehicle_cnt']
+        elif self.__algorithm == 'SQL':
+            self.__feature = ['lane_vehicle_cnt']
+        elif self.__algorithm == 'GSQL':
+            self.__feature = ['lane_vehicle_cnt']
+        elif self.__algorithm == 'DYNAQ':
+            self.__feature = ['lane_vehicle_cnt']
         else:
             warnings.warn('using default feature, algorithm is %s' % self.__algorithm)
             self.__feature = self.__list_state_feature

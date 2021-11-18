@@ -1,24 +1,23 @@
-a ={
-    "intersection_1_1": {
-        "phase_lane_mapping":
-            {"0": [1, 0, 0, 0, 1, 0, 0, 0],
-             "1": [0, 0, 1, 0, 0, 0, 0, 1],
-             "2": [0, 1, 0, 0, 0, 1, 0, 0],
-             "3": [0, 0, 0, 1, 0, 0, 1, 0]},
-        "phase_links": {"0": ["road_0_1_0_1", "road_1_1_0_1"],
-                        "1": ["road_0_1_0_0", "road_1_1_1_0"],
-                        "2": ["road_1_0_1_1", "road_1_1_1_1"],
-                        "3": ["road_1_0_1_0", "road_1_1_2_0"],
-                        "4": ["road_2_1_2_1", "road_1_1_2_1"],
-                        "5": ["road_2_1_2_0", "road_1_1_3_0"],
-                        "6": ["road_1_2_3_0", "road_1_1_0_0"],
-                        "7": ["road_1_2_3_1", "road_1_1_3_1"]},
-        "relation": null,
-        "phase_str": null,
-        "yellow_phase": 0,
-        "list_lane_enters": ["road_0_1_0_1", "road_0_1_0_0", "road_1_0_1_1", "road_1_0_1_0",
-                             "road_2_1_2_1", "road_2_1_2_0", "road_1_2_3_0", "road_1_2_3_1"],
-        "list_lane_exits": ["road_1_1_0_1", "road_1_1_1_0", "road_1_1_1_1", "road_1_1_2_0",
-                            "road_1_1_2_1", "road_1_1_3_0", "road_1_1_0_0", "road_1_1_3_1"]
-    }
-}
+from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput
+from pycallgraph import Config
+from pycallgraph import GlobbingFilter
+
+
+def main():
+    print('1')
+
+
+if __name__ == "__main__":
+    config = Config()
+    # 关系图中包括(include)哪些函数名。
+    # 如果是某一类的函数，例如类gobang，则可以直接写'gobang.*'，表示以gobang.开头的所有函数。（利用正则表达式）。
+    config.trace_filter = GlobbingFilter(include=['*'])
+    # 关系图中不包括(exclude)哪些函数。(正则表达式规则)
+    # config.trace_filter = GlobbingFilter(exclude=[
+    #     'pycallgraph.*',
+    # ])
+    graphviz = GraphvizOutput()
+    graphviz.output_file = 'graph.png'
+    with PyCallGraph(output=graphviz, config=config):
+        main()

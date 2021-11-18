@@ -127,10 +127,10 @@ class MetaLightAgent(Agent):
         next_state = []
         reward_avg = []
         for each in sample_set:
-            state.append(each[0]['cur_phase'] + each[0]['lane_vehicle_cnt'])
+            state.append(each[0]['cur_phase_index'] + each[0]['lane_vehicle_cnt'])
             action.append(each[1])
             next_state.append(
-                each[2]['cur_phase'] + each[2]['lane_vehicle_cnt'])
+                each[2]['cur_phase_index'] + each[2]['lane_vehicle_cnt'])
             reward_avg.append(each[3])
 
         q_values = self.model.forward(torch.Tensor(state)).detach().numpy()
@@ -157,10 +157,10 @@ class MetaLightAgent(Agent):
         next_state = []
         reward_avg = []
         for each in sample_set:
-            state.append(each[0]['cur_phase'] + each[0]['lane_vehicle_cnt'])
+            state.append(each[0]['cur_phase_index'] + each[0]['lane_vehicle_cnt'])
             action.append(each[1])
             next_state.append(
-                each[2]['cur_phase'] + each[2]['lane_vehicle_cnt'])
+                each[2]['cur_phase_index'] + each[2]['lane_vehicle_cnt'])
             reward_avg.append(each[3])
 
         q_values = self.model.forward(torch.Tensor(state)).detach().numpy()

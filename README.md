@@ -1,27 +1,87 @@
-### 我的说明
+#### How to run
+
+check and modify the main.py in the root folder, then run it.
 
 
 
-#### 文件夹说明
+#### How to use
 
-| 文件夹  | 说明                 |
-| ------- | -------------------- |
-| algs    | 存放算法             |
-| data    | 存放交通数据         |
-| configs | 存放项目配置         |
-| misc    | 存放杂七杂八工具     |
-| models  | 存放神经网络         |
-| envs    | 提供自定义环境       |
-| records | 执行过程中产生的文件 |
+this is still an on going project, some algorithm might be not implement or occur some error. but the idea is simple, you can use it to test your idea, add new engine except for sumo and cityflow, add your specific map mode, develop new state, action, reward information, and so on. 
+
+**this project is NOT implement fully, but can be used now**
 
 
 
-#### 文件说明
+#### folder describe
 
-| 文件          | 说明                         |
-| ------------- | ---------------------------- |
-| main.py       | 函数主入口                   |
-| run_script.py | 提供调用参数信息简化启动过程 |
+| folder  | describtion                                 |
+| ------- | ------------------------------------------- |
+| algs    | algorithm                                   |
+| data    | traffic files and information               |
+| configs | config class                                |
+| misc    | tools maybe used by the project             |
+| envs    | environment including sumo and cityflow     |
+| records | the output on the running process           |
+| tmp     | for debuging, tesing the gramma, and so on. |
 
 
+
+#### file describe
+
+| file name | information   |
+| --------- | ------------- |
+| main.py   | main entrance |
+|           |               |
+
+
+
+#### Structure of round learner
+
+![round_learner](picture\round_learner.png)
+
+
+
+#### the UML of the class
+
+![uml_class](picture\uml_class.jpg)
+
+
+
+#### 效果
+
+sumo
+
+![ecust_compus_sumo](picture\ecust_compus_sumo.png)
+
+cityflow
+
+![ecust_compus_cityflow](picture\ecust_compus_cityflow.png)
+
+Curve example in dqn
+
+<img src="picture\dqn_vehicle.png" alt="dqn_vehicle" style="zoom:30%;" />
+
+<img src="picture\dqn_reward.png" alt="dqn_reward" style="zoom:30%;" />
+
+#### Note
+
+本代码框架部分思路来源于，感谢他们在算法和程序上做的贡献。
+
+https://github.com/gjzheng93/frap-pub
+
+https://github.com/zxsRambo/metalight
+
+CityFlow
+
+https://github.com/cityflow-project/CityFlow
+
+Sumo
+
+https://www.eclipse.org/sumo/
+
+
+
+#### Contract
+
+Mr. Bai：1872040489@qq.com
 

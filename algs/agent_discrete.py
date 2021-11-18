@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from configs.conf_path import ConfPath
 
 
-class AgentFix(metaclass=ABCMeta):
+class AgentDiscrete(metaclass=ABCMeta):
     """
         An abstract class for value based method
     """
@@ -13,9 +13,17 @@ class AgentFix(metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def convert_state_to_input(conf_traffic, state):
+    def convert_state_to_input(state):
         pass
 
     @abstractmethod
-    def choose_action(self, state, choice_random=False):
+    def choose_action(self, state, choice_random=True):
+        pass
+
+    @abstractmethod
+    def save_metrix(self, round_number):
+        pass
+
+    @abstractmethod
+    def load_metrix(self, round_number):
         pass

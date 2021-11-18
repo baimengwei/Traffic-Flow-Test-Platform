@@ -10,7 +10,7 @@ class Generator(Generator):
 
         lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
 
-        phase_dim = dim_feature['cur_phase'][0]
+        phase_dim = dim_feature['cur_phase_index'][0]
         vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
         self.history_len = self.dic_agent_conf["HISTORY_LEN"]
         self.state_dim = phase_dim + vehicle_dim

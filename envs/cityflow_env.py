@@ -268,8 +268,7 @@ class CityflowEnv(EnvBase):
             phase_links = phase_links_
             traffic_info['phase_links'] = phase_links
             # relation
-            relation = None
-            # TODO implement relation
+            relation = get_relation(phase_lane)
             traffic_info['relation'] = relation
             # phase_str, yellow_phase
             # note that the phase_str is not used for cityflow

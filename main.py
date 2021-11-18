@@ -11,7 +11,7 @@ def run_metalight():
 
 
 def run_frapplus():
-    from algs.FRAPPlus.frapplus_train import main
+    from algs.FRAPPLUS.frapplus_train import main
     args = parse()
     print('start execute frapplus...')
     args.algorithm = 'FRAPPlus'
@@ -105,15 +105,73 @@ def run_maxpressure():
     args.algorithm = "MAXPRESSURE"
     args.project = "MAXPRESSURE_N"
     args.env = "cityflow"
-    args.if_gui = False
     main(args)
 
+def run_ql():
+    from algs.QL.ql_train import main
+    args = parse()
+    print("start execute q-learning.")
+    args.algorithm = "QL"
+    args.project = "QL_TTT"
+    args.env = "cityflow"
+    main(args)
+
+def run_gsqldsep():
+    from algs.GSQLDSEP.gsqldsep_train import main
+    args = parse()
+    print("start execute gsqldsep-learning.")
+    args.algorithm = "GSQLDSEP"
+    args.project = "GSQLDSEP_TAX"
+    args.env = "cityflow"
+    main(args)
+
+def run_sql():
+    from algs.SQL.sql_train import main
+    args = parse()
+    print("start execute sql.")
+    args.algorithm = "SQL"
+    args.project = "SQL_EMM"
+    args.env = "cityflow"
+    main(args)
+
+def run_gsql():
+    from algs.GSQL.gsql_train import main
+    args = parse()
+    print("start execute gsql.")
+    args.algorithm = "GSQL"
+    args.project = "GSQL_EMM"
+    args.env = "cityflow"
+    main(args)
+
+def run_dynaq():
+    from algs.DYNAQ.dynaq_train import main
+    args = parse()
+    print("start execute gsql.")
+    args.algorithm = "DYNAQ"
+    args.project = "DYNAQ_EMM"
+    args.env = "cityflow"
+    main(args)
 
 if __name__ == '__main__':
+    # from pycallgraph import PyCallGraph
+    # from pycallgraph.output import GraphvizOutput
+    # from pycallgraph import Config
+    # from pycallgraph import GlobbingFilter
+    #
+    # config = Config()
+    # config.trace_filter = GlobbingFilter(include=['*'])
+    # graphviz = GraphvizOutput()
+    # graphviz.output_file = 'graph.png'
+    # with PyCallGraph(output=graphviz, config=config):
+    #     run_gsql()
+    # run_ql()
+    # run_gsqldsep()
+    # run_sql()
+    run_gsql()
+    # run_dynaq()
     # run_metalight()
-    # run_frap()
     # run_frapplus()
-    run_dqn()
+    # run_dqn()
     # run_sotl()
     # run_tddd()
     # run_drqn()

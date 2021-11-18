@@ -13,6 +13,8 @@ class Trainer:
         self.__traffic_file_list = traffic_file_list
         if callback is None:
             self.__callback = self.__default_train
+        else:
+            self.__callback = callback
 
     def train(self):
         """

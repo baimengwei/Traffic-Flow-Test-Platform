@@ -10,7 +10,6 @@ class ConfPath:
     def __init__(self, args):
         self.__model_root = "./records/weights/" + args.project
         self.__work_root = "./records/workspace/" + args.project
-        self.__figure_root = "./records/figures/" + args.project
         self.__data_root = os.path.join("./data/", args.env + "_scenario/")
 
         _time = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(time.time()))
@@ -24,7 +23,6 @@ class ConfPath:
         self.__work_sample_total = self.__work
         self.__work_sample_each = self.__work
         self.__work_test = self.__work
-        self.__figure = os.path.join(self.__figure_root, _suffix)
         self.__data = None
 
         self.__roadnet_file = None
@@ -76,13 +74,12 @@ class ConfPath:
         self.__work_test = os.path.join(self.__work, "test_round",
                                         "round_%d" % round_number)
 
-    def set_model(self, model_dir):
-        self.__model = model_dir
+    # def set_model(self, model_dir):
+    #     self.__model = model_dir
 
     def create_path_dir(self):
         os.makedirs(self.__work, exist_ok=True)
         os.makedirs(self.__model, exist_ok=True)
-        os.makedirs(self.__figure, exist_ok=True)
         os.makedirs(self.__work_sample, exist_ok=True)
         os.makedirs(self.__work_test, exist_ok=True)
 
@@ -146,10 +143,6 @@ class ConfPath:
     @property
     def WORK(self):
         return self.__work
-
-    @property
-    def FIGURE(self):
-        return self.__figure
 
     @property
     def DATA(self):

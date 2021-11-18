@@ -31,21 +31,22 @@ def cal_travel_time(
     return travel_time
 
 
-def get_relation(phase, roadlink):
+def get_relation(phase_lane):
     """
     Returns:
         a metric(1X8X7) about phases relation
     """
     relations = []
-    num_phase = len(phase)
-    map = roadlink
+    phase = list(phase_lane.keys())
+    num_phase = len(phase_lane.keys())
+
     for p1 in phase:
         zeros = [0] * (num_phase - 1)
         count = 0
         for p2 in phase:
             if p1 == p2:
                 continue
-            if len(set(map[p1] + map[p2])) != len(map[p1]) + len(map[p2]):
+            if sum(np.array(phase_lane[p1]) | np.array(phase_lane[p2])) == 3:
                 zeros[count] = 1
             count += 1
         relations.append(zeros)
@@ -272,4 +273,3 @@ def get_deep_copy(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path):
     dic_traffic_env_conf = copy.deepcopy(dic_traffic_env_conf)
     dic_path = copy.deepcopy(dic_path)
     return dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path
-

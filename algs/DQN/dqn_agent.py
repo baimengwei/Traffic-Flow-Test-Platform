@@ -81,7 +81,7 @@ class DQNAgent(Agent):
 
     def choose_action(self, state, choice_random=True):
         input = self.convert_state_to_input(self.__conf_traffic, state)
-        input = torch.Tensor(input).flatten().unsqueeze(0)
+        input = torch.Tensor(input).flatten(0).unsqueeze(0)
 
         q_values = self.model.forward(input)
         if random.random() <= self.__conf_agent["EPSILON"] and choice_random:

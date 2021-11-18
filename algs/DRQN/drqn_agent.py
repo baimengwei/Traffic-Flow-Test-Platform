@@ -1,5 +1,4 @@
 import os
-import pickle
 import random
 import numpy as np
 import torch
@@ -8,21 +7,20 @@ from algs.agent import Agent
 
 
 class Context(nn.Module):
-    def __init__(self, dic_traffic_env_conf, dic_agent_conf):
+    def __init__(self, conf_traffic):
         """
         """
         super().__init__()
-        self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.dic_agent_conf = dic_agent_conf
-        self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
+        self.__conf_traffic = conf_traffic
 
-
-        phase_dim = dim_feature['cur_phase'][0]
-        vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
+        self.traffic_info = self.__conf_traffic.TRAFFIC_INFO
+        phase_dim = len(self.traffic_info['phase_links'])
+        vehicle_dim = len(self.traffic_info['phase_links'])
         self.state_dim = phase_dim + vehicle_dim
+
         self.action_dim = phase_dim  # one hot represent according to phase.
         self.input_dim = self.action_dim + 1 + self.state_dim
-        self.hidden_dim = self.dic_agent_conf["HIDDEN_DIM"]
+        self.hidden_dim = 10
 
         self.recurrent = nn.GRU(self.input_dim, self.hidden_dim,
                                 bidirectional=False, batch_first=True,
@@ -34,34 +32,35 @@ class Context(nn.Module):
         """
         batch_size = len(history_input)
         hidden = torch.zeros(1, batch_size, self.hidden_dim)
-        _, hidden = self.recurrent(history_input, hidden)
+        try:
+            _, hidden = self.recurrent(history_input, hidden)
+        except:
+            print(1)
         out = hidden.squeeze(0)
         return out
 
 
 class DRQN(nn.Module):
-    def __init__(self, dic_traffic_env_conf, dic_agent_conf):
+    def __init__(self, conf_traffic):
         super().__init__()
-        self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.dic_agent_conf = dic_agent_conf
-        self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
+        self.__conf_traffic = conf_traffic
 
-        dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
-        phase_dim = dim_feature['cur_phase'][0]
-        vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
+        self.traffic_info = self.__conf_traffic.TRAFFIC_INFO
+        phase_dim = len(self.traffic_info['phase_links'])
+        vehicle_dim = len(self.traffic_info['phase_links'])
         self.state_dim = phase_dim + vehicle_dim
-        self.action_dim = len(self.lane_phase_info['phase'])
-        self.hidden_dim = self.dic_agent_conf["HIDDEN_DIM"]
-
+        self.action_dim = len(self.traffic_info['phase_lane_mapping'])
+        #
+        self.hidden_dim = 10
         self.weight_feature_line = torch.nn.Linear(
-            self.state_dim + self.hidden_dim, 100)
+            self.state_dim + self.hidden_dim, 50)
         self.activate_feature_line = torch.nn.ReLU()
 
-        self.linear_combine = torch.nn.Linear(100, 100)
+        self.linear_combine = torch.nn.Linear(50, 50)
         self.activate_linear_combine = torch.nn.ReLU()
-        self.linear_final = torch.nn.Linear(100, self.action_dim)
+        self.linear_final = torch.nn.Linear(50, self.action_dim)
 
-        self.rnn_layer = Context(self.dic_traffic_env_conf, self.dic_agent_conf)
+        self.rnn_layer = Context(self.__conf_traffic)
 
     def forward(self, feature_input, history_input):
         history_output = self.rnn_layer(history_input)
@@ -75,56 +74,61 @@ class DRQN(nn.Module):
 
 
 class DRQNAgent(Agent):
-    def __init__(self, config_dir, round_number):
-        super().__init__(config_dir, round_number)
+    def __init__(self, conf_path, round_number, inter_name):
+        super().__init__(conf_path, round_number, inter_name)
+        self.__conf_path = conf_path
+        self.__round_number = round_number
+        self.inter_name = inter_name
+        self.__conf_exp, self.__conf_agent, self.__conf_traffic = \
+            conf_path.load_conf_file(inter_name=inter_name)
+        self.__conf_agent = self.decay_epsilon(
+            self.__conf_agent, self.__round_number)
+
         self.list_history = []
 
-        if self.round_number == 0:
+        if self.__round_number == 0:
             self.build_network()
             self.build_network_bar()
         else:
-            self.load_network("round_%d" % (self.round_number - 1))
-            bar_freq = self.dic_agent_conf["UPDATE_Q_BAR_FREQ"]
-            bar_number = (self.round_number - 1) // bar_freq * bar_freq
-            self.load_network_bar("round_%d" % bar_number)
+            self.load_network(self.__round_number - 1)
+            bar_freq = self.__conf_agent["UPDATE_Q_BAR_FREQ"]
+            bar_number = (self.__round_number - 1) // bar_freq * bar_freq
+            self.load_network_bar(bar_number)
 
     def build_network(self):
-        self.model = DRQN(self.dic_traffic_env_conf, self.dic_agent_conf)
+        self.model = DRQN(self.__conf_traffic)
         self.lossfunc = torch.nn.MSELoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(),
-                                          lr=self.dic_agent_conf["LR"])
+        self.optimizer = torch.optim.Adam(self.model.parameters())
 
     def build_network_bar(self):
-        self.model_target = DRQN(self.dic_traffic_env_conf, self.dic_agent_conf)
+        self.model_target = DRQN(self.__conf_traffic)
         self.model_target.load_state_dict(self.model.state_dict())
 
-    def load_network(self, file_name):
-        file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
-                                 file_name + '.pt')
+    def load_network(self, round_number):
+        file_name = self.inter_name + "_round_%d" % round_number + '.pt'
+        file_path = os.path.join(self.__conf_path.MODEL, file_name)
         ckpt = torch.load(file_path)
         self.build_network()
         self.model.load_state_dict(ckpt['state_dict'])
         self.optimizer.load_state_dict(ckpt['optimizer'])
         self.lossfunc.load_state_dict(ckpt['lossfunc'])
 
-    def load_network_bar(self, file_name):
-        file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
-                                 file_name + '.pt')
+    def load_network_bar(self, round_number):
+        file_name = self.inter_name + "_round_%d" % round_number + '.pt'
+        file_path = os.path.join(self.__conf_path.MODEL, file_name)
         ckpt = torch.load(file_path)
-        self.model_target = DRQN(self.dic_traffic_env_conf, self.dic_agent_conf)
+        self.model_target = DRQN(self.__conf_traffic)
         self.model_target.load_state_dict((ckpt['state_dict']))
 
     def choose_action(self, state, history_input, choice_random=True):
-        state = self.convert_state_to_input(state, "DRQN")
-        input = torch.Tensor(state).flatten().unsqueeze(0)
+        input = self.convert_state_to_input(self.__conf_traffic, state)
+        input = torch.Tensor(input).flatten(0).unsqueeze(0)
         history = torch.Tensor(history_input).unsqueeze(0)
         q_values = self.model.forward(input, history)
-        if random.random() <= self.dic_agent_conf["EPSILON"] \
-                and choice_random:
+        if random.random() <= self.__conf_agent["EPSILON"] and choice_random:
             actions = random.randrange(len(q_values[0]))
         else:
             actions = np.argmax(q_values[0].detach().numpy())
-
         self.list_history.append(np.array(history_input).tolist())
         return actions
 
@@ -135,10 +139,10 @@ class DRQNAgent(Agent):
         reward_avg = []
         history_input = []
         for each in sample_set:
-            state.append(each[0]['cur_phase'] + each[0]['lane_vehicle_cnt'])
+            state.append(each[0]['cur_phase_index'] + each[0]['lane_vehicle_cnt'])
             action.append(each[1])
             next_state.append(
-                each[2]['cur_phase'] + each[2]['lane_vehicle_cnt'])
+                each[2]['cur_phase_index'] + each[2]['lane_vehicle_cnt'])
             reward_avg.append(each[3])
             history_input.append(each[5])
 
@@ -149,8 +153,8 @@ class DRQNAgent(Agent):
             self.model_target.forward(torch.Tensor(next_state),
                                       torch.Tensor(history_input)
                                       ).detach().numpy()
-        reward_avg = np.array(reward_avg) / self.dic_agent_conf["NORMAL_FACTOR"]
-        gamma = self.dic_agent_conf["GAMMA"]
+        reward_avg = np.array(reward_avg) / self.__conf_traffic.NORMAL_FACTOR
+        gamma = self.__conf_agent["GAMMA"]
         range_idx = list(range(len(q_values)))
         q_values[range_idx, action] = \
             reward_avg + gamma * np.max(q_values_bar, axis=-1)
@@ -158,7 +162,7 @@ class DRQNAgent(Agent):
         self.Y = q_values
 
     def train_network(self):
-        epochs = self.dic_agent_conf["EPOCHS"]
+        epochs = self.__conf_agent["EPOCHS"]
         for i in range(epochs):
             sample_x, history_input = self.Xs
             sample_y = self.Y
@@ -171,27 +175,11 @@ class DRQNAgent(Agent):
             # print('%d memory, updating... %d, loss: %.4f'
             #       % (len(self.Y), i, loss.item()))
 
-    def save_network(self, file_name):
-        file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
-                                 file_name + '.pt')
+    def save_network(self, round_number):
+        file_path = os.path.join(
+            self.__conf_path.MODEL,
+            self.inter_name + '_round_%d' % round_number + '.pt')
         ckpt = {'state_dict': self.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
                 'lossfunc': self.lossfunc.state_dict()}
         torch.save(ckpt, file_path)
-
-    def save_history(self):
-        work_path = self.dic_path["PATH_TO_WORK"]
-        for each_file in os.listdir(work_path):
-            if ".pkl" in each_file:
-                file_name = os.path.join(work_path, each_file)
-                with open(file_name, "rb") as f:
-                    logging_data = pickle.load(f)
-                length_cnt = 0
-                for each_data in logging_data:
-                    if each_data["action"] != -1:
-                        each_data["history"] = self.list_history[length_cnt]
-                        length_cnt += 1
-                if length_cnt != len(self.list_history):
-                    raise ValueError(length_cnt, " vs ", len(self.list_history))
-                with open(file_name, "wb") as f:
-                    pickle.dump(logging_data, f)

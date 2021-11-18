@@ -1,4 +1,3 @@
-import copy
 import json
 import pickle
 from collections import defaultdict
@@ -483,6 +482,9 @@ def summary_detail_test(conf_path):
             plt.savefig(figure_path)
 
     dic_reward = defaultdict(lambda :[])
+    list_files = list(filter(lambda x:'round' in x, list_files))
+    list_files = list(sorted(list_files, key=lambda x:int(x.split('_')[-1])))
+
     for file in list_files:
         if 'round' in file:
             file_full = os.path.join(test_round_dir, file, 'valid_flag.json')

@@ -38,13 +38,13 @@ class RoundLearner:
         pass
 
     def learn_round(self):
-        self.__round_generate_step(generator_wrapper)
-        self.__round_make_samples()
-        self.__round_update_network(updater_wrapper)
-        self.__round_test_eval(test_eval)
+        self.round_generate_step(generator_wrapper)
+        self.round_make_samples()
+        self.round_update_network(updater_wrapper)
+        self.round_test_eval(test_eval)
         pass
 
-    def __round_generate_step(self, callback_func):
+    def round_generate_step(self, callback_func):
         process_list = []
         for generate_number in range(self.conf_exp.NUM_GENERATORS):
             self.conf_path.set_work_sample(self.round_number, generate_number)
@@ -57,17 +57,17 @@ class RoundLearner:
         for p in process_list:
             p.join()
 
-    def __round_make_samples(self):
+    def round_make_samples(self):
         self.conf_path.set_work_sample(self.round_number)
         cs = ConstructSample(self.conf_path, self.round_number)
         cs.make_reward()
 
-    def __round_update_network(self, callback_func):
+    def round_update_network(self, callback_func):
         p = Process(target=callback_func, args=(self.conf_path, self.round_number,))
         p.start()
         p.join()
 
-    def __round_test_eval(self, callback_func):
+    def round_test_eval(self, callback_func):
         self.conf_path.set_work_test(self.round_number)
         self.conf_path.create_path_dir()
 

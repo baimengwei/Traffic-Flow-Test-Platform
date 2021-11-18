@@ -14,12 +14,55 @@ class ConfAgent(dict):
 
 
 class Constrant:
+    DIC_AGENT_CONF_QL = {
+        "LR": 0.6,
+        "GAMMA": 0.8,
+        # "EPSILON": 0.8,
+        # "EPSILON_DECAY": 0.90,
+        "MIN_EPSILON": 0.0,
+        "PARTICLE": 3,
+    }
+    DIC_AGENT_CONF_SQL = {
+        "LR": 0.6,
+        "GAMMA": 0.8,
+        # "EPSILON": 0.8,
+        # "EPSILON_DECAY": 0.90,
+        "MIN_EPSILON": 0.0,
+        "PARTICLE": 3,
+    }
+    DIC_AGENT_CONF_GSQL = {
+        "LR": 0.6,
+        "GAMMA": 0.8,
+        # "EPSILON": 0.8,
+        # "EPSILON_DECAY": 0.90,
+        "MIN_EPSILON": 0.0,
+        "PARTICLE": 3,
+        "W": 0.85,
+    }
+    DIC_AGENT_CONF_GSQLDSEP = {
+        "LR": 0.6,
+        "GAMMA": 0.8,
+        "EPSILON": 0.8,
+        "EPSILON_DECAY": 0.90,
+        "MIN_EPSILON": 0.0,
+        "PARTICLE": 3,
+        "W": 0.85,
+        "PLAN_CNT": 3,
+    }
+    DIC_AGENT_CONF_DYNAQ = {
+        "LR": 0.6,
+        "GAMMA": 0.8,
+        "EPSILON": 0.8,
+        "EPSILON_DECAY": 0.90,
+        "MIN_EPSILON": 0.0,
+        "PARTICLE": 3,
+        "PLAN_CNT": 3,
+    }
     DIC_AGENT_CONF_SOTL = {
         "PHI_MIN": 0,
         "THETA": 10,
         "MU": 5,
     }
-
     DIC_AGENT_CONF_WEBSTER = {
         "L_LANE": 3,
         "K1": 1.5,
@@ -53,7 +96,7 @@ class Constrant:
         "HIDDEN_DIM": 10
     })
 
-    DIC_AGENT_CONF_FRAP = deepcopy(DIC_AGENT_CONF_DQN)
+    DIC_AGENT_CONF_FRAPPLUS = deepcopy(DIC_AGENT_CONF_DQN)
 
     DIC_AGENT_CONF_FRAPRQ = deepcopy(DIC_AGENT_CONF_DRQN)
 

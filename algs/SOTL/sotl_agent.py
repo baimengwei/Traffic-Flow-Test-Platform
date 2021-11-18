@@ -15,7 +15,7 @@ class SOTLAgent:
         self.phase_map = self.lane_phase_info["phase_map"]
 
     def choose_action(self, state):
-        cur_phase = state['cur_phase'][0]
+        cur_phase = state['cur_phase_index'][0]
         lane_stop_vehicle = state['stop_vehicle_thres1']
         self.kappa += sum(lane_stop_vehicle)
 

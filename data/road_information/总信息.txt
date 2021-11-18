@@ -14,8 +14,5 @@
 相位类型：8-4B-4A-4B-6C-6E-8-6C
 文件数量：8
 
-https://blog.csdn.net/Deep_Rayne/article/details/109176566
-LA-Universal Hollywood Dr-:34°8'20.400000000000002",-118°21'32.400000000000006"
-
 
 
