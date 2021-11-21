@@ -1,6 +1,6 @@
-## Traffic Flow Test Platform
+## Traffic Flow Test Framework
 
-Traffic flow test platform, especially for reinforcement learning, named TFTP.
+Traffic flow test Framework, especially for reinforcement learning, named TFTF.
 
 A traffic signal control framework that can combine a variety of reinforcement learning algorithms, traditional algorithms and discrete reinforcement learning algorithms. It has two environments: cityflow and sumo. Several algorithms have been implemented.
 
