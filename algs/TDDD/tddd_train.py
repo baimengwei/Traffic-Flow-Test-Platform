@@ -1,7 +1,5 @@
-import misc.summary as summary
 from multiprocessing import Process
 from algs.TDDD.tddd_learner import TDDDLearner
-from common.parallelizer import pipeline
 from configs.config_phaser import *
 from misc.utils import log_round_time
 

@@ -1,20 +1,23 @@
 import numpy as np
 
+from algs.agent_fix import AgentFix
 
-class MAXPRESSUREAgent:
-    def __init__(self, dic_agent_conf, dic_traffic_env_conf,
-                 dic_path, round_number):
 
-        self.dic_agent_conf = dic_agent_conf
-        self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.dic_path = dic_path
-        self.round_number = round_number
+class MAXPRESSUREAgent(AgentFix):
+    def __init__(self, conf_path, round_number, inter_name):
+        super().__init__(conf_path, round_number, inter_name)
 
-        self.lane_phase_info = self.dic_traffic_env_conf["LANE_PHASE_INFO"]
+        self.__conf_path = conf_path
+        self.__round_number = round_number
+        self.__inter_name = inter_name
+        self.__conf_exp, self.__conf_agent, self.__conf_traffic = \
+            conf_path.load_conf_file(inter_name=inter_name)
+
+        self.lane_phase_info = self.__conf_traffic.TRAFFIC_INFO
         self.phase_count = len(self.lane_phase_info["phase_lane_mapping"].keys())
         self.phase_map = self.lane_phase_info["phase_lane_mapping"]
 
-        self.g_min = self.dic_agent_conf["G_MIN"]
+        self.g_min = self.__conf_agent["G_MIN"]
 
         self.global_cnt = 0
         self.list_action = []
@@ -31,7 +34,7 @@ class MAXPRESSUREAgent:
         action = np.argmax(phase_pressure)
         self.list_action = [action for _ in range(self.g_min)]
 
-    def choose_action(self, state):
+    def choose_action(self, state, choice_random=False):
         if len(self.list_action) == 0:
             self.get_phase_method(state)
         action = self.list_action[0]

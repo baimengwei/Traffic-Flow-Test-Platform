@@ -30,16 +30,16 @@ def run_dqn():
 
 
 def run_metadqn():
-    # from algs.MetaDQN.metadqn_train import main
-    from algs.MetaDQN.metadqn_train import main_test
+    from algs.METADQN.metadqn_train import main_train
+    from algs.METADQN.metadqn_train import main_adapt
+    from algs.METADQN.metadqn_train import main_test
     args = parse()
     print('start execute meta dqn...')
-    args.algorithm = "MetaDQN"
-    args.project = "Meta_DQN_RD"
-    args.env = "anno"
-    # main(args)
-    args.train_round = args.adapt_round
-    args.algorithm = "MetaDQNAdapt"
+    args.algorithm = "METADQN"
+    args.project = "METADQN_RD"
+    args.env = "cityflow"
+    main_train(args)
+    main_adapt(args)
     main_test(args)
 
 
@@ -67,6 +67,7 @@ def run_drqn():
     print('start execute drqn')
     args.algorithm = "DRQN"
     args.project = "DRQN_PJ"
+    args.env = "cityflow"
     main(args)
 
 
@@ -107,6 +108,7 @@ def run_maxpressure():
     args.env = "cityflow"
     main(args)
 
+
 def run_ql():
     from algs.QL.ql_train import main
     args = parse()
@@ -115,6 +117,7 @@ def run_ql():
     args.project = "QL_TTT"
     args.env = "cityflow"
     main(args)
+
 
 def run_gsqldsep():
     from algs.GSQLDSEP.gsqldsep_train import main
@@ -125,6 +128,7 @@ def run_gsqldsep():
     args.env = "cityflow"
     main(args)
 
+
 def run_sql():
     from algs.SQL.sql_train import main
     args = parse()
@@ -133,6 +137,7 @@ def run_sql():
     args.project = "SQL_EMM"
     args.env = "cityflow"
     main(args)
+
 
 def run_gsql():
     from algs.GSQL.gsql_train import main
@@ -143,6 +148,7 @@ def run_gsql():
     args.env = "cityflow"
     main(args)
 
+
 def run_dynaq():
     from algs.DYNAQ.dynaq_train import main
     args = parse()
@@ -152,32 +158,24 @@ def run_dynaq():
     args.env = "cityflow"
     main(args)
 
+
 if __name__ == '__main__':
-    # from pycallgraph import PyCallGraph
-    # from pycallgraph.output import GraphvizOutput
-    # from pycallgraph import Config
-    # from pycallgraph import GlobbingFilter
-    #
-    # config = Config()
-    # config.trace_filter = GlobbingFilter(include=['*'])
-    # graphviz = GraphvizOutput()
-    # graphviz.output_file = 'graph.png'
-    # with PyCallGraph(output=graphviz, config=config):
-    #     run_gsql()
     # run_ql()
     # run_gsqldsep()
     # run_sql()
-    run_gsql()
+    # run_gsql()
     # run_dynaq()
-    # run_metalight()
-    # run_frapplus()
+
     # run_dqn()
-    # run_sotl()
-    # run_tddd()
     # run_drqn()
-    # run_webster()
+    # run_frapplus()
+    # run_fraprq()
+    run_metadqn()
+    # TODO
+    # run_metafrap()
+
     # run_fixtime()
     # run_maxpressure()
-    # run_fraprq()
-    # run_dqn()
-    # run_metadqn()
+    # run_sotl()
+    # run_webster()
+

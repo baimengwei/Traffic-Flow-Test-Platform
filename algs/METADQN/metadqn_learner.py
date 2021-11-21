@@ -2,7 +2,6 @@ from multiprocessing import Process
 from common.construct_sample import ConstructSample
 from common.generator import Generator
 from common.updater import Updater
-from configs.config_phaser import *
 from misc.utils import *
 
 

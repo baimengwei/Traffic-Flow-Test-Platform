@@ -47,6 +47,14 @@ class ConfTrafficEnv:
             self.__feature = ['lane_vehicle_cnt']
         elif self.__algorithm == 'DYNAQ':
             self.__feature = ['lane_vehicle_cnt']
+        elif self.__algorithm == 'FRAPRQ':
+            self.__feature = ['cur_phase_index', 'lane_vehicle_cnt']
+        elif self.__algorithm == 'MAXPRESSURE':
+            self.__feature = ['lane_vehicle_cnt', 'lane_vehicle_left_cnt']
+        elif self.__algorithm == 'SOTL':
+            self.__feature = ['cur_phase_index', 'stop_vehicle_thres1']
+        elif self.__algorithm == 'WEBSTER':
+            self.__feature = ['lane_vehicle_cnt']
         else:
             warnings.warn('using default feature, algorithm is %s' % self.__algorithm)
             self.__feature = self.__list_state_feature

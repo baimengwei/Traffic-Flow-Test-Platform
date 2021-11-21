@@ -59,9 +59,9 @@ class Constrant:
         "PLAN_CNT": 3,
     }
     DIC_AGENT_CONF_SOTL = {
-        "PHI_MIN": 0,
-        "THETA": 10,
-        "MU": 5,
+        "PHI_MIN": 2,
+        "THETA": 4,
+        "MU": 28,
     }
     DIC_AGENT_CONF_WEBSTER = {
         "L_LANE": 3,

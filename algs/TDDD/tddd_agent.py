@@ -128,7 +128,7 @@ class TDDDAgent(Agent):
 
     def choose_action(self, state, hidden=None):
         input = self.convert_state_to_input(state)
-        input = torch.Tensor(input).flatten().unsqueeze(0)
+        input = torch.Tensor(input).flatten(0).unsqueeze(0)
         action_prob = self.model_actor.forward(input)[0].detach().numpy()
         action_prob = self.convert_action_prob(action_prob, mode="explore")
         action_prob = action_prob.squeeze()

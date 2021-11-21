@@ -1,6 +1,5 @@
-import json
+from collections import OrderedDict
 import uuid
-
 from misc.utils import *
 import time
 import cityflow

@@ -18,7 +18,7 @@ class Context(nn.Module):
         vehicle_dim = len(self.traffic_info['phase_links'])
         self.state_dim = phase_dim + vehicle_dim
 
-        self.action_dim = phase_dim  # one hot represent according to phase.
+        self.action_dim = len(self.traffic_info['phase_lane_mapping'])  # one hot represent according to phase.
         self.input_dim = self.action_dim + 1 + self.state_dim
         self.hidden_dim = 10
 

@@ -2,8 +2,6 @@ import copy
 import pickle
 import random
 import os
-import shutil
-from collections import OrderedDict
 import numpy as np
 import pandas as pd
 from math import isnan
@@ -124,12 +122,6 @@ def get_conf_file(work_dir):
     with open(os.path.join(work_dir, 'path.conf')) as f:
         dic_path_conf = json.load(f)
     return dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path_conf
-
-
-def copy_traffic_file(dic_traffic_env_conf, dic_path):
-    dir_work = dic_path["PATH_TO_WORK"]
-    shutil.copy(dic_path["PATH_TO_ROADNET_FILE"], dir_work)
-    shutil.copy(dic_path["PATH_TO_FLOW_FILE"], dir_work)
 
 
 def downsample(path_to_log_file):

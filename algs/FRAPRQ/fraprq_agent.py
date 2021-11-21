@@ -1,5 +1,4 @@
 import os
-import pickle
 import random
 import numpy as np
 import torch
@@ -8,21 +7,23 @@ from algs.agent import Agent
 
 
 class Context(nn.Module):
-    def __init__(self, dic_traffic_env_conf, dic_agent_conf):
+    def __init__(self, conf_traffic):
         """
         """
         super().__init__()
-        self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.dic_agent_conf = dic_agent_conf
-        self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
+        self.__conf_traffic = conf_traffic
 
+        self.traffic_info = self.__conf_traffic.TRAFFIC_INFO
+        phase_dim = len(self.traffic_info['phase_links'])
+        vehicle_dim = len(self.traffic_info['phase_links'])
+        self.state_dim = phase_dim + vehicle_dim
+        self.action_dim = len(self.traffic_info['phase_lane_mapping'])  # one hot represent according to phase.
+        self.input_dim = 1 + 1 + 1 * 2
+        self.hidden_dim = 10
 
-        # For each lane information. dim phase and vehicle should be 1.
-
-        self.hidden_dim = self.dic_agent_conf["HIDDEN_DIM"]
-
-        self.recurrent = nn.GRU(4, self.hidden_dim, bidirectional=False,
-                                batch_first=True, num_layers=1)
+        self.recurrent = nn.GRU(self.input_dim, self.hidden_dim,
+                                bidirectional=False, batch_first=True,
+                                num_layers=1)
 
     def forward(self, history_input):
         """
@@ -30,30 +31,31 @@ class Context(nn.Module):
         """
         batch_size = len(history_input)
         hidden = torch.zeros(1, batch_size, self.hidden_dim)
-        _, hidden = self.recurrent(history_input, hidden)
+        try:
+            _, hidden = self.recurrent(history_input, hidden)
+        except:
+            print(1)
         out = hidden.squeeze(0)
         return out
 
 
 class FRAPRQ(nn.Module):
-    def __init__(self, dic_traffic_env_conf, dic_agent_conf):
+    def __init__(self, conf_traffic):
         super().__init__()
+        self.__conf_traffic = conf_traffic
 
-        self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.dic_agent_conf = dic_agent_conf
-        self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
+        self.traffic_info = self.__conf_traffic.TRAFFIC_INFO
 
-        self.list_lane = self.lane_phase_info['start_lane']
-        self.list_phase = self.lane_phase_info['phase']
-        self.phase_line_mapping = \
-            self.lane_phase_info['phase_startLane_mapping']
+        self.list_lane = self.traffic_info['list_lane_enters']
+        self.list_phase = list(self.traffic_info['phase_lane_mapping'].keys())
+        self.phase_lane_mapping = \
+            self.traffic_info['phase_lane_mapping']
         self.constant_mask = \
-            torch.Tensor(self.lane_phase_info['relation']).int()
+            torch.Tensor(self.traffic_info['relation']).int()
 
-        dim_feature = self.dic_traffic_env_conf["DIC_FEATURE_DIM"]
-        self.phase_dim = dim_feature['cur_phase_index'][0]
-        self.vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
-        self.hidden_dim = self.dic_agent_conf["HIDDEN_DIM"]
+        self.phase_dim = len(self.traffic_info['phase_links'])
+        self.vehicle_dim = len(self.traffic_info['phase_links'])
+        self.hidden_dim = 10
 
         self.embeding_phase = nn.Embedding(2, 4)
         self.activate_phase = nn.Sigmoid()
@@ -63,11 +65,11 @@ class FRAPRQ(nn.Module):
         self.embeding_history = nn.Linear(3, 4)
         self.activate_history = nn.Sigmoid()
 
-        self.rnn_layer = Context(self.dic_traffic_env_conf, self.dic_agent_conf)
+        self.rnn_layer = Context(self.__conf_traffic)
 
-        self.weight_feature_line = torch.nn.Linear(8 + self.hidden_dim, 16)
-        self.activate_feature_line = torch.nn.ReLU()
-        # torch.nn.init.uniform_(self.weight_feature_line.weight)
+        self.weight_feature_lane = torch.nn.Linear(8 + self.hidden_dim, 16)
+        self.activate_feature_lane = torch.nn.ReLU()
+        # torch.nn.init.uniform_(self.weight_feature_lane.weight)
 
         self.embeding_constant = nn.Embedding(2, 4)
 
@@ -104,13 +106,20 @@ class FRAPRQ(nn.Module):
         # the code below is the same with frap method.
         list_phase_pressure = []
         for phase_index in self.list_phase:
-            line_combine = self.phase_line_mapping[phase_index]
-            line1, line2 = line_combine[0], line_combine[1]
-            line1 = self.weight_feature_line(dic_feature_lane[line1])
-            line1 = self.activate_feature_line(line1)
-            line2 = self.weight_feature_line(dic_feature_lane[line2])
-            line2 = self.activate_feature_line(line2)
-            combine = line1 + line2
+            lane_map = self.traffic_info['phase_lane_mapping'][phase_index]
+            list_lane_enters = self.traffic_info['list_lane_enters']
+            lane_combine = []
+            for idx,l in enumerate(lane_map):
+                if l == 1:
+                    lane_combine.append(idx)
+            lane1 = list_lane_enters[lane_combine[0]]
+            lane2 = list_lane_enters[lane_combine[0]]
+            #
+            lane1 = self.weight_feature_lane(dic_feature_lane[lane1])
+            lane1 = self.activate_feature_lane(lane1)
+            lane2 = self.weight_feature_lane(dic_feature_lane[lane2])
+            lane2 = self.activate_feature_lane(lane2)
+            combine = lane1 + lane2
             list_phase_pressure.append(combine)
 
         constant_mask = torch.tile(self.constant_mask, (batch_size, 1, 1))
@@ -146,56 +155,56 @@ class FRAPRQ(nn.Module):
 
 
 class FRAPRQAgent(Agent):
-    def __init__(self, dic_agent_conf, dic_traffic_env_conf,
-                 dic_path, round_number):
-        super().__init__(dic_agent_conf, dic_traffic_env_conf, dic_path,
-                         round_number)
-        self.decay_epsilon(self.round_number)
+    def __init__(self, conf_path, round_number, inter_name):
+        super().__init__(conf_path, round_number, inter_name)
+        self.__conf_path = conf_path
+        self.__round_number = round_number
+        self.inter_name = inter_name
+        self.__conf_exp, self.__conf_agent, self.__conf_traffic = \
+            conf_path.load_conf_file(inter_name=inter_name)
+        self.decay_epsilon(self.__conf_agent, self.__round_number)
         self.list_history = []
 
-        if self.round_number == 0:
+        if self.__round_number == 0:
             self.build_network()
             self.build_network_bar()
         else:
-            self.load_network("round_%d" % (self.round_number - 1))
-            bar_freq = self.dic_agent_conf["UPDATE_Q_BAR_FREQ"]
-            bar_number = (self.round_number - 1) // bar_freq * bar_freq
-            self.load_network_bar("round_%d" % bar_number)
+            self.load_network(self.__round_number - 1)
+            bar_freq = self.__conf_agent["UPDATE_Q_BAR_FREQ"]
+            bar_number = (self.__round_number - 1) // bar_freq * bar_freq
+            self.load_network_bar(bar_number)
 
     def build_network(self):
-        self.model = FRAPRQ(self.dic_traffic_env_conf, self.dic_agent_conf)
+        self.model = FRAPRQ(self.__conf_traffic)
         self.lossfunc = torch.nn.MSELoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(),
-                                          lr=self.dic_agent_conf["LR"])
+        self.optimizer = torch.optim.Adam(self.model.parameters())
 
     def build_network_bar(self):
-        self.model_target = FRAPRQ(self.dic_traffic_env_conf,
-                                   self.dic_agent_conf)
+        self.model_target = FRAPRQ(self.__conf_traffic)
         self.model_target.load_state_dict(self.model.state_dict())
 
-    def load_network(self, file_name):
-        file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
-                                 file_name + '.pt')
+    def load_network(self, round_number):
+        file_name = self.inter_name + "_round_%d" % round_number + '.pt'
+        file_path = os.path.join(self.__conf_path.MODEL, file_name)
         ckpt = torch.load(file_path)
         self.build_network()
         self.model.load_state_dict(ckpt['state_dict'])
         self.optimizer.load_state_dict(ckpt['optimizer'])
         self.lossfunc.load_state_dict(ckpt['lossfunc'])
 
-    def load_network_bar(self, file_name):
-        file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
-                                 file_name + '.pt')
+    def load_network_bar(self, round_number):
+        file_name = self.inter_name + "_round_%d" % round_number + '.pt'
+        file_path = os.path.join(self.__conf_path.MODEL, file_name)
         ckpt = torch.load(file_path)
-        self.model_target = FRAPRQ(self.dic_traffic_env_conf,
-                                   self.dic_agent_conf)
+        self.model_target = FRAPRQ(self.__conf_traffic)
         self.model_target.load_state_dict((ckpt['state_dict']))
 
     def choose_action(self, state, history_input, choice_random=True):
-        state = self.convert_state_to_input(state)
-        input = torch.Tensor(state).flatten().unsqueeze(0)
+        input = self.convert_state_to_input(self.__conf_traffic, state)
+        input = torch.Tensor(input).flatten(0).unsqueeze(0)
         history = torch.Tensor(history_input).unsqueeze(0)
         q_values = self.model.forward(input, history)
-        if random.random() <= self.dic_agent_conf["EPSILON"] \
+        if random.random() <= self.__conf_agent["EPSILON"] \
                 and choice_random:
             actions = random.randrange(len(q_values[0]))
         else:
@@ -204,16 +213,6 @@ class FRAPRQAgent(Agent):
         self.list_history.append(np.array(history_input).tolist())
         return actions
 
-    def convert_state_to_input(self, s):
-        input = []
-        dic_phase_expansion = self.dic_traffic_env_conf[
-            "LANE_PHASE_INFO"]['phase_map']
-        for feature in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
-            if feature == "cur_phase":
-                input.append(np.array([dic_phase_expansion[s[feature][0]]]))
-            else:
-                input.append(np.array([s[feature]]))
-        return input
 
     def prepare_Xs_Y(self, sample_set):
         state = []
@@ -236,8 +235,8 @@ class FRAPRQAgent(Agent):
             self.model_target.forward(torch.Tensor(next_state),
                                       torch.Tensor(history_input)
                                       ).detach().numpy()
-        reward_avg = np.array(reward_avg) / self.dic_agent_conf["NORMAL_FACTOR"]
-        gamma = self.dic_agent_conf["GAMMA"]
+        reward_avg = np.array(reward_avg) / self.__conf_traffic.NORMAL_FACTOR
+        gamma = self.__conf_agent["GAMMA"]
         range_idx = list(range(len(q_values)))
         q_values[range_idx, action] = \
             reward_avg + gamma * np.max(q_values_bar, axis=-1)
@@ -245,7 +244,7 @@ class FRAPRQAgent(Agent):
         self.Y = q_values
 
     def train_network(self):
-        epochs = self.dic_agent_conf["EPOCHS"]
+        epochs = self.__conf_agent["EPOCHS"]
         for i in range(epochs):
             sample_x, history_input = self.Xs
             sample_y = self.Y
@@ -258,27 +257,13 @@ class FRAPRQAgent(Agent):
             # print('%d memory, updating... %d, loss: %.4f'
             #       % (len(self.Y), i, loss.item()))
 
-    def save_network(self, file_name):
-        file_path = os.path.join(self.dic_path["PATH_TO_MODEL"],
-                                 file_name + '.pt')
+    def save_network(self, round_number):
+        file_path = os.path.join(
+            self.__conf_path.MODEL,
+            self.inter_name + '_round_%d' % round_number + '.pt')
         ckpt = {'state_dict': self.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
                 'lossfunc': self.lossfunc.state_dict()}
         torch.save(ckpt, file_path)
 
-    def save_history(self):
-        work_path = self.dic_path["PATH_TO_WORK"]
-        for each_file in os.listdir(work_path):
-            if ".pkl" in each_file:
-                file_name = os.path.join(work_path, each_file)
-                with open(file_name, "rb") as f:
-                    logging_data = pickle.load(f)
-                length_cnt = 0
-                for each_data in logging_data:
-                    if each_data["action"] != -1:
-                        each_data["history"] = self.list_history[length_cnt]
-                        length_cnt += 1
-                if length_cnt != len(self.list_history):
-                    raise ValueError(length_cnt, " vs ", len(self.list_history))
-                with open(file_name, "wb") as f:
-                    pickle.dump(logging_data, f)
+

@@ -1,8 +1,10 @@
+import time
+
 import misc.summary as summary
 from multiprocessing import Process
-from algs.MetaDQN.metadqn_learner import MetaDQNLearner
-from common.parallelizer import pipeline
+from algs.METADQN.metadqn_learner import METADQNLearner
 from common.round_learner import RoundLearner
+from common.trainer import Trainer
 from configs.config_phaser import *
 from misc.utils import *
 from misc.utils_metaq import plot_metadqn_train
@@ -39,28 +41,18 @@ def metadqn_summary(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
     summary.main(path_conf['PATH_TO_WORK'])
 
 
-def main(args):
+def main_train(args):
     """main entrance. for metalight
     """
-    t_start = time.time()
-    dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path = \
-        config_all(args)
-    dic_traffic_env_conf = \
-        update_traffic_env_tasks(dic_traffic_env_conf, 'train_all')
-    create_path_dir(dic_path)
-    for round_number in range(dic_exp_conf["TRAIN_ROUND"]):
-        t_round = time.time()
-        p = Process(target=metadqn_train,
-                    args=(copy.deepcopy(dic_exp_conf),
-                          copy.deepcopy(dic_agent_conf),
-                          copy.deepcopy(dic_traffic_env_conf),
-                          copy.deepcopy(dic_path),
-                          round_number))
-        p.start()
-        p.join()
-        print('train round %d finished..' % round_number)
-        log_round_time(dic_path, round_number, t_round, time.time())
-    plot_metadqn_train(os.path.join(dic_path["PATH_TO_WORK"], 'test_round'))
+    conf_exp, _, conf_traffic, _ = config_all(args)
+    traffic_file_list = conf_traffic.TRAFFIC_CATEGORY['train_all']
+    print('training list:', traffic_file_list)
+
+    trainer = Trainer(args, traffic_file_list)
+    trainer.train()
+
+def main_adapt(args):
+    pass
 
 
 def main_test(args):

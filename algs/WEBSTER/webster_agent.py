@@ -1,33 +1,35 @@
 import numpy as np
 
-
-class WEBSTERAgent():
-    def __init__(self, dic_agent_conf, dic_traffic_env_conf,
-                 dic_path, round_number):
-
-        self.dic_agent_conf = dic_agent_conf
-        self.dic_traffic_env_conf = dic_traffic_env_conf
-        self.dic_path = dic_path
-        self.round_number = round_number
-
-        self.lane_phase_info = dic_traffic_env_conf["LANE_PHASE_INFO"]
+from algs.agent_fix import AgentFix
 
 
-        self.vehicle_dim = dim_feature['lane_vehicle_cnt'][0]
-        self.R = self.dic_agent_conf["L_LANE"] * self.vehicle_dim
+class WEBSTERAgent(AgentFix):
+    def __init__(self, conf_path, round_number, inter_name):
+        super().__init__(conf_path, round_number, inter_name)
+        self.__conf_path = conf_path
+        self.__round_number = round_number
+        self.__inter_name = inter_name
+        self.__conf_exp, self.__conf_agent, self.__conf_traffic = \
+            conf_path.load_conf_file(inter_name=inter_name)
+
+        self.traffic_info = self.__conf_traffic.TRAFFIC_INFO
+
+
+        self.vehicle_dim = len(self.traffic_info['phase_links'])
+        self.R = self.__conf_agent["L_LANE"] * self.vehicle_dim
         self.flow_rate = [0 for _ in range(self.vehicle_dim)]
         self.flow_cnt = [0 for _ in range(self.vehicle_dim)]
         self.lane_num_vehicle_pre = [0 for _ in range(self.vehicle_dim)]
 
-        self.phase_cnt = len(self.lane_phase_info['phase'])
-        self.dic_phase_expansion = self.lane_phase_info['phase_map']
+        self.phase_cnt = len(self.traffic_info['phase_lane_mapping'])
+        self.dic_phase_expansion = self.traffic_info['phase_lane_mapping']
         self.global_cnt = 0
         self.global_cnt_pre = 0
         self.circle = 30
         self.get_phase_method()
 
     def get_value_Y(self):
-        ymax = self.dic_agent_conf["Y_MAX"]
+        ymax = self.__conf_agent["Y_MAX"]
         self.Y = []
         self.flow_rate = np.array(self.flow_cnt) * 3600 / (
                 self.global_cnt - self.global_cnt_pre + 1e-8)
@@ -40,8 +42,8 @@ class WEBSTERAgent():
         self.Y = np.array(self.Y) / len(self.Y)
 
     def get_value_circle(self):
-        k1 = self.dic_agent_conf["K1"]
-        k2 = self.dic_agent_conf["K2"]
+        k1 = self.__conf_agent["K1"]
+        k2 = self.__conf_agent["K2"]
         self.circle = (self.R * k1 + k2) / (1 - sum(self.Y))
 
     def get_phase_method(self):
@@ -57,11 +59,8 @@ class WEBSTERAgent():
         self.list_action = []
         for phase, each in enumerate(self.list_action_phase_time):
             self.list_action += [phase for _ in range(int(round(each)))]
-        if self.dic_traffic_env_conf["ENV_DEBUG"]:
-            print("\n step %d, phase method: %s" %
-                  (self.global_cnt, self.list_action))
 
-    def choose_action(self, state):
+    def choose_action(self, state, choice_random=False):
         x = self.lane_num_vehicle_pre - np.array(state["lane_vehicle_cnt"])
         for idx, each in enumerate(x):
             if each > 0:
