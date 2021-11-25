@@ -94,7 +94,7 @@ def generator_wrapper(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
     generator.generate()
 
 
-class MetaDQNLearner:
+class METADQNLearner:
     def __init__(self, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                  dic_path, round_number):
         self.dic_exp_conf = dic_exp_conf

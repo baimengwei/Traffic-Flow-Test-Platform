@@ -23,7 +23,7 @@ def parse():
     parser.add_argument("--project", type=str, default="project_name")
     # ------------------------------exp.conf-----------------------------------
     parser.add_argument("--algorithm", type=str)
-    parser.add_argument("--train_round", type=int, default=3,
+    parser.add_argument("--train_round", type=int, default=300,
                         help="for train process")
     parser.add_argument("--task_round", type=int, default=20,
                         help="for metalight train process")
@@ -32,7 +32,7 @@ def parse():
     parser.add_argument("--adapt_round", type=int, default=20,
                         help="for metalight valid test")
     parser.add_argument("--num_generator", type=int, default=3)
-    parser.add_argument("--num_pipeline", type=int, default=3)
+    parser.add_argument("--num_pipeline", type=int, default=15)
 
     # -----------------------------traffic_env.conf---------------------------
     parser.add_argument("--episode_len", type=int, default=3600, help='for mdp')

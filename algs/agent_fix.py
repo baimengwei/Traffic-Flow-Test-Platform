@@ -6,7 +6,6 @@ class AgentFix(metaclass=ABCMeta):
     """
         An abstract class for value based method
     """
-
     def __init__(self, conf_path: ConfPath, round_number: int, inter_name: str):
         """
         """

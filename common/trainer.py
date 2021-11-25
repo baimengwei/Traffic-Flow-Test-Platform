@@ -45,6 +45,7 @@ class Trainer:
         conf_exp, conf_agent, conf_traffic, conf_path = config_all(args)
 
         conf_path.set_traffic_file(traffic_file)
+        conf_traffic.set_traffic_file(traffic_file)
         conf_path.create_path_dir()
         conf_path.dump_conf_file(conf_exp, conf_agent, conf_traffic)
 

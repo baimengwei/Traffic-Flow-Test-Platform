@@ -28,14 +28,13 @@ class Generator:
         agent_class = getattr(agent_package, '%sAgent' % agent_name.upper())
 
         self.__list_agent = []
-        self.__list_inter = list(agents_infos.keys())
+        self.__list_inter = list(sorted(list(agents_infos.keys())))
         for inter_name in self.__list_inter:
             # store config
             self.__conf_traffic.set_intersection(inter_name)
-            for i in agents_infos.keys():
-                self.__conf_path.dump_conf_file(
-                    self.__conf_exp, self.__conf_agent,
-                    self.__conf_traffic, inter_name=i)
+            self.__conf_path.dump_conf_file(
+                self.__conf_exp, self.__conf_agent,
+                self.__conf_traffic, inter_name=inter_name)
             # create agent
             agent = agent_class(self.__conf_path, self.__round_number, inter_name)
             self.__list_agent.append(agent)
@@ -82,7 +81,7 @@ class Generator:
             downsample(path_to_log_file)
 
     def generate_none(self):
-        self.generate(done_enable=False)
+        self.generate(done_enable=False, choice_random=False)
         for inter_name in self.__conf_traffic.TRAFFIC_INFOS:
             write_summary(self.__conf_path, self.__round_number, inter_name)
 

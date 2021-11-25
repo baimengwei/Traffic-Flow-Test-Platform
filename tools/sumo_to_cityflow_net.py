@@ -78,17 +78,21 @@ def get_trafficLight(traci_tls, inter, inter_config):
             #
             roadLinks_config = get_roadLinks(inter, links_now)
             inter_config['roadLinks'] = roadLinks_config
-            inter_config['roadLinkIndices'] = \
+            inter_config['trafficLight']['roadLinkIndices'] = \
                 [i for i in range(len(inter_config['roadLinks']))]
 
             phase = traci_tls.getCompleteRedYellowGreenDefinition(tls_id)[0]
             phase = phase.getPhases()
             list_lightphases = []
+            each_lightphases = OrderedDict()
+            each_lightphases['time'] = 5
+            each_lightphases['availableRoadLinks'] = []
+            list_lightphases.append(each_lightphases)
             for p in phase:
                 each_lightphases = OrderedDict()
                 each_lightphases['time'] = p.duration
                 each_lightphases['availableRoadLinks'] = \
-                    [idx for idx, s in enumerate(p.state) if s=='G']
+                    [idx for idx, s in enumerate(p.state) if s == 'G']
                 list_lightphases.append(each_lightphases)
 
             inter_config['trafficLight']['lightphases'] = list_lightphases

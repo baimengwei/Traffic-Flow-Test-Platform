@@ -28,14 +28,13 @@ class OnceGenerator:
         agent_class = getattr(agent_package, '%sAgent' % agent_name.upper())
 
         self.__list_agent = []
-        self.__list_inter = list(agents_infos.keys())
+        self.__list_inter = list(sorted(list(agents_infos.keys())))
         for inter_name in self.__list_inter:
             # store config
             self.__conf_traffic.set_intersection(inter_name)
-            for i in agents_infos.keys():
-                self.__conf_path.dump_conf_file(
-                    self.__conf_exp, self.__conf_agent,
-                    self.__conf_traffic, inter_name=i)
+            self.__conf_path.dump_conf_file(
+                self.__conf_exp, self.__conf_agent,
+                self.__conf_traffic, inter_name=inter_name)
             # create agent
             agent = agent_class(self.__conf_path, self.__round_number, inter_name)
             self.__list_agent.append(agent)
@@ -66,7 +65,6 @@ class OnceGenerator:
             if step_num % 10 == 0: print('.', end='')
             if done_enable and done:
                 break
-
         print('||final done||')
         self.__env.bulk_log(reward=self.__list_reward)
 
@@ -96,7 +94,6 @@ class OnceLearner:
     def learn_round(self):
         self.__round_train()
         self.__round_test()
-        pass
 
     def __round_train(self):
         self.conf_path.set_work_sample(self.round_number, 0)
@@ -110,3 +107,4 @@ class OnceLearner:
         self.conf_path.create_path_dir()
         generator = OnceGenerator(self.conf_path, self.round_number, is_test=True)
         generator.generate_test()
+

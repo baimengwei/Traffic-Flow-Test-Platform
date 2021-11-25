@@ -126,3 +126,7 @@ class ConfTrafficEnv:
     @property
     def VALID_THRESHOLD(self):
         return self.__threshold
+
+    @property
+    def TRAFFIC_FILE(self):
+        return self.__traffic_file

@@ -46,7 +46,7 @@ class HistoryGenerator:
         agent_class = getattr(agent_package, '%sAgent' % agent_name.upper())
 
         self.list_agent = []
-        self.__list_inter = list(agents_infos.keys())
+        self.__list_inter = list(sorted(list(agents_infos.keys())))
         self.__conf_path.set_work_sample_total(self.__list_inter)
         for inter_name in self.__list_inter:
             # store config

@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 
 from envs.env_base import EnvBase
@@ -12,8 +14,8 @@ sys.path.append(os.path.join(os.environ["SUMO_HOME"], "tools"))
 class Intersection:
     def __init__(self, inter_id, conf_traffic, eng):
         self.inter_id = inter_id
-        # TODO try copy obj
-        self.conf_traffic = conf_traffic
+
+        self.conf_traffic = copy.deepcopy(conf_traffic)
         self.eng = eng
 
         self.conf_traffic.set_intersection(self.inter_id)

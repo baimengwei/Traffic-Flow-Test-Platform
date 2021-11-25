@@ -24,8 +24,8 @@ class FIXTIMEAgent(AgentFix):
         self.global_cnt = 0
 
     def choose_action(self, state, choice_random=False):
-        if choice_random is True:
-            return np.random.choice(self.list_action,1)[0]
+        # if choice_random is True:
+        #     return np.random.choice(self.list_action,1)[0]
         action = self.list_action[self.global_cnt % len(self.list_action)]
         self.global_cnt += 1
         return action

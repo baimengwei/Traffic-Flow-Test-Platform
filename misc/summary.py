@@ -15,6 +15,8 @@ def summary_detail_test(conf_path):
     """
     """
     conf_path.set_work_test(0)
+    _, _, conf_traffic = \
+        conf_path.load_conf_file(inter_name=conf_path.load_conf_inters()[0])
 
     test_round_dir = os.path.join(conf_path.WORK_TEST, '../')
     list_files = os.listdir(test_round_dir)
@@ -35,7 +37,8 @@ def summary_detail_test(conf_path):
             ax2.plot(list_vehicle_out, linestyle=':')
             plt.legend(['vehicle_in', 'vehicle_out'], loc='upper right')
             plt.show()
-            figure_path = 'result_' + file.split('.')[0] + '.png'
+            figure_path = '%s_' % conf_traffic.TRAFFIC_FILE +\
+                          file.split('.')[0] + '.png'
             figure_path = os.path.join(conf_path.WORK, figure_path)
             plt.savefig(figure_path)
 
@@ -55,10 +58,11 @@ def summary_detail_test(conf_path):
     list_inter = list(sorted(dic_reward.keys()))
     for inter in list_inter:
         ax1.plot(dic_reward[inter])
-    plt.legend(list_inter)
-    plt.show()
-    figure_path = os.path.join(conf_path.WORK, 'reward_info.png')
-    plt.savefig(figure_path)
+        plt.legend(list_inter)
+        plt.show()
+        figure_path = os.path.join(conf_path.WORK, 'reward_info_%s.png'
+                                   % inter)
+        plt.savefig(figure_path)
 
 
 if __name__ == "__main__":

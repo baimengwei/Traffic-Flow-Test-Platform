@@ -270,7 +270,25 @@
         }
       ],
       "trafficLight": {
+        "roadLinkIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
         "lightphases": [
+          {
+            "time": 5,
+            "availableRoadLinks": []
+          },
           {
             "time": 20.0,
             "availableRoadLinks": [
@@ -308,21 +326,7 @@
           }
         ]
       },
-      "virtual": false,
-      "roadLinkIndices": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11
-      ]
+      "virtual": false
     },
     {
       "id": "gneJ0",
@@ -594,7 +598,25 @@
         }
       ],
       "trafficLight": {
+        "roadLinkIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
         "lightphases": [
+          {
+            "time": 5,
+            "availableRoadLinks": []
+          },
           {
             "time": 20.0,
             "availableRoadLinks": [
@@ -632,21 +654,7 @@
           }
         ]
       },
-      "virtual": false,
-      "roadLinkIndices": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11
-      ]
+      "virtual": false
     },
     {
       "id": "gneJ2",
@@ -918,7 +926,25 @@
         }
       ],
       "trafficLight": {
+        "roadLinkIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
         "lightphases": [
+          {
+            "time": 5,
+            "availableRoadLinks": []
+          },
           {
             "time": 20.0,
             "availableRoadLinks": [
@@ -956,21 +982,7 @@
           }
         ]
       },
-      "virtual": false,
-      "roadLinkIndices": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11
-      ]
+      "virtual": false
     },
     {
       "id": "gneJ12",
@@ -1511,7 +1523,37 @@
         }
       ],
       "trafficLight": {
+        "roadLinkIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
         "lightphases": [
+          {
+            "time": 5,
+            "availableRoadLinks": []
+          },
           {
             "time": 20.0,
             "availableRoadLinks": [
@@ -1570,33 +1612,7 @@
           }
         ]
       },
-      "virtual": false,
-      "roadLinkIndices": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23
-      ]
+      "virtual": false
     },
     {
       "id": "gneJ16",
@@ -2152,7 +2168,37 @@
         }
       ],
       "trafficLight": {
+        "roadLinkIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
         "lightphases": [
+          {
+            "time": 5,
+            "availableRoadLinks": []
+          },
           {
             "time": 20.0,
             "availableRoadLinks": [
@@ -2211,33 +2257,7 @@
           }
         ]
       },
-      "virtual": false,
-      "roadLinkIndices": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23
-      ]
+      "virtual": false
     },
     {
       "id": "gneJ4",
@@ -2635,7 +2655,31 @@
         }
       ],
       "trafficLight": {
+        "roadLinkIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
         "lightphases": [
+          {
+            "time": 5,
+            "availableRoadLinks": []
+          },
           {
             "time": 20.0,
             "availableRoadLinks": [
@@ -2671,27 +2715,7 @@
           }
         ]
       },
-      "virtual": false,
-      "roadLinkIndices": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17
-      ]
+      "virtual": false
     },
     {
       "id": "gneJ5",

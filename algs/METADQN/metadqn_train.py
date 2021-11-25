@@ -7,7 +7,6 @@ from common.round_learner import RoundLearner
 from common.trainer import Trainer
 from configs.config_phaser import *
 from misc.utils import *
-from misc.utils_metaq import plot_metadqn_train
 
 
 def metadqn_adapt(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
@@ -50,6 +49,7 @@ def main_train(args):
 
     trainer = Trainer(args, traffic_file_list)
     trainer.train()
+
 
 def main_adapt(args):
     pass

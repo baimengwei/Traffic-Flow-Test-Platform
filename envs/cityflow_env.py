@@ -1,3 +1,4 @@
+import copy
 from collections import OrderedDict
 import uuid
 from misc.utils import *
@@ -9,8 +10,8 @@ from envs.env_base import EnvBase
 class Intersection:
     def __init__(self, inter_id, conf_traffic, eng):
         self.inter_id = inter_id
-        # TODO try copy obj
-        self.conf_traffic = conf_traffic
+
+        self.conf_traffic = copy.deepcopy(conf_traffic)
         self.eng = eng
         self.conf_traffic.set_intersection(self.inter_id)
         #
@@ -457,7 +458,7 @@ if __name__ == '__main__':
     env = CityflowEnv(conf_path)
     traffic_info = env.get_agents_info()
     print('----------traffic_info-------------')
-    print( json.dumps(traffic_info))
+    print(json.dumps(traffic_info))
     print('----------------------------------')
     state = env.reset()
     done = False
