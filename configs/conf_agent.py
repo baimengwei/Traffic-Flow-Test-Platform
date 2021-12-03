@@ -35,6 +35,7 @@ class Constrant:
         "GAMMA": 0.8,
         # "EPSILON": 0.8,
         # "EPSILON_DECAY": 0.90,
+
         "MIN_EPSILON": 0.0,
         "PARTICLE": 3,
         "W": 0.85,
@@ -47,6 +48,7 @@ class Constrant:
         "MIN_EPSILON": 0.0,
         "PARTICLE": 3,
         "W": 0.85,
+        "MEMORY_SIZE":2,
         "PLAN_CNT": 3,
     }
     DIC_AGENT_CONF_DYNAQ = {
@@ -57,6 +59,7 @@ class Constrant:
         "MIN_EPSILON": 0.0,
         "PARTICLE": 3,
         "PLAN_CNT": 3,
+        "MEMORY_SIZE": 2,
     }
     DIC_AGENT_CONF_SOTL = {
         "PHI_MIN": 2,

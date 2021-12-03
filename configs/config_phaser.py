@@ -32,7 +32,7 @@ def parse():
     parser.add_argument("--adapt_round", type=int, default=20,
                         help="for metalight valid test")
     parser.add_argument("--num_generator", type=int, default=3)
-    parser.add_argument("--num_pipeline", type=int, default=15)
+    parser.add_argument("--num_pipeline", type=int, default=3)
 
     # -----------------------------traffic_env.conf---------------------------
     parser.add_argument("--episode_len", type=int, default=3600, help='for mdp')

@@ -11,6 +11,8 @@ def main(args):
     # traffic_file_list = ['cps_multi_1888']
     # traffic_file_list = ['hangzhou_baochu_tiyuchang_1h_10_11_2021']
     traffic_file_list = ['demo_train_1364']
+    traffic_file_list = list(conf_traffic.TRAFFIC_CATEGORY['train_all']) + \
+                        list(conf_traffic.TRAFFIC_CATEGORY['test_homogeneous'])
     print('training list:', traffic_file_list)
 
     # traffic_file_list_ = []

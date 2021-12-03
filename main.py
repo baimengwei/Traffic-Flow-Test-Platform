@@ -15,7 +15,7 @@ def run_frapplus():
     args = parse()
     print('start execute frapplus...')
     args.algorithm = 'FRAPPlus'
-    args.project = 'FRAPPlus_Min'
+    args.project = '20211129_FRAP_ALL'
     main(args)
 
 
@@ -24,7 +24,7 @@ def run_dqn():
     args = parse()
     print('start execute dqn...')
     args.algorithm = "DQN"
-    args.project = "DQN_TEST"
+    args.project = "20211128_DQN_ALL"
     args.env = "cityflow"
     main(args)
 
@@ -67,7 +67,7 @@ def run_drqn():
     args = parse()
     print('start execute drqn')
     args.algorithm = "DRQN"
-    args.project = "DRQN_PJ"
+    args.project = "20211128_DRQN_ALL"
     args.env = "cityflow"
     main(args)
 
@@ -96,7 +96,7 @@ def run_fixtime():
     args = parse()
     print('start execute fixtime..')
     args.algorithm = "FIXTIME"
-    args.project = "20211124_MULTI_FIXTIME_ALL"
+    args.project = "20211127_MULTI_FIXTIME_ALL"
     args.train_round = 1
     main(args)
 
@@ -117,8 +117,7 @@ def run_ql():
     args = parse()
     print("start execute q-learning.")
     args.algorithm = "QL"
-    # args.project = "20211124_QL_ALL"
-    args.project = "20211125_MULTI_QL_ALL"
+    args.project = "20211127_MULTI_QL_ALL"
     args.env = "cityflow"
     main(args)
 
@@ -129,7 +128,7 @@ def run_gsqldsep():
     print("start execute gsqldsep-learning.")
     args.algorithm = "GSQLDSEP"
     # args.project = "20211123_GSQLDSEP_ALL"
-    args.project = "20211125_MULTI_GSQLDSEP_ALL"
+    args.project = "20211127_MULTI_GSQLDSEP_ALL"
     args.env = "cityflow"
     main(args)
 
@@ -140,7 +139,7 @@ def run_sql():
     print("start execute sql.")
     args.algorithm = "SQL"
     # args.project = "20211123_SQL_ALL"
-    args.project = "20211125_MULTI_SQL_ALL"
+    args.project = "20211127_MULTI_SQL_ALL"
     args.env = "cityflow"
     main(args)
 
@@ -151,7 +150,7 @@ def run_gsql():
     print("start execute gsql.")
     args.algorithm = "GSQL"
     # args.project = "20211123_GSQL_ALL"
-    args.project = "20211125_MULTI_GSQL_ALL"
+    args.project = "20211127_MULTI_GSQL_ALL"
     args.env = "cityflow"
     main(args)
 
@@ -162,7 +161,7 @@ def run_dynaq():
     print("start execute dynaq.")
     args.algorithm = "DYNAQ"
     # args.project = "20211123_DYNAQ_ALL"
-    args.project = "20211125_MULTI_DYNAQ_ALL"
+    args.project = "20211127_MULTI_DYNAQ_ALL"
     args.env = "cityflow"
     main(args)
 
@@ -173,17 +172,20 @@ if __name__ == '__main__':
     # run_sql()
     # run_gsql()
     # run_dynaq()
+    # from multiprocessing import Process
+    # list_func = [run_ql, run_gsqldsep, run_sql, run_gsql, run_dynaq]
+    # list_proc = [Process(target=func) for func in list_func]
+    # [p.start() for p in list_proc]
+    # [p.join() for p in list_proc]
 
-    run_dqn()
-    # run_drqn()
-    # run_frapplus()
-    # run_fraprq()
-    # run_metadqn()
-    # TODO
-    # run_metafrap()
+    # run_dqn()
+    ## run_drqn()
+    run_frapplus()
+    ## run_fraprq()
+    run_metadqn()
+    ## run_metafrap()
 
     # run_fixtime()
     # run_maxpressure()
     # run_sotl()
     # run_webster()
-
