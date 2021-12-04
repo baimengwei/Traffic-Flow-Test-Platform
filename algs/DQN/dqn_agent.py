@@ -1,5 +1,6 @@
 import os
 import random
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -58,6 +59,15 @@ class DQNAgent(Agent):
         self.model = DQN(self.__conf_traffic)
         self.lossfunc = torch.nn.MSELoss()
         self.optimizer = torch.optim.Adam(self.model.parameters())
+        # FOR META bellow, modify the code by hand.
+        # import warnings
+        # warnings.warn('loading meta parameters...')
+        # meta_network = os.path.join(
+        #     self.__conf_path.MODEL, '..', '..', 'intersection_1_1_round_99.pt')
+        # ckpt = torch.load(meta_network)
+        # self.model.load_state_dict(ckpt['state_dict'])
+        # self.optimizer.load_state_dict(ckpt['optimizer'])
+        # self.lossfunc.load_state_dict(ckpt['lossfunc'])
 
     def build_network_bar(self):
         self.model_target = DQN(self.__conf_traffic)

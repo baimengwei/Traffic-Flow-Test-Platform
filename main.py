@@ -30,17 +30,16 @@ def run_dqn():
 
 
 def run_metadqn():
-    from algs.METADQN.metadqn_train import main_train
     from algs.METADQN.metadqn_train import main_adapt
     from algs.METADQN.metadqn_train import main_test
     args = parse()
     print('start execute meta dqn...')
     args.algorithm = "METADQN"
-    args.project = "METADQN_RD"
+    args.project = "20211203_METADQN_TEST"
     args.env = "cityflow"
-    main_train(args)
-    main_adapt(args)
+    # main_adapt(args)
     main_test(args)
+    print('this is end.')
 
 
 def run_sotl():
@@ -180,7 +179,7 @@ if __name__ == '__main__':
 
     # run_dqn()
     ## run_drqn()
-    run_frapplus()
+    # run_frapplus()
     ## run_fraprq()
     run_metadqn()
     ## run_metafrap()

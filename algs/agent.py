@@ -35,7 +35,7 @@ class Agent(metaclass=ABCMeta):
                           np.power(conf_agent['EPSILON_DECAY'],
                                    round_number)
         conf_agent['EPSILON'] = max(decayed_epsilon,
-                                 conf_agent['MIN_EPSILON'])
+                                    conf_agent['MIN_EPSILON'])
         return conf_agent
 
     @abstractmethod

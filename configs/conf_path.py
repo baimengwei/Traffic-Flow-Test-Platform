@@ -48,27 +48,72 @@ class ConfPath:
     def set_work(self, work_dir):
         self.__work = work_dir
 
-    def set_work_sample(self, round_number, generate_number=None):
+    def set_work_sample(self, round_number, *, traffic_file=None, generate_number=None):
+        """
+
+        Args:
+            round_number:
+            traffic_file: is used for metadqn
+            generate_number:
+
+        Returns:
+
+        """
         if generate_number is not None:
-            self.__work_sample = os.path.join(self.__work, "samples",
-                                              "round_%d" % round_number,
-                                              "generator_%d" % generate_number)
-        elif round_number:
-            self.__work_sample = os.path.join(self.__work, "samples",
-                                              "round_%d" % round_number)
+            if traffic_file is not None:
+                self.__work_sample = os.path.join(self.__work, "samples",
+                                                  "round_%d" % round_number,
+                                                  "traffic_%s" % traffic_file,
+                                                  "generator_%d" % generate_number)
+            else:
+                self.__work_sample = os.path.join(self.__work, "samples",
+                                                  "round_%d" % round_number,
+                                                  "generator_%d" % generate_number)
+        elif round_number is not None:
+            if traffic_file is not None:
+                self.__work_sample = os.path.join(self.__work, "samples",
+                                                  "round_%d" % round_number,
+                                                  "traffic_%s" % traffic_file)
+            else:
+                self.__work_sample = os.path.join(self.__work, "samples",
+                                                  "round_%d" % round_number)
+        else:
+            raise ValueError('round_number is not valid!', round_number)
 
-    def set_work_sample_total(self, list_inters):
-        self.__work_sample_total = [os.path.join(self.__work, "samples",
-                                                 "total_samples_%s.pkl" % inter)
-                                    for inter in list_inters]
+    def set_work_sample_total(self, list_inters, *,
+                              round_num=None, traffic_file=None):
+        if traffic_file is not None:
+            self.__work_sample_total = [
+                os.path.join(self.__work, "samples",
+                             "round_%d" % round_num,
+                             "traffic_%s" % traffic_file,
+                             "total_samples_%s.pkl" % inter)
+                for inter in list_inters]
+        else:
+            self.__work_sample_total = [
+                os.path.join(self.__work, "samples",
+                             "total_samples_%s.pkl" % inter)
+                for inter in list_inters]
 
-    def set_work_sample_each(self, round_number, gen_cnt, list_inters):
-        self.__work_sample_each = [os.path.join(self.__work, "samples",
-                                                "round_%d" % round_number,
-                                                "generator_%d" % generate_number,
-                                                "%s.pkl" % inter)
-                                   for generate_number in range(gen_cnt)
-                                   for inter in list_inters]
+    def set_work_sample_each(self, round_number, gen_cnt, list_inters,
+                             *, traffic_file=None):
+        if traffic_file is not None:
+            self.__work_sample_each = [
+                os.path.join(self.__work, "samples",
+                             "round_%d" % round_number,
+                             "traffic_%s" % traffic_file,
+                             "generator_%d" % generate_number,
+                             "%s.pkl" % inter)
+                for generate_number in range(gen_cnt)
+                for inter in list_inters]
+        else:
+            self.__work_sample_each = [
+                os.path.join(self.__work, "samples",
+                             "round_%d" % round_number,
+                             "generator_%d" % generate_number,
+                             "%s.pkl" % inter)
+                for generate_number in range(gen_cnt)
+                for inter in list_inters]
 
     def set_work_test(self, round_number):
         self.__work_test = os.path.join(self.__work, "test_round",
@@ -84,8 +129,11 @@ class ConfPath:
         os.makedirs(self.__work_test, exist_ok=True)
 
     def dump_conf_file(self, conf_exp, conf_agent, conf_traffic,
-                       *, inter_name=None, hard=False):
-        work_dir = self.__work
+                       *, inter_name=None, config_dir=None, hard=False):
+        if config_dir is None:
+            work_dir = self.__work
+        else:
+            work_dir = config_dir
         path_exp = os.path.join(work_dir, "conf_exp_%s.pkl" % inter_name)
         if not os.path.exists(path_exp) or hard:
             pickle.dump(conf_exp, open(path_exp, mode='wb'))
@@ -106,18 +154,29 @@ class ConfPath:
             pickle.dump(self, open(path_path, mode='wb'))
             print(path_path, 'stored')
 
-    def load_conf_file(self, *, inter_name=None):
-        work_dir = self.__work
+    def load_conf_file(self, *, config_dir=None, inter_name=None):
+        if config_dir is None:
+            work_dir = self.__work
+        else:
+            work_dir = config_dir
         conf_exp = pickle.load(open(os.path.join(
             work_dir, "conf_exp_%s.pkl" % inter_name), mode='rb'))
         conf_agent = pickle.load(open(os.path.join(
             work_dir, "conf_agent_%s.pkl" % inter_name), mode='rb'))
-        conf_traffic = pickle.load(open(os.path.join(
-            work_dir, "conf_traffic_%s.pkl" % inter_name), mode='rb'))
+        try:
+            conf_traffic = pickle.load(open(os.path.join(
+                work_dir, "conf_traffic_%s.pkl" % inter_name), mode='rb'))
+        except:
+            raise ValueError(os.path.join(
+                work_dir, "conf_traffic_%s.pkl" % inter_name))
         return conf_exp, conf_agent, conf_traffic
 
-    def load_conf_inters(self):
-        file_names = os.listdir(self.__work)
+    def load_conf_inters(self, *, config_dir=None):
+        if config_dir is not None:
+            work_dir = config_dir
+        else:
+            work_dir = self.__work
+        file_names = os.listdir(work_dir)
         file_names = list(filter(lambda fn: 'conf' in fn, file_names))
         file_names = list(filter(lambda fn: '.pkl' in fn, file_names))
         file_names = list(filter(lambda fn: 'conf_exp' in fn, file_names))

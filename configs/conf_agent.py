@@ -48,7 +48,7 @@ class Constrant:
         "MIN_EPSILON": 0.0,
         "PARTICLE": 3,
         "W": 0.85,
-        "MEMORY_SIZE":2,
+        "MEMORY_SIZE": 2,
         "PLAN_CNT": 3,
     }
     DIC_AGENT_CONF_DYNAQ = {
@@ -104,29 +104,17 @@ class Constrant:
     DIC_AGENT_CONF_FRAPRQ = deepcopy(DIC_AGENT_CONF_DRQN)
 
     DIC_AGENT_CONF_METADQN = {
-        "LR": 0.001,
-        "ALPHA": 0.1,
-        "MIN_ALPHA": 0.00025,
-        "ALPHA_DECAY_RATE": 0.95,
-        "ALPHA_DECAY_STEP": 100,
-        "BETA": 0.1,
-        "LR_DECAY": 1,
-        "MIN_LR": 0.0001,
         "SAMPLE_SIZE": 1000,
-        'UPDATE_START': 100,
-        'UPDATE_PERIOD': 10,
-        "TEST_PERIOD": 50,
         "BATCH_SIZE": 32,
         "EPOCHS": 100,
         "UPDATE_Q_BAR_FREQ": 5,
 
+        "FILE_SIZE": 5,
         "GAMMA": 0.8,
         "MAX_MEMORY_LEN": 5000,
         "EPSILON": 0.8,
-        "EPSILON_DECAY": 0.95,
+        "EPSILON_DECAY": 0.90,
         "MIN_EPSILON": 0.2,
-        "NORMAL_FACTOR": 20,
-        "EARLY_STOP": False,
     }
 
     DIC_AGENT_CONF_METALIGHT = {

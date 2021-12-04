@@ -47,7 +47,8 @@ class RoundLearner:
     def round_generate_step(self, callback_func):
         process_list = []
         for generate_number in range(self.conf_exp.NUM_GENERATORS):
-            self.conf_path.set_work_sample(self.round_number, generate_number)
+            self.conf_path.set_work_sample(
+                self.round_number, generate_number=generate_number)
             self.conf_path.create_path_dir()
             # -----------------------------------------------------
             p = Process(target=callback_func,
