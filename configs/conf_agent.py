@@ -72,11 +72,9 @@ class Constrant:
         "K2": 5,
         "Y_MAX": 1650,
     }
-
     DIC_AGENT_CONF_FIXTIME = {
         "TIME_PHASE": 15,
     }
-
     DIC_AGENT_CONF_MAXPRESSURE = {
         "G_MIN": 5,
     }
@@ -95,8 +93,8 @@ class Constrant:
 
     DIC_AGENT_CONF_DRQN = deepcopy(DIC_AGENT_CONF_DQN)
     DIC_AGENT_CONF_DRQN.update({
-        "HISTORY_LEN": 20,
-        "HIDDEN_DIM": 10
+        "HISTORY_LEN": 5,
+        "HIDDEN_DIM": 3
     })
 
     DIC_AGENT_CONF_FRAPPLUS = deepcopy(DIC_AGENT_CONF_DQN)

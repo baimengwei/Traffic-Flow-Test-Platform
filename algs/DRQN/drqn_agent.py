@@ -7,20 +7,22 @@ from algs.agent import Agent
 
 
 class Context(nn.Module):
-    def __init__(self, conf_traffic):
+    def __init__(self, conf_traffic, conf_agent):
         """
         """
         super().__init__()
         self.__conf_traffic = conf_traffic
+        self.__conf_agent = conf_agent
 
         self.traffic_info = self.__conf_traffic.TRAFFIC_INFO
         phase_dim = len(self.traffic_info['phase_links'])
         vehicle_dim = len(self.traffic_info['phase_links'])
         self.state_dim = phase_dim + vehicle_dim
 
-        self.action_dim = len(self.traffic_info['phase_lane_mapping'][0])  # one hot represent according to phase.
+        self.action_dim = len(
+            self.traffic_info['phase_lane_mapping'][0])  # one hot represent according to phase.
         self.input_dim = self.action_dim + 1 + self.state_dim
-        self.hidden_dim = 10
+        self.hidden_dim = self.__conf_agent['HIDDEN_DIM']
 
         self.recurrent = nn.GRU(self.input_dim, self.hidden_dim,
                                 bidirectional=False, batch_first=True,
@@ -32,19 +34,16 @@ class Context(nn.Module):
         """
         batch_size = len(history_input)
         hidden = torch.zeros(1, batch_size, self.hidden_dim)
-        try:
-            _, hidden = self.recurrent(history_input, hidden)
-        except:
-            print(1)
-            raise ValueError('error in rnn')
+        _, hidden = self.recurrent(history_input, hidden)
         out = hidden.squeeze(0)
         return out
 
 
 class DRQN(nn.Module):
-    def __init__(self, conf_traffic):
+    def __init__(self, conf_traffic, conf_agent):
         super().__init__()
         self.__conf_traffic = conf_traffic
+        self.__conf_agent = conf_agent
 
         self.traffic_info = self.__conf_traffic.TRAFFIC_INFO
         phase_dim = len(self.traffic_info['phase_links'])
@@ -52,7 +51,7 @@ class DRQN(nn.Module):
         self.state_dim = phase_dim + vehicle_dim
         self.action_dim = len(self.traffic_info['phase_lane_mapping'])
         #
-        self.hidden_dim = 10
+        self.hidden_dim = self.__conf_agent['HIDDEN_DIM']
         self.weight_feature_line = torch.nn.Linear(
             self.state_dim + self.hidden_dim, 50)
         self.activate_feature_line = torch.nn.ReLU()
@@ -61,7 +60,7 @@ class DRQN(nn.Module):
         self.activate_linear_combine = torch.nn.ReLU()
         self.linear_final = torch.nn.Linear(50, self.action_dim)
 
-        self.rnn_layer = Context(self.__conf_traffic)
+        self.rnn_layer = Context(self.__conf_traffic, self.__conf_agent)
 
     def forward(self, feature_input, history_input):
         history_output = self.rnn_layer(history_input)
@@ -97,12 +96,12 @@ class DRQNAgent(Agent):
             self.load_network_bar(bar_number)
 
     def build_network(self):
-        self.model = DRQN(self.__conf_traffic)
+        self.model = DRQN(self.__conf_traffic, self.__conf_agent)
         self.lossfunc = torch.nn.MSELoss()
         self.optimizer = torch.optim.Adam(self.model.parameters())
 
     def build_network_bar(self):
-        self.model_target = DRQN(self.__conf_traffic)
+        self.model_target = DRQN(self.__conf_traffic, self.__conf_agent)
         self.model_target.load_state_dict(self.model.state_dict())
 
     def load_network(self, round_number):
@@ -118,7 +117,7 @@ class DRQNAgent(Agent):
         file_name = self.inter_name + "_round_%d" % round_number + '.pt'
         file_path = os.path.join(self.__conf_path.MODEL, file_name)
         ckpt = torch.load(file_path)
-        self.model_target = DRQN(self.__conf_traffic)
+        self.model_target = DRQN(self.__conf_traffic, self.__conf_agent)
         self.model_target.load_state_dict((ckpt['state_dict']))
 
     def choose_action(self, state, history_input, choice_random=True):

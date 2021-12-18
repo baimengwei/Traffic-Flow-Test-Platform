@@ -111,7 +111,6 @@ class DQNAgent(Agent):
             next_state.append(
                 each[2]['cur_phase_index'] + each[2]['lane_vehicle_cnt'])
             reward_avg.append(each[3])
-
         q_values = self.model.forward(torch.Tensor(state)).detach().numpy()
         q_values_bar = self.model_target.forward(
             torch.Tensor(next_state)).detach().numpy()

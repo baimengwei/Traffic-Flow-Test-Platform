@@ -23,10 +23,10 @@ def parse():
     parser.add_argument("--project", type=str, default="project_name")
     # ------------------------------exp.conf-----------------------------------
     parser.add_argument("--algorithm", type=str)
-    parser.add_argument("--train_round", type=int, default=100,
+    parser.add_argument("--train_round", type=int, default=300,
                         help="for train process")
     parser.add_argument("--num_generator", type=int, default=3)
-    parser.add_argument("--num_pipeline", type=int, default=3)
+    parser.add_argument("--num_pipeline", type=int, default=1)
 
     # -----------------------------traffic_env.conf---------------------------
     parser.add_argument("--episode_len", type=int, default=3600, help='for mdp')

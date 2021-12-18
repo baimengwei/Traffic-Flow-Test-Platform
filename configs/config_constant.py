@@ -11,7 +11,6 @@ LIST_STATE_FEATURE = [
 ]
 
 DIC_REWARD_INFO = {
-    "flickering": 0,
     "sum_lane_queue_length": 0,
     "sum_lane_wait_time": 0,
     "sum_lane_vehicle_left_cnt": 0,

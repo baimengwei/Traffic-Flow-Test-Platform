@@ -37,6 +37,7 @@ class Updater:
 
     def load_sample(self):
         self.sample_set = []
+        # x = [1 for s in self.sample_set[1] if len(s[0]['cur_phase_index']) != 24]
         for sample_file in self.conf_path.WORK_SAMPLE_TOTAL:
             sample_each = []
             f = open(sample_file, "rb")

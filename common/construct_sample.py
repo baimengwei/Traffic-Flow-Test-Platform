@@ -102,6 +102,8 @@ class ConstructSample:
             logging_data = self.load_data(each_file)
             total_time = int(logging_data[-1]['time'] + 1)
             list_samples = []
+            inter_name = each_file.split('/')[-1].split('.')[0]
+            self.conf_traffic.set_intersection(inter_name)
             for time in range(0, total_time - self.measure_time + 1,
                               self.interval):
                 state = self.construct_state(

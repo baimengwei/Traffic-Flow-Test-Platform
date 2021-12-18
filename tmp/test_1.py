@@ -1,25 +1,13 @@
-from abc import abstractmethod
-from abc import ABCMeta
+import os
+import pickle
+if __name__=='__main__':
+    print('start')
+    with open('conf_traffic_intersection_1_1.pkl', mode='rb') as f:
+        cf = pickle.load(f)
 
-class AbstractMethod(metaclass=ABCMeta):
-    def __init__(self, name):
-        self._name = name
-
-    @abstractmethod
-    def get_name(self):
-        pass
-
-    def get_name_(self):
-        return self._name
-
-class AbstractImpl(AbstractMethod):
-    def get_name_(self):
-        return self._name
-
-    def get_name(self):
-        return None
-
-if __name__ == '__main__':
-    a = AbstractImpl('asd')
-    print(a.get_name_())
+    list_folder = os.listdir(('.'))
+    list_file_name = []
+    for folder in list_folder:
+        if '.py' in folder:
+            list_file_name.append(folder)
 

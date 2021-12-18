@@ -114,6 +114,9 @@ class ConfPath:
                              "%s.pkl" % inter)
                 for generate_number in range(gen_cnt)
                 for inter in list_inters]
+        self.__work_sample_each = sorted(
+            self.__work_sample_each,
+            key=lambda x: x.split('/')[-1])
 
     def set_work_test(self, round_number):
         self.__work_test = os.path.join(self.__work, "test_round",

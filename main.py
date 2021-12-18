@@ -24,7 +24,7 @@ def run_dqn():
     args = parse()
     print('start execute dqn...')
     args.algorithm = "DQN"
-    args.project = "20211128_DQN_ALL"
+    args.project = "20211205_DQN_MULTI"
     args.env = "cityflow"
     main(args)
 
@@ -66,7 +66,7 @@ def run_drqn():
     args = parse()
     print('start execute drqn')
     args.algorithm = "DRQN"
-    args.project = "20211128_DRQN_ALL"
+    args.project = "20211206_DRQN_ALL"
     args.env = "cityflow"
     main(args)
 
@@ -178,10 +178,10 @@ if __name__ == '__main__':
     # [p.join() for p in list_proc]
 
     # run_dqn()
-    ## run_drqn()
+    run_drqn()
     # run_frapplus()
     ## run_fraprq()
-    run_metadqn()
+    # run_metadqn()
     ## run_metafrap()
 
     # run_fixtime()
