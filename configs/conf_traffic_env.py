@@ -69,6 +69,7 @@ class ConfTrafficEnv:
 
     def set_intersection(self, inter_name):
         self.__inter_name = inter_name
+
         self.__traffic_info = self.__traffic_infos[inter_name]
 
     def set_port(self, port):

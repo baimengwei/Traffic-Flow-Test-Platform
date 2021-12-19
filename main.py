@@ -26,6 +26,7 @@ def run_dqn():
     args.algorithm = "DQN"
     args.project = "20211205_DQN_MULTI"
     args.env = "cityflow"
+    args.env = "sumo"
     main(args)
 
 
@@ -177,8 +178,8 @@ if __name__ == '__main__':
     # [p.start() for p in list_proc]
     # [p.join() for p in list_proc]
 
-    # run_dqn()
-    run_drqn()
+    run_dqn()
+    # run_drqn()
     # run_frapplus()
     ## run_fraprq()
     # run_metadqn()

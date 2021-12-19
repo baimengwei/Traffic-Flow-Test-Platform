@@ -12,7 +12,7 @@ class Trainer:
         self.__args = args
         self.__traffic_file_list = traffic_file_list
         if callback is None:
-            self.__callback = self.__default_train
+            self.__callback = self.default_train
         else:
             self.__callback = callback
 
@@ -24,7 +24,7 @@ class Trainer:
         traffic_file_list_surplus = copy.deepcopy(self.__traffic_file_list)
         list_pipeline = []
         for traffic_file in self.__traffic_file_list:
-            p = Process(target=self.__pipeline,
+            p = Process(target=self.pipeline,
                         args=(self.__args, traffic_file, self.__callback,))
             p.start()
             list_pipeline.append(p)
@@ -38,7 +38,7 @@ class Trainer:
                 list_pipeline = []
 
     @staticmethod
-    def __pipeline(args, traffic_file, callback_func):
+    def pipeline(args, traffic_file, callback_func):
         """
         """
         t_start = time.time()
@@ -64,7 +64,7 @@ class Trainer:
               (callback_func.__name__, time_count / 60))
 
     @staticmethod
-    def __default_train(conf_path, round_number):
+    def default_train(conf_path, round_number):
         print('round %s start...' % round_number)
         learner = RoundLearner(conf_path, round_number)
         learner.learn_round()
